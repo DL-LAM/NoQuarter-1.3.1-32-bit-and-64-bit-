@@ -1,0 +1,40 @@
+# Visual Studio / IDE temporary files and directories
+.vs/
+*.sln.docstates
+*.suo
+*.user
+*.userosscache
+*.sln.ide
+*.vcxproj.user
+
+# Build outputs and intermediate files
+build/
+build32/
+build64/
+out/
+bin/
+x64/
+x86/
+Release/
+Debug/
+*.dir/
+*.tlog
+*.obj
+*.o
+*.ilk
+*.exp
+*.lib
+*.pdb
+*.idb
+*.manifest
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# Temporary and packaging directories
+pk3_stage*/
+pk3_staging/
+scratch/
+*.tmp
+*.log
