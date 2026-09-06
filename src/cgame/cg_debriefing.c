@@ -1252,6 +1252,22 @@ qboolean CG_MapVoteList_KeyDown(panel_button_t* button, int key) {
 		}
 		return qtrue;
 	}
+	else if (key == K_MWHEELUP) {
+		cgs.dbMapVoteListOffset--;
+		if (cgs.dbMapVoteListOffset < 0) {
+			cgs.dbMapVoteListOffset = 0;
+		}
+		return qtrue;
+	}
+	else if (key == K_MWHEELDOWN) {
+		int maxofs = cgs.dbNumMaps - 18;
+		if (maxofs < 0) maxofs = 0;
+		cgs.dbMapVoteListOffset++;
+		if (cgs.dbMapVoteListOffset > maxofs) {
+			cgs.dbMapVoteListOffset = maxofs;
+		}
+		return qtrue;
+	}
 	return qfalse;
 }
 
@@ -1638,7 +1654,7 @@ void CG_Debriefing_ChatEdit_Draw(panel_button_t* button) {
 
 	do {
 		offset++;
-		if (buffer + offset == '\0') {
+		if (buffer[offset] == '\0') {
 			break;
 		}
 	} while (CG_Text_Width_Ext(buffer + offset, button->font->scalex, 0, button->font->font) > button->rect.w);
@@ -1665,7 +1681,7 @@ void CG_Debriefing_ChatBox_Draw(panel_button_t* button) {
 	int w, h;
 	vec4_t		hcolor;
 	int chatWidth = 444 + cgs.wideXoffset; // MODERN INTERMISSION: Stretch to fill the new box
-	int chatHeight = button->rect.h;
+	int chatHeight = TEAMCHAT_HEIGHT;
 
 	if (cgs.teamLastChatPos != cgs.teamChatPos) {
 		int i, len;
@@ -2409,7 +2425,30 @@ qboolean CG_Debriefing_Scrollbar_KeyDown(panel_button_t* button, int key) {
 			BG_PanelButtons_SetFocusButton(button);
 			button->data[1] = 0;
 			button->data[2] = cgs.cursorY - r.y;
+			return qtrue;
 		}
+		else if (BG_CursorInRect(&button->rect)) {
+			int ofs = CG_Debriefing_ScrollGetOffset(button);
+			if (cgs.cursorY < r.y) {
+				CG_Debriefing_ScrollSetOffset(button, ofs - CG_Debriefing_ScrollGetMax(button));
+			} else {
+				CG_Debriefing_ScrollSetOffset(button, ofs + CG_Debriefing_ScrollGetMax(button));
+			}
+			CG_Debriefing_ScrollCheckOffset(button);
+			return qtrue;
+		}
+	}
+	else if (key == K_MWHEELUP) {
+		int ofs = CG_Debriefing_ScrollGetOffset(button);
+		CG_Debriefing_ScrollSetOffset(button, ofs - 1);
+		CG_Debriefing_ScrollCheckOffset(button);
+		return qtrue;
+	}
+	else if (key == K_MWHEELDOWN) {
+		int ofs = CG_Debriefing_ScrollGetOffset(button);
+		CG_Debriefing_ScrollSetOffset(button, ofs + 1);
+		CG_Debriefing_ScrollCheckOffset(button);
+		return qtrue;
 	}
 	return qfalse;
 }

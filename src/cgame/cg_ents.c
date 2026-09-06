@@ -1995,6 +1995,69 @@ void CG_CalcEntityLerpPositions( centity_t *cent ) {
 
 /*
 ===============
+CG_MovePlane
+===============
+*/
+void CG_MovePlane( centity_t *cent ) {
+	refEntity_t ent;
+
+	if ( !cg_drawAirstrikePlanes.integer || cent->currentState.time < 0 ) {
+		return;
+	}
+
+	memset( &ent, 0, sizeof(ent) );
+	VectorCopy( cent->lerpOrigin, ent.origin );
+	VectorCopy( cent->lastLerpOrigin, ent.oldorigin );
+	AnglesToAxis( cent->lerpAngles, ent.axis );
+
+	// Propeller frame animation
+	if ( cg.time >= cent->lerpFrame.frameTime ) {
+		cent->lerpFrame.oldFrameTime = cent->lerpFrame.frameTime;
+		cent->lerpFrame.oldFrame     = cent->lerpFrame.frame;
+
+		while ( cg.time >= cent->lerpFrame.frameTime ) {
+			cent->lerpFrame.frameTime += TIME_FRAME_PROPELLER;
+			cent->lerpFrame.frame++;
+
+			if ( cent->lerpFrame.frame >= NUM_FRAME_PROPELLER ) {
+				cent->lerpFrame.frame = 0;
+			}
+		}
+	}
+
+	if ( cent->lerpFrame.frameTime == cent->lerpFrame.oldFrameTime ) {
+		cent->lerpFrame.backlerp = 0;
+	}
+	else {
+		cent->lerpFrame.backlerp = 1.0f - (float)(cg.time - cent->lerpFrame.oldFrameTime) / (float)(cent->lerpFrame.frameTime - cent->lerpFrame.oldFrameTime);
+	}
+
+	ent.frame = cent->lerpFrame.frame + cent->currentState.frame;
+	if ( ent.frame >= NUM_FRAME_PROPELLER ) {
+		ent.frame -= NUM_FRAME_PROPELLER;
+	}
+
+	ent.oldframe = cent->lerpFrame.oldFrame + cent->currentState.frame;
+	if ( ent.oldframe >= NUM_FRAME_PROPELLER ) {
+		ent.oldframe -= NUM_FRAME_PROPELLER;
+	}
+
+	ent.backlerp = cent->lerpFrame.backlerp;
+
+	if ( cent->currentState.teamNum == TEAM_AXIS ) {
+		ent.hModel = cgs.media.airstrikePlane[0];
+	}
+	else {
+		ent.hModel = cgs.media.airstrikePlane[1];
+	}
+
+	if ( ent.hModel ) {
+		trap_R_AddRefEntityToScene( &ent );
+	}
+}
+
+/*
+===============
 CG_ProcessEntity
 ===============
 */
@@ -2093,6 +2156,9 @@ static void CG_ProcessEntity( centity_t *cent ) {
 		CG_Smoker( cent );
 		break;
 	case ET_MISSILECAM:
+		break;
+	case ET_AIRSTRIKE_PLANE:
+		CG_MovePlane( cent );
 		break;
 	}
 }

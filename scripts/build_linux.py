@@ -284,6 +284,8 @@ def build_target(arch, target_triple, out_dir):
         return False
     if arch != "x86_64":
         shutil.copyfile(qagame_out, os.path.join(out_dir, "qagame_mp_x86.so"))
+    else:
+        shutil.copyfile(qagame_out, os.path.join(out_dir, "qagame_mp_x64.so"))
 
     # 4. Build cgame
     if arch == "x86_64":
@@ -303,6 +305,8 @@ def build_target(arch, target_triple, out_dir):
         return False
     if arch != "x86_64":
         shutil.copyfile(cgame_out, os.path.join(out_dir, "cgame_mp_x86.so"))
+    else:
+        shutil.copyfile(cgame_out, os.path.join(out_dir, "cgame_mp_x64.so"))
 
     # 5. Build ui
     if arch == "x86_64":
@@ -322,6 +326,8 @@ def build_target(arch, target_triple, out_dir):
         return False
     if arch != "x86_64":
         shutil.copyfile(ui_out, os.path.join(out_dir, "ui_mp_x86.so"))
+    else:
+        shutil.copyfile(ui_out, os.path.join(out_dir, "ui_mp_x64.so"))
 
     print(f"Successfully built all Linux {arch} binaries in {out_dir}")
     return True

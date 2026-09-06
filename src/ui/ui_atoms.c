@@ -192,18 +192,11 @@ Adjusted for resolution and screen aspect ratio
 ================
 */
 void UI_AdjustFrom640( float *x, float *y, float *w, float *h ) {
-	float aspectratio;
 	// expect valid pointers
 	*x *= uiInfo.uiDC.xscale;
 	*y *= uiInfo.uiDC.yscale;
 	*w *= uiInfo.uiDC.xscale;
 	*h *= uiInfo.uiDC.yscale;
-	// core: adjusting for possible widescreens..
-	aspectratio = (float)(uiInfo.uiDC.glconfig.vidWidth) / uiInfo.uiDC.glconfig.vidHeight;
-	if ( aspectratio != RATIO43 ) {
-		*x *= RATIO43 / aspectratio;
-		*w *= RATIO43 / aspectratio;
-	}
 }
 
 void UI_DrawNamedPic( float x, float y, float width, float height, const char *picname ) {

@@ -101,7 +101,7 @@ int WM_DrawObjectives( int x, int y, int width, float fade ) {
 				tens = seconds / 10;
 				seconds -= tens * 10;
 				Q_strncpyz( sm, va("%s %2.0f:%i%i",CG_TranslateString("MISSION TIME LEFT:"),(float)mins,tens,seconds), sizeof(sm) );
-				CG_Text_Paint_Ext( x + 20, 20, 0.16f, 0.16f, HUD_Text, sm, 0, 0, 0, &cgs.media.limboFont1 );
+				CG_Text_Paint_Ext( x + 20, 20, 0.16f, 0.16f, HUD_Text, sm, 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont1 );
 			}
 		}
 
@@ -110,9 +110,12 @@ int WM_DrawObjectives( int x, int y, int width, float fade ) {
 // JPW NERVE -- mission time & reinforce time
 	else {
 		int msec, mins, seconds, tens; // JPW NERVE
+		vec4_t hcolor;
 
 		CG_FillRect( x-5, y-2, width+5, 21, clrUiBack );
 		CG_FillRect( x-5, y-2, width+5, 21, clrUiBar );
+		
+		Vector4Set( hcolor, 0, 0, 0, fade );
 		CG_DrawRect_FixedBorder( x-5, y-2, width+5, 21, 1, colorBlack );
 
 		if( cgs.timelimit > 0.0f ) {
@@ -141,7 +144,7 @@ int WM_DrawObjectives( int x, int y, int width, float fade ) {
 			s = va( "%s   %2.0f:%i%i", CG_TranslateString( "MISSION TIME:" ), (float)mins, tens, seconds ); // float cast to line up with reinforce time
 		}
 
-		CG_Text_Paint_Ext( x, y + 13, 0.25f, 0.25f, HUD_Text, s, 0, 0, 0, &cgs.media.limboFont1 );
+		CG_Text_Paint_Ext( x, y + 13, 0.25f, 0.25f, HUD_Text, s, 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont1 );
 
 		if( cgs.gametype != GT_WOLF_LMS ) {
 			if(cgs.clientinfo[cg.snap->ps.clientNum].team == TEAM_AXIS || cgs.clientinfo[cg.snap->ps.clientNum].team == TEAM_ALLIES) {
@@ -158,7 +161,7 @@ int WM_DrawObjectives( int x, int y, int width, float fade ) {
 				seconds -= tens * 10;
 
 				s = va( "%s %2.0f:%i%i", CG_TranslateString( "REINFORCE TIME:" ), (float)mins, tens, seconds );
-				CG_Text_Paint_Ext( 640 - 20 - CG_Text_Width_Ext(s, 0.25f, 0, &cgs.media.limboFont1) + cgs.wideXoffset, y + 13, 0.25f, 0.25f, HUD_Text, s, 0, 0, 0, &cgs.media.limboFont1 );
+				CG_Text_Paint_Ext( 640 - 20 - CG_Text_Width_Ext(s, 0.25f, 0, &cgs.media.limboFont1) + cgs.wideXoffset, y + 13, 0.25f, 0.25f, HUD_Text, s, 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont1 );
 			}
 		}
 
@@ -169,21 +172,21 @@ int WM_DrawObjectives( int x, int y, int width, float fade ) {
 
 			w = CG_Text_Width_Ext( s, 0.25f, 0, &cgs.media.limboFont1 );
 
-			CG_Text_Paint_Ext( x + 300 - w*0.5f, y + 13, 0.25f, 0.25f, HUD_Text, s, 0, 0, 0, &cgs.media.limboFont1 );
+			CG_Text_Paint_Ext( x + 300 - w*0.5f, y + 13, 0.25f, 0.25f, HUD_Text, s, 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont1 );
 		}
 		else if( cgs.gametype == GT_WOLF_LMS ) {
 			int w;
 			s = va( "%s %i  %s %i-%i", CG_TranslateString( "ROUND" ), cgs.currentRound + 1, CG_TranslateString( "SCORE" ), cg.teamWonRounds[1], cg.teamWonRounds[0] );
 			w = CG_Text_Width_Ext( s, 0.25f, 0, &cgs.media.limboFont1 );
 
-			CG_Text_Paint_Ext( x + 300 - w*0.5f, y + 13, 0.25f, 0.25f, HUD_Text, s, 0, 0, 0, &cgs.media.limboFont1 );
+			CG_Text_Paint_Ext( x + 300 - w*0.5f, y + 13, 0.25f, 0.25f, HUD_Text, s, 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont1 );
 		}
 		else if( cgs.gametype == GT_WOLF_CAMPAIGN ) {
 			int w;
 			s = va( "MAP %i of %i", cgs.currentCampaignMap + 1, cgs.campaignData.mapCount );
 			w = CG_Text_Width_Ext( s, 0.25f, 0, &cgs.media.limboFont1 );
 
-			CG_Text_Paint_Ext( x + 300 - w*0.5f, y + 13, 0.25f, 0.25f, HUD_Text, s, 0, 0, 0, &cgs.media.limboFont1 );
+			CG_Text_Paint_Ext( x + 300 - w*0.5f, y + 13, 0.25f, 0.25f, HUD_Text, s, 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont1 );
 		}
 		// MAPVOTE
 		else if( cgs.gametype == GT_WOLF_MAPVOTE ) {
@@ -191,7 +194,7 @@ int WM_DrawObjectives( int x, int y, int width, float fade ) {
 			s = ( cgs.mapVoteMapY ? va( "MAP %i of %i", cgs.mapVoteMapX + 1, cgs.mapVoteMapY ) : "" );
 			w = CG_Text_Width_Ext( s, 0.25f, 0, &cgs.media.limboFont1 );
 
-			CG_Text_Paint_Ext( x + 300 - w*0.5f, y + 13, 0.25f, 0.25f,  HUD_Text, s, 0, 0, 0, &cgs.media.limboFont1 );
+			CG_Text_Paint_Ext( x + 300 - w*0.5f, y + 13, 0.25f, 0.25f,  HUD_Text, s, 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont1 );
 		}
 		// MAPVOTE END
 
@@ -316,37 +319,20 @@ static void WM_DrawClientScore( int x, int y, score_t *score, float *color, floa
 	}
 
 	// draw name
-	CG_DrawStringExt( tempx, y, ci->name, hcolor, qfalse, qfalse, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, maxchars );
+	CG_Text_Paint_Ext( tempx, y + 11, 0.22f, 0.22f, hcolor, ci->name, 0, maxchars, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont2 );
 	maxchars -= CG_DrawStrlen( ci->name );
-/*
-	// core: This will draw some colored characters behind a playername..
-	// It eats up precious space, and most people do not even know what the characters represent.
 
-	// draw medals
-	buf[0] = '\0';
-	for( i = 0; i < SK_NUM_SKILLS; i++ ) {
-		for( j = 0; j < ci->medals[i]; j++ )
-			Q_strcat( buf, sizeof(buf), va( "^%c%c", COLOR_RED + i, skillNames[i][0] ) );
-	}
-	maxchars--;
-	// CHRUKER: b032 - Medals clipped wrong in scoreboard when you're dead, because CG_DrawStringExt will draw everything if maxchars <= 0
-	if (maxchars > 0) {
-		CG_DrawStringExt( tempx + (BG_drawStrlen(ci->name) * SMALLCHAR_WIDTH + SMALLCHAR_WIDTH), y, buf, hcolor, qfalse, qfalse, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, maxchars );
-	}
-*/
 	tempx += INFO_PLAYER_WIDTH - offset;
 
 	tempx += INFO_LIVES_WIDTH;
-
-	CG_DrawStringExt( tempx , y, "^7", hcolor, qfalse, qfalse, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, maxchars );
 
 	if ( ci->team == TEAM_SPECTATOR ) {
 		tempx -= (6*SMALLCHAR_WIDTH);
 
 		if (score->ping == -1)
-			CG_DrawSmallString( tempx, y, "^1CONN", fade );
+			CG_Text_Paint_RightAligned_Ext( tempx + INFO_LATENCY_WIDTH - 4, y + 11, 0.22f, 0.22f, hcolor, "^1CONN", 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont2 );
 		else
-			CG_DrawSmallString( tempx, y, "^3SPEC" , fade );
+			CG_Text_Paint_RightAligned_Ext( tempx + INFO_LATENCY_WIDTH - 4, y + 11, 0.22f, 0.22f, hcolor, "^3SPEC", 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont2 );
 
 		tempx += (6*SMALLCHAR_WIDTH);
 	}
@@ -362,18 +348,18 @@ static void WM_DrawClientScore( int x, int y, score_t *score, float *color, floa
 	}
 	tempx += INFO_CLASS_WIDTH;
 
-	CG_DrawSmallString( tempx, y, va( "%3i", score->score ), fade );
+	CG_Text_Paint_RightAligned_Ext( tempx + (cg_gameType.integer == GT_WOLF_LMS ? INFO_SCORE_WIDTH : INFO_XP_WIDTH) - 4, y + 11, 0.22f, 0.22f, hcolor, va( "%i", score->score ), 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont2 );
 	if( cg_gameType.integer == GT_WOLF_LMS ) {
 		tempx += INFO_SCORE_WIDTH;
 	} else {
 		tempx += INFO_XP_WIDTH;
 	}
 	if (score->ping == -1)
-		CG_DrawSmallString( tempx, y, "^1CONN^7", fade );
+		CG_Text_Paint_RightAligned_Ext( tempx + INFO_LATENCY_WIDTH - 4, y + 11, 0.22f, 0.22f, hcolor, "^1CONN^7", 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont2 );
 	else if ( score->scoreflags & 2 )
-		CG_DrawSmallString( tempx, y, " BOT", fade );
+		CG_Text_Paint_RightAligned_Ext( tempx + INFO_LATENCY_WIDTH - 4, y + 11, 0.22f, 0.22f, hcolor, "^3BOT", 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont2 );
 	else
-		CG_DrawSmallString( tempx, y, va( "%4i", score->ping ), fade );
+		CG_Text_Paint_RightAligned_Ext( tempx + INFO_LATENCY_WIDTH - 4, y + 11, 0.22f, 0.22f, hcolor, va( "%4i", score->ping ), 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont2 );
 
 	tempx += INFO_LATENCY_WIDTH;
 }
@@ -482,40 +468,20 @@ static void WM_DrawClientScore_Small( int x, int y, score_t *score, float *color
 	}
 
 	// draw name
-	CG_DrawStringExt( tempx, y, ci->name, hcolor, qfalse, qfalse, MINICHAR_WIDTH, MINICHAR_HEIGHT, maxchars );
-
-	// CHRUKER: b033 - Added to draw medals
+	CG_Text_Paint_Ext( tempx, y + 8, 0.17f, 0.17f, hcolor, ci->name, 0, maxchars, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont2 );
 	maxchars -= CG_DrawStrlen( ci->name );
-/*
-	// core: This will draw some colored characters behind a playername..
-	// It eats up precious space, and most people do not even know what the characters represent.
 
-	buf[0] = '\0';
-	for( i = 0; i < SK_NUM_SKILLS; i++ ) {
-		for( j = 0; j < ci->medals[i]; j++ )
-			Q_strcat( buf, sizeof(buf), va( "^%c%c", COLOR_RED + i, skillNames[i][0] ) );
-	}
-	maxchars--;
-
-	if (maxchars > 0) CG_DrawStringExt( tempx + (BG_drawStrlen(ci->name) * MINICHAR_WIDTH + MINICHAR_WIDTH), y, buf, hcolor, qfalse, qfalse, MINICHAR_WIDTH, MINICHAR_HEIGHT, maxchars );
-	// b033
-*/
 	tempx += INFO_PLAYER_WIDTH - offset;
-	// dhm - nerve
 
 	tempx += INFO_LIVES_WIDTH;
-
-	// terminate coloring
-	CG_DrawStringExt( tempx , y, "^7", hcolor, qfalse, qfalse, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, maxchars );
-
 
 	if ( ci->team == TEAM_SPECTATOR ) {
 		tempx -= (4*MINICHAR_WIDTH);
 
 		if (score->ping == -1)
-			CG_DrawSmallStringColor( tempx, y, "CONN", hcolor );
+			CG_Text_Paint_RightAligned_Ext( tempx + INFO_LATENCY_WIDTH - 4, y + 8, 0.17f, 0.17f, hcolor, "^1CONN", 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont2 );
 		else
-			CG_DrawStringExt( tempx, y, "SPEC", hcolor, qfalse, qfalse, MINICHAR_WIDTH, MINICHAR_HEIGHT, 0 );
+			CG_Text_Paint_RightAligned_Ext( tempx + INFO_LATENCY_WIDTH - 4, y + 8, 0.17f, 0.17f, hcolor, "^3SPEC", 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont2 );
 
 		tempx += (4*MINICHAR_WIDTH);
 	}
@@ -524,7 +490,7 @@ static void WM_DrawClientScore_Small( int x, int y, score_t *score, float *color
 	}
 	tempx += INFO_CLASS_WIDTH;
 
-	CG_DrawStringExt( tempx, y, va( "%3i", score->score ), hcolor, qfalse, qfalse, MINICHAR_WIDTH, MINICHAR_HEIGHT, 0 );
+	CG_Text_Paint_RightAligned_Ext( tempx + (cg_gameType.integer == GT_WOLF_LMS ? INFO_SCORE_WIDTH : INFO_XP_WIDTH) - 4, y + 8, 0.17f, 0.17f, hcolor, va( "%i", score->score ), 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont2 );
 	if( cg_gameType.integer == GT_WOLF_LMS ) {
 		tempx += INFO_SCORE_WIDTH;
 	}
@@ -533,11 +499,11 @@ static void WM_DrawClientScore_Small( int x, int y, score_t *score, float *color
 	}
 
 	if (score->ping == -1)
-		CG_DrawStringExt( tempx, y, "^1CONN", hcolor, qfalse, qfalse, MINICHAR_WIDTH, MINICHAR_HEIGHT, 0 );
+		CG_Text_Paint_RightAligned_Ext( tempx + INFO_LATENCY_WIDTH - 4, y + 8, 0.17f, 0.17f, hcolor, "^1CONN^7", 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont2 );
 	else if ( score->scoreflags & 2 )
-		CG_DrawStringExt( tempx, y, " ^4BOT", hcolor, qfalse, qfalse, MINICHAR_WIDTH, MINICHAR_HEIGHT, 0 );
+		CG_Text_Paint_RightAligned_Ext( tempx + INFO_LATENCY_WIDTH - 4, y + 8, 0.17f, 0.17f, hcolor, "^3BOT", 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont2 );
 	else
-		CG_DrawStringExt( tempx, y, va( "%4i", score->ping ), hcolor, qfalse, qfalse, MINICHAR_WIDTH, MINICHAR_HEIGHT, 0 );
+		CG_Text_Paint_RightAligned_Ext( tempx + INFO_LATENCY_WIDTH - 4, y + 8, 0.17f, 0.17f, hcolor, va( "%4i", score->ping ), 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont2 );
 
 	tempx += INFO_LATENCY_WIDTH;
 }
@@ -590,7 +556,7 @@ static int WM_DrawInfoLine( int x, int y, float fade ) {
 
 	w = CG_Text_Width_Ext( s, 0.25f, 0, &cgs.media.limboFont1 );
 
-	CG_Text_Paint_Ext( 320 - w*0.5f, y + 15, 0.25f, 0.25f, HUD_Text, s, 0, 0, 0, &cgs.media.limboFont1 );
+	CG_Text_Paint_Ext( 320 - w*0.5f, y + 15, 0.25f, 0.25f, HUD_Text, s, 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont1 );
 	return y + INFO_LINE_HEIGHT + 6;
 }
 
@@ -624,20 +590,20 @@ static int WM_TeamScoreboard( int x, int y, team_t team, float fade, int maxrows
 			s = va( "%s [%d] (%d %s)", CG_TranslateString( "AXIS" ), cg.teamScores[0], cg.teamPlayers[team], CG_TranslateString("PLAYERS") );
 			s = va( "%s ^3%s", s, cg.teamFirstBlood == TEAM_AXIS ? CG_TranslateString("FIRST BLOOD") : "" );
 
-			CG_Text_Paint_Ext( x, y + 13, 0.25f, 0.25f, HUD_Text, s, 0, 0, 0, &cgs.media.limboFont1 );
+			CG_Text_Paint_Ext( x, y + 13, 0.25f, 0.25f, HUD_Text, s, 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont1 );
 		}
 		else if ( team == TEAM_ALLIES ) {
 			s = va( "%s [%d] (%d %s)", CG_TranslateString( "ALLIES" ), cg.teamScores[1], cg.teamPlayers[team], CG_TranslateString("PLAYERS") );
 			s = va( "%s ^3%s", s, cg.teamFirstBlood == TEAM_ALLIES ? CG_TranslateString("FIRST BLOOD") : "" );
 
-			CG_Text_Paint_Ext( x, y + 13, 0.25f, 0.25f, HUD_Text, s, 0, 0, 0, &cgs.media.limboFont1 );
+			CG_Text_Paint_Ext( x, y + 13, 0.25f, 0.25f, HUD_Text, s, 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont1 );
 		}
 	}
 	else {
 		if ( team == TEAM_AXIS ) {
-			CG_Text_Paint_Ext( x, y + 13, 0.25f, 0.25f, HUD_Text, va( "%s [%d] (%d %s)", CG_TranslateString( "AXIS" ), cg.teamScores[0], cg.teamPlayers[team], CG_TranslateString("PLAYERS") ), 0, 0, 0, &cgs.media.limboFont1 );
+			CG_Text_Paint_Ext( x, y + 13, 0.25f, 0.25f, HUD_Text, va( "%s [%d] (%d %s)", CG_TranslateString( "AXIS" ), cg.teamScores[0], cg.teamPlayers[team], CG_TranslateString("PLAYERS") ), 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont1 );
 		} else if ( team == TEAM_ALLIES ) {
-			CG_Text_Paint_Ext( x, y + 13, 0.25f, 0.25f, HUD_Text, va( "%s [%d] (%d %s)", CG_TranslateString( "ALLIES" ), cg.teamScores[1], cg.teamPlayers[team], CG_TranslateString("PLAYERS") ), 0, 0, 0, &cgs.media.limboFont1 );
+			CG_Text_Paint_Ext( x, y + 13, 0.25f, 0.25f, HUD_Text, va( "%s [%d] (%d %s)", CG_TranslateString( "ALLIES" ), cg.teamScores[1], cg.teamPlayers[team], CG_TranslateString("PLAYERS") ), 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont1 );
 		}
 	}
 
@@ -652,7 +618,7 @@ static int WM_TeamScoreboard( int x, int y, team_t team, float fade, int maxrows
 	trap_R_SetColor( NULL );
 
 	// draw player info headings
-	CG_DrawSmallString( tempx, y, CG_TranslateString( "Name" ), fade );
+	CG_Text_Paint_Ext( tempx, y + 12, 0.22f, 0.22f, HUD_Text, CG_TranslateString( "Name" ), 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont1 );
 	tempx += INFO_PLAYER_WIDTH;
 
 	tempx += INFO_LIVES_WIDTH;
@@ -660,15 +626,15 @@ static int WM_TeamScoreboard( int x, int y, team_t team, float fade, int maxrows
 	tempx += INFO_CLASS_WIDTH;
 
 	if( cgs.gametype == GT_WOLF_LMS ) {
-		CG_DrawSmallString( tempx, y, CG_TranslateString( "Score" ), fade );
+		CG_Text_Paint_RightAligned_Ext( tempx + INFO_SCORE_WIDTH - 4, y + 12, 0.22f, 0.22f, HUD_Text, CG_TranslateString( "Score" ), 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont1 );
 		tempx += INFO_SCORE_WIDTH;
 	}
 	else {
-		CG_DrawSmallString( tempx + 1 * SMALLCHAR_WIDTH, y, CG_TranslateString( "XP" ), fade );
+		CG_Text_Paint_RightAligned_Ext( tempx + INFO_XP_WIDTH - 4, y + 12, 0.22f, 0.22f, HUD_Text, CG_TranslateString( "XP" ), 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont1 );
 		tempx += INFO_XP_WIDTH;
 	}
 
-	CG_DrawSmallString( tempx, y, CG_TranslateString( "Ping" ), fade );
+	CG_Text_Paint_RightAligned_Ext( tempx + INFO_LATENCY_WIDTH - 4, y + 12, 0.22f, 0.22f, HUD_Text, CG_TranslateString( "Ping" ), 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont1 );
 	tempx += INFO_LATENCY_WIDTH;
 
 	y += SMALLCHAR_HEIGHT;

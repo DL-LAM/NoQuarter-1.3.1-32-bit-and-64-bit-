@@ -48,6 +48,8 @@ extern vmCvar_t	ui_browserShowFriendlyFire;
 extern vmCvar_t	ui_browserShowMaxlives;
 extern vmCvar_t	ui_browserShowPunkBuster;
 extern vmCvar_t ui_browserShowAntilag;
+extern vmCvar_t ui_customFont1;
+extern vmCvar_t ui_customFont2;
 extern vmCvar_t ui_browserShowWeaponsRestricted;
 extern vmCvar_t ui_browserShowTeamBalanced;
 extern vmCvar_t	ui_browserNQonly;
@@ -100,6 +102,8 @@ mapInfo*		UI_FindMapInfoByMapname( const char* name );
 void			UI_ReadableSize( char *buf, int bufsize, int value );
 void			UI_PrintTime( char *buf, int bufsize, int time );
 void			Text_Paint_Ext( float x, float y, float scalex, float scaley, vec4_t color, const char *text, float adjust, int limit, int style, fontInfo_t* font );
+void			Text_Paint_Centred_Ext( float x, float y, float scalex, float scaley, vec4_t color, const char *text, float adjust, int limit, int style, fontInfo_t* font );
+void			Text_Paint_RightAligned_Ext( float x, float y, float scalex, float scaley, vec4_t color, const char *text, float adjust, int limit, int style, fontInfo_t* font );
 
 void UI_Campaign_f( void );
 void UI_ListCampaigns_f( void );

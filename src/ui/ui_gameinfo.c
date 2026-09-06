@@ -96,7 +96,7 @@ static void UI_LoadArenasFromFile( char *filename ) {
 		if( *token.string == '}' ) {
 
 			if( !uiInfo.mapList[uiInfo.mapCount].typeBits ) {
-				uiInfo.mapList[uiInfo.mapCount].typeBits |= (1 << GT_WOLF);
+				uiInfo.mapList[uiInfo.mapCount].typeBits |= (1 << GT_WOLF) | (1 << GT_WOLF_MAPVOTE);
 			}
 
 			uiInfo.mapCount++;
@@ -176,13 +176,13 @@ static void UI_LoadArenasFromFile( char *filename ) {
 					uiInfo.mapList[uiInfo.mapCount].typeBits |= (1 << GT_SINGLE_PLAYER);
 				}
 				if( strstr( token.string, "wolflms" ) ) {
-					uiInfo.mapList[uiInfo.mapCount].typeBits |= (1 << GT_WOLF_LMS);
+					uiInfo.mapList[uiInfo.mapCount].typeBits |= (1 << GT_WOLF_LMS) | (1 << GT_WOLF_MAPVOTE);
 				}
 				if( strstr( token.string, "wolfmp" ) ) {
-					uiInfo.mapList[uiInfo.mapCount].typeBits |= (1 << GT_WOLF);
+					uiInfo.mapList[uiInfo.mapCount].typeBits |= (1 << GT_WOLF) | (1 << GT_WOLF_MAPVOTE);
 				}
 				if( strstr( token.string, "wolfsw" ) ) {
-					uiInfo.mapList[uiInfo.mapCount].typeBits |= (1 << GT_WOLF_STOPWATCH);
+					uiInfo.mapList[uiInfo.mapCount].typeBits |= (1 << GT_WOLF_STOPWATCH) | (1 << GT_WOLF_MAPVOTE);
 				}
 			}
 		}
@@ -234,17 +234,17 @@ UI_LoadArenas
 void UI_LoadArenas( void ) {
 
 	char		filename[128];
-	char		dirlist[1024];
+	static char	dirlist[65536];
 	char*		dirptr;
 	// get all arenas from .arena files
-	int			numdirs = trap_FS_GetFileList("scripts", ".arena", dirlist, 1024 );
+	int			numdirs = trap_FS_GetFileList("scripts", ".arena", dirlist, sizeof(dirlist) );
 	int			i;
 	int			dirlen;
 
 	uiInfo.mapCount = 0;
 
 	dirptr  = dirlist;
-	for (i = 0; i < numdirs; i++, dirptr += dirlen+1) {
+	for (i = 0; i < numdirs && uiInfo.mapCount < MAX_MAPS; i++, dirptr += dirlen+1) {
 		dirlen = strlen(dirptr);
 		strcpy(filename, "scripts/");
 		strcat(filename, dirptr);
@@ -518,7 +518,7 @@ int QDECL UI_SortCampaigns( const void *a, const void *b ) {
 void UI_LoadCampaigns( void ) {
 	int			numdirs;
 	char		filename[128];
-	char		dirlist[1024];
+	static char	dirlist[65536];
 	char*		dirptr;
 	int			i, j;
 	int			dirlen;
@@ -529,7 +529,7 @@ void UI_LoadCampaigns( void ) {
 	memset( &uiInfo.campaignList, 0, sizeof(uiInfo.campaignList) );
 
 	// get all campaigns from .campaign files
-	numdirs = trap_FS_GetFileList( "scripts", ".campaign", dirlist, 1024 );
+	numdirs = trap_FS_GetFileList( "scripts", ".campaign", dirlist, sizeof(dirlist) );
 	dirptr  = dirlist;
 	for (i = 0; i < numdirs && uiInfo.campaignCount < MAX_CAMPAIGNS; i++, dirptr += dirlen+1) {
 		dirlen = strlen(dirptr);

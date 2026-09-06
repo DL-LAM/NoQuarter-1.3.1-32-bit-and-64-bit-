@@ -51,7 +51,6 @@ This must be the very first function compiled into the .q3vm file
 #endif
 #endif
 
-
 Q_EXPORT intptr_t vmMain( intptr_t command, intptr_t arg0, intptr_t arg1, intptr_t arg2, intptr_t arg3, intptr_t arg4, intptr_t arg5, intptr_t arg6, intptr_t arg7, intptr_t arg8, intptr_t arg9, intptr_t arg10, intptr_t arg11  ) {
 
 #if defined(__MACOS__)
@@ -336,6 +335,9 @@ vmCvar_t	cg_whizzSounds; // bullets flying by (integer part = distance, fraction
 vmCvar_t	cg_favWeaponBank; // 0=previously used weapon.  banks: 1=knife, 2=pistol, 3=SMG, 4=grenade // lastUsedWeaponBank - get next weapon after using cretain weapon (like panzer,airstrike,satchel etc)
 vmCvar_t    cg_spawnTimer_set;      // spawntimer from etpub
 vmCvar_t    cg_spawnTimer_period;   // spawntimer from etpub
+vmCvar_t	cg_drawAirstrikePlanes;
+vmCvar_t	cg_customFont1;
+vmCvar_t	cg_customFont2;
 
 
 typedef struct {
@@ -592,6 +594,9 @@ cvarTable_t		cvarTable[] =
 	{ &cg_favWeaponBank,		"cg_favWeaponBank",				"0",		CVAR_ARCHIVE	},
 	{ &cg_spawnTimer_set,       "cg_spawnTimer_set",            "-1",       CVAR_TEMP       },  // from etpub
 	{ &cg_spawnTimer_period,    "cg_spawnTimer_period",         "0",        CVAR_TEMP       },  // from etpub
+	{ &cg_drawAirstrikePlanes,	"cg_drawAirstrikePlanes",		"1",		CVAR_ARCHIVE	},
+	{ &cg_customFont1,			"cg_customFont1",				"",			CVAR_ARCHIVE	},
+	{ &cg_customFont2,			"cg_customFont2",				"",			CVAR_ARCHIVE	},
 };
 
 int			cvarTableSize = sizeof( cvarTable ) / sizeof( cvarTable[0] );
@@ -675,6 +680,27 @@ void CG_UpdateCvars( void ) {
 				else if(cv->vmCvar == &cg_refereePassword && *cg_refereePassword.string) {
 					trap_SendConsoleCommand( va( "ref %s", cg_refereePassword.string ) );
 				}
+				else if(cv->vmCvar == &cg_customFont1 || cv->vmCvar == &cg_customFont2) {
+					const char *font1 = cg_customFont1.string[0] ? cg_customFont1.string : "ariblk";
+					const char *font2 = cg_customFont2.string[0] ? cg_customFont2.string : "courbd";
+
+					trap_R_RegisterFont( font1, 27, &cgs.media.limboFont1 );
+					if ( cgs.media.limboFont1.glyphs[0].glyph == 0 && cg_customFont1.string[0] ) {
+						trap_R_RegisterFont( "ariblk", 27, &cgs.media.limboFont1 );
+					}
+					trap_R_RegisterFont( font1, 16, &cgs.media.limboFont1_lo );
+					if ( cgs.media.limboFont1_lo.glyphs[0].glyph == 0 && cg_customFont1.string[0] ) {
+						trap_R_RegisterFont( "ariblk", 16, &cgs.media.limboFont1_lo );
+					}
+					trap_R_RegisterFont( font2, 30, &cgs.media.limboFont2 );
+					if ( cgs.media.limboFont2.glyphs[0].glyph == 0 && cg_customFont2.string[0] ) {
+						trap_R_RegisterFont( "courbd", 30, &cgs.media.limboFont2 );
+					}
+					trap_R_RegisterFont( font2, 21, &cgs.media.limboFont2_lo );
+					if ( cgs.media.limboFont2_lo.glyphs[0].glyph == 0 && cg_customFont2.string[0] ) {
+						trap_R_RegisterFont( "courbd", 21, &cgs.media.limboFont2_lo );
+					}
+				}
 				else if( cv->vmCvar == &cg_HUDBorderColor || cv->vmCvar == &cg_HUDBackgroundColor || cv->vmCvar == &cg_HUDAlpha ) {
 					jP_SetHUDColors();
 				}
@@ -710,11 +736,9 @@ void CG_RestoreProfile(void) {
 	int i;
 
 	for( i=0; i<cg.cvarBackupsCount; ++i ) {
-		if (cg.cvarBackups[i].cvarName[0]) {
-			trap_Cvar_Set(cg.cvarBackups[i].cvarName, cg.cvarBackups[i].cvarValue);
-		}
+		trap_Cvar_Set(cg.cvarBackups[i].cvarName, cg.cvarBackups[i].cvarValue);
 	}
-	cg.cvarBackupsCount = 0;
+
 }
 
 void CG_setClientFlags(void) {
@@ -1890,15 +1914,36 @@ static void CG_RegisterGraphics( void ) {
 	cgs.media.hMountedFPMG42 =		trap_R_RegisterModel( "models/multiplayer/mg42/v_mg42.md3" );
 	cgs.media.hMountedFPBrowning =	trap_R_RegisterModel( "models/multiplayer/browning/tankmounted.md3" );
 
+	cgs.media.airstrikePlane[0] =	trap_R_RegisterModel( "models/mapobjects/planes/ju87.md3" );
+	cgs.media.airstrikePlane[1] =	trap_R_RegisterModel( "models/mapobjects/planes/spitfire.md3" );
+
 	// medic icon for commandmap
 	cgs.media.medicIcon_cm			= trap_R_RegisterShaderNoMip("sprites/voiceMedic_cm");
 	cgs.media.medicIcon				= trap_R_RegisterShaderNoMip("sprites/voiceMedic");
 	cgs.media.disguiseShader		= trap_R_RegisterShaderNoMip("sprites/disguised" );
 
 
-	trap_R_RegisterFont( "ariblk", 27, &cgs.media.limboFont1 );
-	trap_R_RegisterFont( "ariblk", 16, &cgs.media.limboFont1_lo );
-	trap_R_RegisterFont( "courbd", 30, &cgs.media.limboFont2 );
+	{
+		const char *font1 = cg_customFont1.string[0] ? cg_customFont1.string : "ariblk";
+		const char *font2 = cg_customFont2.string[0] ? cg_customFont2.string : "courbd";
+
+		trap_R_RegisterFont( font1, 27, &cgs.media.limboFont1 );
+		if ( cgs.media.limboFont1.glyphs[0].glyph == 0 && cg_customFont1.string[0] ) {
+			trap_R_RegisterFont( "ariblk", 27, &cgs.media.limboFont1 );
+		}
+		trap_R_RegisterFont( font1, 16, &cgs.media.limboFont1_lo );
+		if ( cgs.media.limboFont1_lo.glyphs[0].glyph == 0 && cg_customFont1.string[0] ) {
+			trap_R_RegisterFont( "ariblk", 16, &cgs.media.limboFont1_lo );
+		}
+		trap_R_RegisterFont( font2, 30, &cgs.media.limboFont2 );
+		if ( cgs.media.limboFont2.glyphs[0].glyph == 0 && cg_customFont2.string[0] ) {
+			trap_R_RegisterFont( "courbd", 30, &cgs.media.limboFont2 );
+		}
+		trap_R_RegisterFont( font2, 21, &cgs.media.limboFont2_lo );
+		if ( cgs.media.limboFont2_lo.glyphs[0].glyph == 0 && cg_customFont2.string[0] ) {
+			trap_R_RegisterFont( "courbd", 21, &cgs.media.limboFont2_lo );
+		}
+	}
 
 	cgs.media.medal_back =				trap_R_RegisterShaderNoMip( "gfx/limbo/medal_back" );
 
@@ -2619,6 +2664,11 @@ void checkExecutable() {
 	qboolean untrusted = qtrue;
 	int fileSize = 0;
 
+// FIXME/TODO move this down to enable other engines
+#ifndef _DEBUG
+	if ( !isET260() ) trap_Error("");
+#endif
+
 	trap_Cvar_VariableStringBuffer("fs_basepath", basepath, sizeof(basepath));
 
 /* alternative way for linux - not used atm
@@ -2664,6 +2714,8 @@ void checkExecutable() {
 	if (strcmp(__progname, "et.x86") == 0) {
 		char *fname = va("%s/%s", basepath, __progname);
 		FILE *file = NULL;
+
+		if ( !isET260() ) trap_Error("");
 
 		// Note: if we this fails client will crash
 		file = fopen(fname,"r");
@@ -2714,6 +2766,8 @@ void checkExecutable() {
 
 			if (strcmp(progname, "ET.exe") == 0) {
 				char *fname = va("%s/%s", basepath, progname);
+
+				if ( !isET260() ) trap_Error("");
 
 				if (fileSize == 1286144 ) { // 2.60b -> TODO
 					untrusted = qfalse;
@@ -2857,6 +2911,10 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int clientNum, qb
 
 #ifdef SYSTEM_CHECK
 	checkExecutable();
+#else
+#ifndef _DEBUG
+	if ( !isET260() ) trap_Error("");
+#endif
 #endif
 
 	// tjw: clean up the config backup if one exists
@@ -2868,9 +2926,6 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int clientNum, qb
 	memset( cg_entities, 0, sizeof(cg_entities) );
 	memset( cg_weapons, 0, sizeof(cg_weapons) );
 	memset( cg_items, 0, sizeof(cg_items) );
-
-	CG_InitPM();
-	CG_InitMM();
 
 	cgs.initing = qtrue;
 
@@ -3278,30 +3333,18 @@ void jP_SetHUDColors(void) {
 }
 
 qhandle_t CG_GetGameModel ( int index ) {
-    if (index < 0) {
-        return 0;
-    }
-    // Cached game file
+    // Chached game file
     if (index < GAMEMODEL_MAX) {
         return cgs.cachedModels[index];
-    }
-    if (index - GAMEMODEL_MAX >= MAX_MODELS) {
-        return 0;
     }
 
 	return (cgs.gameModels[index-GAMEMODEL_MAX] ? cgs.gameModels[index-GAMEMODEL_MAX] : 0);
 }
 
 sfxHandle_t CG_GetGameSound ( int index ) {
-    if (index < 0) {
-        return 0;
-    }
     // Cached game file
     if (index < GAMESOUND_MAX) {
         return cgs.cachedSounds[index];
-    }
-    if (index - GAMESOUND_MAX >= MAX_SOUNDS) {
-        return 0;
     }
     return cgs.gameSounds[index-GAMESOUND_MAX] ? cgs.gameSounds[index-GAMESOUND_MAX] : 0;
 }

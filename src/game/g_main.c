@@ -249,6 +249,7 @@ vmCvar_t 		g_ammoCabinetTime;
 vmCvar_t 		g_healthCabinetTime;
 vmCvar_t 		g_infiniteCabinets;
 vmCvar_t 		g_soldierShotgun;
+vmCvar_t 		g_alliedCovertWeapon;
 vmCvar_t 		g_maxWarp;
 vmCvar_t		g_antiwarp; // zinx etpro antiwarp, overrides g_maxWarp
 vmCvar_t 		g_dropObj;
@@ -646,6 +647,7 @@ cvarTable_t		gameCvarTable[] =
 	{ &g_healthCabinetTime,					"g_healthCabinetTime",					"10000", 								0 },
 	{ &g_infiniteCabinets,					"g_infiniteCabinets",					"0",									CVAR_SERVERINFO | CVAR_ARCHIVE },
 	{ &g_soldierShotgun,					"g_soldierShotgun",						"1",									CVAR_SERVERINFO | CVAR_ARCHIVE },
+	{ &g_alliedCovertWeapon,				"g_alliedCovertWeapon",					"0",									CVAR_SERVERINFO | CVAR_ARCHIVE },
 	{ &g_dropHealth,						"g_dropHealth", 						"0", 									0 },
 	{ &g_dropAmmo,							"g_dropAmmo",							"0",									0 },
 
@@ -1990,6 +1992,15 @@ void G_UpdateNQinfo(void) {
 	Info_SetValueForKey(cs, "MC", va("%i", team_maxCovertops.integer));
 
 	Info_SetValueForKey(cs, "SS", va("%i", g_soldierShotgun.integer));
+
+	if ( g_alliedCovertWeapon.integer == 1 ) {
+		bg_allies_playerclasses[PC_COVERTOPS].classWeapons[1] = WP_BAR;
+	} else if ( g_alliedCovertWeapon.integer == 2 ) {
+		bg_allies_playerclasses[PC_COVERTOPS].classWeapons[1] = WP_FG42;
+	} else {
+		bg_allies_playerclasses[PC_COVERTOPS].classWeapons[1] = WP_JOHNSON;
+	}
+	Info_SetValueForKey(cs, "CW", va("%i", g_alliedCovertWeapon.integer));
 
 	Info_SetValueForKey(cs, "W",  level.weaponScriptsDir);
 

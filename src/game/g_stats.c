@@ -574,13 +574,6 @@ void G_LoseKillSkillPoints( gentity_t *tker, meansOfDeath_t mod, hitRegion_t hr,
 	}
 }
 
-// MODERN XP POPUP: Hijack the debug macro to broadcast the exact reason string!
-#undef G_DEBUG_ADD_SKILL_POINTS
-#define G_DEBUG_ADD_SKILL_POINTS( ent, skill, points, reason ) \
-	if ( points > 0 && ent->client && !(ent->r.svFlags & SVF_BOT) ) { \
-		trap_SendServerCommand( ent - g_entities, va("xppopup %f %i \"%s\"", (float)(points), (int)(skill), reason) ); \
-	}
-
 void G_AddKillSkillPoints( gentity_t *attacker, meansOfDeath_t mod, hitRegion_t hr, qboolean splash )
 {
 
@@ -665,24 +658,24 @@ void G_AddKillSkillPoints( gentity_t *attacker, meansOfDeath_t mod, hitRegion_t 
 									break;
 					case HR_ARMS:	G_AddSkillPoints( attacker, SK_LIGHT_WEAPONS, xp-1.0f );
 									G_AddSkillPoints( attacker, SK_HEAVY_WEAPONS, xp-2.0f );
-									G_DEBUG_ADD_SKILL_POINTS( attacker, SK_LIGHT_WEAPONS, xp - 1.0f, "headshot kill" );
-									G_DEBUG_ADD_SKILL_POINTS( attacker, SK_LIGHT_WEAPONS, xp-2.0f, "armshot kill" );
+									G_DEBUG_ADD_SKILL_POINTS( attacker, SK_LIGHT_WEAPONS, xp - 1.0f, "armshot kill" );
+									G_DEBUG_ADD_SKILL_POINTS( attacker, SK_HEAVY_WEAPONS, xp-2.0f, "armshot kill" );
 									break;
 					case HR_BODY:	G_AddSkillPoints( attacker, SK_LIGHT_WEAPONS, xp-1.0f );
 									G_AddSkillPoints( attacker, SK_HEAVY_WEAPONS, xp-2.0f );
-									G_DEBUG_ADD_SKILL_POINTS( attacker, SK_LIGHT_WEAPONS, xp - 1.0f, "headshot kill" );
-									G_DEBUG_ADD_SKILL_POINTS( attacker, SK_LIGHT_WEAPONS, xp-2.0f, "armshot kill" );
+									G_DEBUG_ADD_SKILL_POINTS( attacker, SK_LIGHT_WEAPONS, xp - 1.0f, "bodyshot kill" );
+									G_DEBUG_ADD_SKILL_POINTS( attacker, SK_HEAVY_WEAPONS, xp-2.0f, "bodyshot kill" );
 									break;
 					case HR_LEGS:	G_AddSkillPoints( attacker, SK_LIGHT_WEAPONS, xp-1.0f );
 									G_AddSkillPoints( attacker, SK_HEAVY_WEAPONS, xp-2.0f );
-									G_DEBUG_ADD_SKILL_POINTS( attacker, SK_LIGHT_WEAPONS, xp - 1.0f, "headshot kill" );
-									G_DEBUG_ADD_SKILL_POINTS( attacker, SK_LIGHT_WEAPONS, xp-2.0f, "armshot kill" );
+									G_DEBUG_ADD_SKILL_POINTS( attacker, SK_LIGHT_WEAPONS, xp - 1.0f, "legshot kill" );
+									G_DEBUG_ADD_SKILL_POINTS( attacker, SK_HEAVY_WEAPONS, xp-2.0f, "legshot kill" );
 									break;
 					// for weapons that don't have localized damage
 					default:		G_AddSkillPoints( attacker, SK_LIGHT_WEAPONS, xp-1.0f );
 									G_AddSkillPoints( attacker, SK_HEAVY_WEAPONS, xp-2.0f );
-									G_DEBUG_ADD_SKILL_POINTS( attacker, SK_LIGHT_WEAPONS, xp - 1.0f, "headshot kill" );
-									G_DEBUG_ADD_SKILL_POINTS( attacker, SK_LIGHT_WEAPONS, xp-2.0f, "armshot kill" );
+									G_DEBUG_ADD_SKILL_POINTS( attacker, SK_LIGHT_WEAPONS, xp - 1.0f, "kill" );
+									G_DEBUG_ADD_SKILL_POINTS( attacker, SK_HEAVY_WEAPONS, xp-2.0f, "kill" );
 									break;
 				}
 				break;
@@ -828,6 +821,71 @@ void G_AddKillSkillPointsForDestruction( gentity_t *attacker, meansOfDeath_t mod
 			break;
 		default:
 			break;
+	}
+}
+
+#define MAX_PLAYERS_ASSIST_TO_REWARDS 4
+#define MAX_ASSIST_ELAPSED_TIME 1500
+
+static int QDECL G_SortPlayersDamageGiver( const void *a, const void *b ) {
+	const damageReceivedStats_t *ca = *(const damageReceivedStats_t **)a;
+	const damageReceivedStats_t *cb = *(const damageReceivedStats_t **)b;
+
+	if ( ca->damageReceived > cb->damageReceived ) {
+		return -1;
+	}
+	if ( cb->damageReceived > ca->damageReceived ) {
+		return 1;
+	}
+	return 0;
+}
+
+void G_AddKillAssistPoints( gentity_t *target, gentity_t *attacker ) {
+	int i;
+	int rewardedPlayers;
+	damageReceivedStats_t *dmgReceivedSts[MAX_CLIENTS];
+
+	if ( !target || !target->client ) {
+		return;
+	}
+
+	for ( i = 0; i < MAX_CLIENTS; ++i ) {
+		dmgReceivedSts[i] = &(target->client->dmgReceivedSts[i]);
+	}
+
+	qsort( dmgReceivedSts, MAX_CLIENTS, sizeof(damageReceivedStats_t *), G_SortPlayersDamageGiver );
+
+	for ( i = 0, rewardedPlayers = 0; i < MAX_CLIENTS && rewardedPlayers < MAX_PLAYERS_ASSIST_TO_REWARDS; ++i ) {
+		gentity_t *ent;
+		float points;
+		float maxHp;
+
+		if ( dmgReceivedSts[i]->damageReceived <= 0 ) {
+			break;
+		}
+
+		if ( dmgReceivedSts[i]->lastHitTime + MAX_ASSIST_ELAPSED_TIME < level.time ) {
+			continue;
+		}
+
+		ent = &g_entities[dmgReceivedSts[i] - target->client->dmgReceivedSts];
+
+		if ( ent == target || ent == attacker || !ent->client ) {
+			continue;
+		}
+
+		if ( ent->client->sess.sessionTeam != target->client->sess.sessionTeam ) {
+			maxHp = (float)target->client->pers.maxHealth;
+			if ( maxHp <= 0 ) maxHp = 100.0f;
+			points = 3.f * ((float)dmgReceivedSts[i]->damageReceived / maxHp);
+			if ( points > 3.0f ) points = 3.0f;
+			if ( points < 0.1f ) points = 0.1f;
+
+			G_AddSkillPoints( ent, SK_BATTLE_SENSE, points );
+			G_DEBUG_ADD_SKILL_POINTS( ent, SK_BATTLE_SENSE, points, "kill assist" );
+			ent->client->sess.kill_assists++;
+			++rewardedPlayers;
+		}
 	}
 }
 

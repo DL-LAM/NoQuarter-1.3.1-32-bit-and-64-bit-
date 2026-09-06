@@ -13,12 +13,6 @@
 
 void CG_LimboMenu_f();
 
-//MODERN XP POPUP VARIABLES - Hawkeye
-int xpPopupTime = 0;
-float xpPopupPoints = 0;
-int xpPopupSkill = 0;
-char xpPopupReason[64] = "";
-
 /*
 =================
 CG_ParseScores
@@ -329,6 +323,19 @@ void CG_ParseNQinfo( void ) {
 	cgs.soldierShotgun = 1;
 	if ( Info_ValueForKey(info, "SS") && *Info_ValueForKey(info, "SS") ) {
 		cgs.soldierShotgun = atoi(Info_ValueForKey(info, "SS"));
+	}
+
+	cgs.alliedCovertWeapon = 0;
+	if ( Info_ValueForKey(info, "CW") && *Info_ValueForKey(info, "CW") ) {
+		cgs.alliedCovertWeapon = atoi(Info_ValueForKey(info, "CW"));
+	}
+
+	if ( cgs.alliedCovertWeapon == 1 ) {
+		bg_allies_playerclasses[PC_COVERTOPS].classWeapons[1] = WP_BAR;
+	} else if ( cgs.alliedCovertWeapon == 2 ) {
+		bg_allies_playerclasses[PC_COVERTOPS].classWeapons[1] = WP_FG42;
+	} else {
+		bg_allies_playerclasses[PC_COVERTOPS].classWeapons[1] = WP_JOHNSON;
 	}
 
 
@@ -2655,20 +2662,29 @@ static void CG_ServerCommand( void ) {
 		return;
 	}
 
-	// MODERN XP POPUP: Intercept the custom network command here!
+	// ET:LEGACY XP GAIN / MODERN XP POPUP: Intercept the network commands here!
+	if (!Q_stricmp(cmd, "xpgain")) {
+		int skill = atoi(CG_Argv(1));
+		float points = (float)atof(CG_Argv(2));
+		const char *reason = CG_Argv(3);
+		CG_AddXPPopup( points, skill, reason );
+		return;
+	}
+
 	if (!Q_stricmp(cmd, "xppopup")) {
-		int newSkill = atoi(CG_Argv(2));
-
-		if (xpPopupTime != 0 && cg.time - xpPopupTime < 2500 && newSkill == xpPopupSkill) {
-			xpPopupPoints += atof(CG_Argv(1));
+		float val1 = (float)atof(CG_Argv(1));
+		float val2 = (float)atof(CG_Argv(2));
+		const char *reason = CG_Argv(3);
+		float points;
+		int skill;
+		if (val1 >= 0 && val1 < SK_NUM_SKILLS && (val2 >= SK_NUM_SKILLS || val2 != (int)val2)) {
+			skill = (int)val1;
+			points = val2;
+		} else {
+			points = val1;
+			skill = (int)val2;
 		}
-		else {
-			xpPopupPoints = atof(CG_Argv(1));
-		}
-
-		xpPopupSkill = newSkill;
-		Q_strncpyz(xpPopupReason, CG_Argv(3), sizeof(xpPopupReason)); // Catch "armshot kill"
-		xpPopupTime = cg.time;
+		CG_AddXPPopup( points, skill, reason );
 		return;
 	}
 

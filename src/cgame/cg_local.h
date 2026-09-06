@@ -1690,6 +1690,7 @@ typedef struct {
 	fontInfo_t		limboFont1;
 	fontInfo_t		limboFont1_lo;
 	fontInfo_t		limboFont2;
+	fontInfo_t		limboFont2_lo;
 	qhandle_t		limboNumber_roll;
 	qhandle_t		limboNumber_back;
 	qhandle_t		limboStar_roll;
@@ -1799,6 +1800,7 @@ typedef struct {
 	qhandle_t		nameshaderAllies;
 	qhandle_t		win;
 
+	qhandle_t		airstrikePlane[2];
 } cgMedia_t;
 
 typedef struct {
@@ -2207,7 +2209,6 @@ typedef struct cgs_s
 	int					maxEngineers;
 	int					maxFieldops;
 	int					maxCovertops;
-	int					soldierShotgun;
 
 	//g_skill*
 	char				skillSoldier[MAX_CVAR_VALUE_STRING];
@@ -2250,6 +2251,8 @@ typedef struct cgs_s
 	char				weaponScriptsDir[MAX_CVAR_VALUE_STRING];
 	int					fixedphysics;
 	int					fixedphysicsfps;
+	int					soldierShotgun;
+	int					alliedCovertWeapon;
 } cgs_t;
 
 //==============================================================================
@@ -2480,6 +2483,9 @@ extern vmCvar_t			cg_whizzSounds;
 extern vmCvar_t			cg_favWeaponBank;
 extern vmCvar_t         cg_spawnTimer_period;   // from etpub
 extern vmCvar_t         cg_spawnTimer_set;      // from etpub
+extern vmCvar_t			cg_drawAirstrikePlanes;
+extern vmCvar_t			cg_customFont1;
+extern vmCvar_t			cg_customFont2;
 
 // core: cg_smallFont flagbits
 #define SMALLFONT_CHATS			0x01
@@ -2634,6 +2640,7 @@ void CG_DrawTeamBackground( int x, int y, int w, int h, float alpha, int team );
 void CG_OwnerDraw(float x, float y, float w, float h, float text_x, float text_y, int ownerDraw, int ownerDrawFlags, int align, float special, float scale, vec4_t color, qhandle_t shader, int textStyle);
 void CG_Text_Paint_Ext( float x, float y, float scalex, float scaley, vec4_t color, const char *text, float adjust, int limit, int style, fontInfo_t* font );
 void CG_Text_Paint_Centred_Ext( float x, float y, float scalex, float scaley, vec4_t color, const char *text, float adjust, int limit, int style, fontInfo_t* font );
+void CG_Text_Paint_RightAligned_Ext( float x, float y, float scalex, float scaley, vec4_t color, const char *text, float adjust, int limit, int style, fontInfo_t* font );
 void CG_Text_Paint(float x, float y, float scale, vec4_t color, const char *text, float adjust, int limit, int style);
 void CG_Text_SetActiveFont( int font );
 int CG_Text_Width_Ext( const char *text, float scale, int limit, fontInfo_t* font );
@@ -2700,6 +2707,7 @@ qboolean CG_AddCEntity_Filter( centity_t* cent );
 qboolean CG_AddLinkedEntity( centity_t *cent, qboolean ignoreframe, int atTime );
 void CG_PositionEntityOnTag( refEntity_t *entity, const refEntity_t *parent, const char *tagName, int startIndex, vec3_t *offset);
 void CG_PositionRotatedEntityOnTag( refEntity_t *entity, const refEntity_t *parent, const char *tagName );
+void CG_MovePlane( centity_t *cent );
 
 //
 // cg_weapons.c
@@ -3566,6 +3574,8 @@ void CG_AddPMItem( popupMessageType_t type, const char* message, qhandle_t shade
 void CG_AddPMItemBig( popupMessageBigType_t type, const char* message, qhandle_t shader, vec3_t color );
 void CG_DrawPMItems( void );
 void CG_DrawPMItemsBig( void );
+void CG_AddXPPopup( float points, int skill, const char *reason );
+void CG_DrawXPPopup( void );
 const char* CG_GetPMItemText( centity_t* cent );
 void CG_PlayPMItemSound( centity_t *cent );
 qhandle_t CG_GetPMItemIcon( centity_t* cent );

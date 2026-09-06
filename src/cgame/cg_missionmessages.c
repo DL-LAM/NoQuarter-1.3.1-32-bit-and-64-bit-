@@ -359,7 +359,7 @@ void CG_DrawMMItems( void )
 	float			y = CG_MMPosY();
 	float			w = 0;
 	float			y_offset = 12.0f;
-	float			scale = ( cg_smallFont.integer & SMALLFONT_MISSIONPOPUPS )? 0.16f : 0.2f;
+	float			scale = ( cg_smallFont.integer & SMALLFONT_MISSIONPOPUPS )? 0.14f : 0.17f;
 
 	if( cg_drawSmallPopupIcons.integer ) {
 		size = altSize = MM_ICON_SIZE_SMALL;
@@ -367,6 +367,7 @@ void CG_DrawMMItems( void )
 	}
 	else {
 		size = altSize = MM_ICON_SIZE_NORMAL;
+		y_offset = 11.0f;
 	}
 
 	if( !cg_mmWaitingList ) {
@@ -396,7 +397,7 @@ void CG_DrawMMItems( void )
 		size = 0;
 	}
 
-	CG_Text_Paint_Ext( x + size*2 + 2, y + y_offset, scale, scale, colourText, cg_mmWaitingList->message, 0, 0, 0, &cgs.media.limboFont2 );
+	CG_Text_Paint_Ext( x + size*2 + 2, y + y_offset, scale, scale, colourText, cg_mmWaitingList->message, 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont2 );
 
 	// jet Pilot - expanded PopupMessages
 	if (cg_mmWaitingList->message2[0]) {
@@ -414,7 +415,7 @@ void CG_DrawMMItems( void )
 		}
 		trap_R_SetColor( NULL );
 
-		CG_Text_Paint_Ext( x + size*2 + (altSize*cg_mmWaitingList->actionShaderWScale) + 16 + w, y + y_offset, scale, scale, colourText, cg_mmWaitingList->message2, 0, 0, 0, &cgs.media.limboFont2 );
+		CG_Text_Paint_Ext( x + size*2 + (altSize*cg_mmWaitingList->actionShaderWScale) + 16 + w, y + y_offset, scale, scale, colourText, cg_mmWaitingList->message2, 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont2 );
 	}
 
 	for( i = 0; i < MAX_VISIBLE_ITEMS-1 && listItem; i++, listItem = listItem->next ) {
@@ -448,7 +449,7 @@ void CG_DrawMMItems( void )
 			size = 0;
 		}
 
-		CG_Text_Paint_Ext( x + size*2 + 2, y + y_offset, scale, scale, colourText, listItem->message, 0, 0, 0, &cgs.media.limboFont2 );
+		CG_Text_Paint_Ext( x + size*2 + 2, y + y_offset, scale, scale, colourText, listItem->message, 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont2 );
 
 		// jet Pilot - expanded PopupMessages
 		if (listItem->message2[0]) {
@@ -466,7 +467,7 @@ void CG_DrawMMItems( void )
 			}
 			trap_R_SetColor( NULL );
 
-			CG_Text_Paint_Ext( 4 + size*2 + (altSize*listItem->actionShaderWScale) + 16 + w, y + y_offset, scale, scale, colourText, listItem->message2, 0, 0, 0, &cgs.media.limboFont2 );
+			CG_Text_Paint_Ext( 4 + size*2 + (altSize*listItem->actionShaderWScale) + 16 + w, y + y_offset, scale, scale, colourText, listItem->message2, 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont2 );
 		}
 
 	}

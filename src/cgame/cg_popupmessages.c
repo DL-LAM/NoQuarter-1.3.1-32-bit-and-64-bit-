@@ -615,7 +615,7 @@ void CG_DrawPMItems( void )
 		y = 478 - numlines * lineHeight;
 	}
 
-	scale = ( cg_smallFont.integer & SMALLFONT_POPUPS )? 0.16f : 0.2f;
+	scale = ( cg_smallFont.integer & SMALLFONT_POPUPS )? 0.14f : 0.17f;
 
 	if( cg_drawSmallPopupIcons.integer ) {
 		size = altSize = PM_ICON_SIZE_SMALL;
@@ -624,6 +624,7 @@ void CG_DrawPMItems( void )
 	}
 	else {
 		size = altSize = PM_ICON_SIZE_NORMAL;
+		y_offset = 11.0f;
 	}
 
 	if ( hud_drawAltHUD.integer > 0 )
@@ -657,7 +658,7 @@ void CG_DrawPMItems( void )
 		size = 0;
 	}
 
-	CG_Text_Paint_Ext( 4 + size + 2, y + y_offset, scale, scale, colourText, cg_pmWaitingList->message, 0, 0, 0, &cgs.media.limboFont2 );
+	CG_Text_Paint_Ext( 4 + size + 2, y + y_offset, scale, scale, colourText, cg_pmWaitingList->message, 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont2 );
 
 	// jet Pilot - expanded PopupMessages
 	if (cg_pmWaitingList->message2[0]) {
@@ -675,7 +676,7 @@ void CG_DrawPMItems( void )
 		}
 		trap_R_SetColor( NULL );
 
-		CG_Text_Paint_Ext( 4 + size + (altSize*cg_pmWaitingList->actionShaderWScale) + 16 + w, y + y_offset, scale, scale, colourText, cg_pmWaitingList->message2, 0, 0, 0, &cgs.media.limboFont2 );
+		CG_Text_Paint_Ext( 4 + size + (altSize*cg_pmWaitingList->actionShaderWScale) + 16 + w, y + y_offset, scale, scale, colourText, cg_pmWaitingList->message2, 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont2 );
 	}
 
 	for( i = 0; i < 4 && listItem; i++, listItem = listItem->next ) {
@@ -711,7 +712,7 @@ void CG_DrawPMItems( void )
 			size = 0;
 		}
 
-		CG_Text_Paint_Ext( 4 + size + 2, y + y_offset, scale, scale, colourText, listItem->message, 0, 0, 0, &cgs.media.limboFont2 );
+		CG_Text_Paint_Ext( 4 + size + 2, y + y_offset, scale, scale, colourText, listItem->message, 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont2 );
 
 		// jet Pilot - expanded PopupMessages
 		if (listItem->message2[0]) {
@@ -729,7 +730,7 @@ void CG_DrawPMItems( void )
 			}
 			trap_R_SetColor( NULL );
 
-			CG_Text_Paint_Ext( 4 + size + (altSize*listItem->actionShaderWScale) + 16 + w, y + y_offset, scale, scale, colourText, listItem->message2, 0, 0, 0, &cgs.media.limboFont2 );
+			CG_Text_Paint_Ext( 4 + size + (altSize*listItem->actionShaderWScale) + 16 + w, y + y_offset, scale, scale, colourText, listItem->message2, 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont2 );
 		}
 	}
 }
@@ -767,7 +768,7 @@ void CG_DrawPMItemsBig( void ) {
 
 
 	w = CG_Text_Width_Ext( cg_pmWaitingListBig->message, 0.22f, 0, &cgs.media.limboFont2 );
-	CG_Text_Paint_Ext( Ccg_WideX(640) - 4 - w - 50, y + 56, 0.22f, 0.24f, colourText, cg_pmWaitingListBig->message, 0, 0, 0, &cgs.media.limboFont2 );
+	CG_Text_Paint_Ext( Ccg_WideX(640) - 4 - w - 50, y + 56, 0.22f, 0.24f, colourText, cg_pmWaitingListBig->message, 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont2 );
 }
 
 #define TXTCOLOR_OBJ "^O"

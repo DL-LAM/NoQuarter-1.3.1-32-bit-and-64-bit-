@@ -7,12 +7,6 @@
  */
 #include "cg_local.h"
 
- // MODERN XP POPUP LINKS
-extern int xpPopupTime;
-extern float xpPopupPoints;
-extern int xpPopupSkill;
-extern char xpPopupReason[64];
-
 #define INFOTEXT_STARTX	8
 
 // jet Pilot - Unified HUD colors
@@ -136,26 +130,38 @@ void CG_Text_Paint_Centred_Ext( float x, float y, float scalex, float scaley, ve
 	CG_Text_Paint_Ext( x, y, scalex, scaley, color, text, adjust, limit, style, font );
 }
 
-void CG_Text_Paint_Ext( float x, float y, float scalex, float scaley, vec4_t color, const char *text, float adjust, int limit, int style, fontInfo_t* font ) {
-	scalex *= font->glyphScale;
-	scaley *= font->glyphScale;
+void CG_Text_Paint_RightAligned_Ext( float x, float y, float scalex, float scaley, vec4_t color, const char *text, float adjust, int limit, int style, fontInfo_t* font ) {
+	x -= CG_Text_Width_Ext( text, scalex, limit, font );
 
-	if (text) {
+	CG_Text_Paint_Ext( x, y, scalex, scaley, color, text, adjust, limit, style, font );
+}
+
+void CG_Text_Paint_Ext( float x, float y, float scalex, float scaley, vec4_t color, const char *text, float adjust, int limit, int style, fontInfo_t* font ) {
+	if (text && font) {
 		int len, count = 0;
 		vec4_t newColor;
 		glyphInfo_t *glyph;
 		const char *s = text;
+		float newAlpha = 1.0f;
 
-		trap_R_SetColor( color );
-		memcpy(&newColor[0], &color[0], sizeof(vec4_t));
+		scalex *= font->glyphScale;
+		scaley *= font->glyphScale;
 
 		len = strlen(text);
 		if (limit > 0 && len > limit) {
 			len = limit;
 		}
 
+		Vector4Copy(color, newColor);
+
+		if (style == ITEM_TEXTSTYLE_BLINK || style == ITEM_TEXTSTYLE_PULSE) {
+			newAlpha = (float)fabs(sin((double)cg.time / (style == ITEM_TEXTSTYLE_BLINK ? BLINK_DIVISOR : PULSE_DIVISOR)));
+			newColor[3] = newAlpha * color[3];
+		}
+
+		trap_R_SetColor( newColor );
+
 		while (s && *s && count < len) {
-			glyph = &font->glyphs[(unsigned char)*s];
 			if ( Q_IsColorString( s ) ) {
 				if( *(s+1) == COLOR_NULL ) {
 					memcpy( newColor, color, sizeof(newColor) );
@@ -164,21 +170,43 @@ void CG_Text_Paint_Ext( float x, float y, float scalex, float scaley, vec4_t col
 					memcpy( newColor, g_color_table[ColorIndex(*(s+1))], sizeof( newColor ) );
 					newColor[3] = color[3];
 				}
+
+				if (style == ITEM_TEXTSTYLE_BLINK || style == ITEM_TEXTSTYLE_PULSE) {
+					newColor[3] = newAlpha * color[3];
+				}
+
 				trap_R_SetColor( newColor );
 				s += 2;
 				continue;
 			}
 			else {
+				glyph = &font->glyphs[(unsigned char)*s];
 				float yadj = scaley * glyph->top;
-				if (style == ITEM_TEXTSTYLE_SHADOWED || style == ITEM_TEXTSTYLE_SHADOWEDMORE) {
-					int ofs = style == ITEM_TEXTSTYLE_SHADOWED ? 1 : 2;
+				float px = x + (glyph->pitch * scalex);
+				float py = y - yadj;
+
+				if (style == ITEM_TEXTSTYLE_SHADOWED || style == ITEM_TEXTSTYLE_SHADOWEDMORE || style == ITEM_TEXTSTYLE_OUTLINESHADOWED) {
+					const float ofs = (style == ITEM_TEXTSTYLE_SHADOWEDMORE) ? TEXTSTYLE_SHADOWEDMORE_OFFSET : TEXTSTYLE_SHADOWED_OFFSET;
 					colorBlack[3] = newColor[3];
 					trap_R_SetColor( colorBlack );
-					CG_Text_PaintChar_Ext(x + (glyph->pitch * scalex) + ofs, y - yadj + ofs, glyph->imageWidth, glyph->imageHeight, scalex, scaley, glyph->s, glyph->t, glyph->s2, glyph->t2, glyph->glyph);
-					colorBlack[3] = 1.0;
+					CG_Text_PaintChar_Ext(px + ofs, py + ofs, glyph->imageWidth, glyph->imageHeight, scalex, scaley, glyph->s, glyph->t, glyph->s2, glyph->t2, glyph->glyph);
+					colorBlack[3] = 1.0f;
 					trap_R_SetColor( newColor );
 				}
-				CG_Text_PaintChar_Ext(x + (glyph->pitch * scalex), y - yadj, glyph->imageWidth, glyph->imageHeight, scalex, scaley, glyph->s, glyph->t, glyph->s2, glyph->t2, glyph->glyph);
+
+				if (style == ITEM_TEXTSTYLE_OUTLINED || style == ITEM_TEXTSTYLE_OUTLINESHADOWED) {
+					colorBlack[3] = newColor[3];
+					trap_R_SetColor( colorBlack );
+					CG_Text_PaintChar_Ext(px - TEXTSTYLE_OUTLINED_OFFSET, py, glyph->imageWidth, glyph->imageHeight, scalex, scaley, glyph->s, glyph->t, glyph->s2, glyph->t2, glyph->glyph);
+					CG_Text_PaintChar_Ext(px + TEXTSTYLE_OUTLINED_OFFSET, py, glyph->imageWidth, glyph->imageHeight, scalex, scaley, glyph->s, glyph->t, glyph->s2, glyph->t2, glyph->glyph);
+					CG_Text_PaintChar_Ext(px, py - TEXTSTYLE_OUTLINED_OFFSET, glyph->imageWidth, glyph->imageHeight, scalex, scaley, glyph->s, glyph->t, glyph->s2, glyph->t2, glyph->glyph);
+					CG_Text_PaintChar_Ext(px, py + TEXTSTYLE_OUTLINED_OFFSET, glyph->imageWidth, glyph->imageHeight, scalex, scaley, glyph->s, glyph->t, glyph->s2, glyph->t2, glyph->glyph);
+					colorBlack[3] = 1.0f;
+					trap_R_SetColor( newColor );
+				}
+
+				CG_Text_PaintChar_Ext(px, py, glyph->imageWidth, glyph->imageHeight, scalex, scaley, glyph->s, glyph->t, glyph->s2, glyph->t2, glyph->glyph);
+
 				x += (glyph->xSkip * scalex) + adjust;
 				s++;
 				count++;
@@ -982,17 +1010,17 @@ CG_DrawTeamInfo
 */
 static void CG_DrawTeamInfo( void ) {
 	int		chatHeight = TEAMCHAT_HEIGHT;
-	float	lineHeight = 9.f;
-	float	scale = 0.2f;
+	float	lineHeight = 10.f;
+	float	scale = 0.20f;
 	float	icon_width = 12.f;
 	float	icon_height = 10.f;
 	int		x_offset = 0;
 
 	if ( cg_smallFont.integer & SMALLFONT_CHATS ) {
-		lineHeight = 7.5f;
+		lineHeight = 8.5f;
 		scale = 0.16f;
-		icon_width = 11.f;
-		icon_height = 9.f;
+		icon_width = 10.f;
+		icon_height = 8.f;
 		x_offset = 2;
 	}
 
@@ -1058,7 +1086,7 @@ static void CG_DrawTeamInfo( void ) {
 			else if ( cgs.teamChatMsgTeams[i % chatHeight] == TEAM_ALLIES ) {
 				CG_DrawPic( chatPosX - 16, CHATLOC_Y - (cgs.teamChatPos - i - 0.9f) * lineHeight - 8, icon_width, icon_height, cgs.media.alliedFlag );
 			}
-			CG_Text_Paint_Ext( chatPosX, CHATLOC_Y - (cgs.teamChatPos - i - 1) * lineHeight - 1, scale, scale, hcolor, cgs.teamChatMsgs[i % chatHeight], 0, 0, 0, &cgs.media.limboFont2 );
+			CG_Text_Paint_Ext( chatPosX, CHATLOC_Y - (cgs.teamChatPos - i - 1) * lineHeight - 1, scale, scale, hcolor, cgs.teamChatMsgs[i % chatHeight], 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont2 );
 		}
 	}
 }
@@ -1404,7 +1432,7 @@ Called for important messages that should stay in the center of the screen
 for a few moments
 ==============
 */
-#define CP_LINEWIDTH (int)(Ccg_WideX(56))	// NERVE - SMF	// core: longer lines on widescreen displays..
+#define CP_LINEWIDTH 36	// compact line wrapping so it never collides with left HUD popups
 
 void CG_CenterPrint( const char *str, int y, int charWidth ) {
 	char		*s;
@@ -1564,8 +1592,9 @@ CG_DrawAnnouncement - jet Pilot
 static void CG_DrawAnnouncement( void ) {
 	char	*start;
 	int		l;
-	int		x, y, w;
+	int		y;
 	float	*color;
+	float	scale = 0.20f;
 
 	if ( !cg.announcementPrintTime ) {
 		return;
@@ -1579,11 +1608,9 @@ static void CG_DrawAnnouncement( void ) {
 		return;
 	}
 
-	trap_R_SetColor( color );
-
 	start = cg.announcement;
 
-	y = cg.announcementPrintY - cg.announcementPrintLines * BIGCHAR_HEIGHT / 2;
+	y = cg.announcementPrintY - cg.announcementPrintLines * 12 / 2;
 
 	while ( 1 ) {
 		char linebuffer[1024];
@@ -1597,13 +1624,9 @@ static void CG_DrawAnnouncement( void ) {
 		}
 		linebuffer[l] = 0;
 
-		w = cg.announcementCharWidth * CG_DrawStrlen( linebuffer );
+		CG_Text_Paint_Centred_Ext( 320 + cgs.wideXoffset, y, scale, scale, color, linebuffer, 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont1 );
 
-		x = ( SCREEN_WIDTH - w ) / 2;
-
-		CG_DrawStringExt( x, y, linebuffer, color, qfalse, qtrue, cg.centerPrintCharWidth, (int)(cg.centerPrintCharWidth * 1.5), 0 );
-
-		y += cg.announcementCharWidth * 1.5;
+		y += 12;
 
 		while ( *start && ( *start != '\n' ) ) {
 			start++;
@@ -1613,8 +1636,6 @@ static void CG_DrawAnnouncement( void ) {
 		}
 		start++;
 	}
-
-	trap_R_SetColor( NULL );
 }
 
 /*
@@ -1625,8 +1646,9 @@ CG_DrawCenterString
 static void CG_DrawCenterString( void ) {
 	char	*start;
 	int		l;
-	int		x, y, w;
+	int		y;
 	float	*color;
+	float	scale = 0.20f;
 
 	if ( !cg.centerPrintTime ) {
 		return;
@@ -1639,11 +1661,9 @@ static void CG_DrawCenterString( void ) {
 		return;
 	}
 
-	trap_R_SetColor( color );
-
 	start = cg.centerPrint;
 
-	y = cg.centerPrintY - cg.centerPrintLines * BIGCHAR_HEIGHT / 2;
+	y = cg.centerPrintY - cg.centerPrintLines * 12 / 2;
 
 	while ( 1 ) {
 		char linebuffer[1024];
@@ -1656,12 +1676,9 @@ static void CG_DrawCenterString( void ) {
 		}
 		linebuffer[l] = 0;
 
-		w = cg.centerPrintCharWidth * CG_DrawStrlen( linebuffer );
+		CG_Text_Paint_Centred_Ext( 320 + cgs.wideXoffset, y, scale, scale, color, linebuffer, 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont1 );
 
-		x = (Ccg_WideX(SCREEN_WIDTH) - w) / 2;
-		CG_DrawStringExt( x, y, linebuffer, color, qfalse, qtrue, cg.centerPrintCharWidth, (int)(cg.centerPrintCharWidth * 1.5), 0 );
-
-		y += cg.centerPrintCharWidth * 1.5;
+		y += 12;
 
 		while ( *start && ( *start != '\n' ) ) {
 			start++;
@@ -1671,8 +1688,6 @@ static void CG_DrawCenterString( void ) {
 		}
 		start++;
 	}
-
-	trap_R_SetColor( NULL );
 }
 
 
@@ -3650,63 +3665,138 @@ static void CG_DrawWarmup( void ) {
 	}
 }
 
-//==================================================================================//XP POPUP DRAW 
-void CG_DrawXPPopup(void) {
-	int timeElapsed;
-	float alpha;
-	char text[64];
-	vec4_t color;
+//==================================================================================// XP POPUP SYSTEM (ET:Legacy Style)
+#define MAX_XP_POPUPS 6
+#define XP_POPUP_STAY_TIME 2200
+#define XP_POPUP_FADE_TIME 600
 
-	if (xpPopupTime == 0) {
-		return;
-	}
+typedef struct xpPopupItem_s {
+	int     time;
+	float   points;
+	int     skill;
+	char    reason[64];
+} xpPopupItem_t;
 
-	timeElapsed = cg.time - xpPopupTime;
+static xpPopupItem_t xpPopups[MAX_XP_POPUPS];
 
-	if (timeElapsed > 2500) {
-		xpPopupTime = 0;
-		return;
-	}
+void CG_AddXPPopup( float points, int skill, const char *reason ) {
+	char cleanReason[64];
+	int i;
+	static const char *defaultSkillNames[SK_NUM_SKILLS] = {
+		"battle sense",
+		"engineering",
+		"first aid",
+		"signals",
+		"light weapons",
+		"heavy weapons",
+		"covert ops"
+	};
 
-	// TEXT CLEANUP: Replace ugly server underscores with clean spaces
-	{
-		char cleanReason[128];
-		int i;
-
-		// Make a copy of the raw reason
-		Q_strncpyz(cleanReason, xpPopupReason, sizeof(cleanReason));
-
-		// Loop through and swap every '_' for a ' '
-		for (i = 0; cleanReason[i] != '\0'; i++) {
-			if (cleanReason[i] == '_') {
+	if ( !reason || !*reason ) {
+		cleanReason[0] = '\0';
+	} else {
+		// Clean up underscores and copy
+		Q_strncpyz( cleanReason, reason, sizeof(cleanReason) );
+		for ( i = 0; cleanReason[i] != '\0'; i++ ) {
+			if ( cleanReason[i] == '_' ) {
 				cleanReason[i] = ' ';
 			}
 		}
-
-		// Format cleanly using the processed string
-		Com_sprintf(text, sizeof(text), "%i XP ^7%s", (int)xpPopupPoints, cleanReason);
 	}
 
-	alpha = 1.0f;
-	if (timeElapsed > 2000) {
-		alpha = 1.0f - ((float)(timeElapsed - 2000) / 500.0f);
+	// Fallback to skill name if reason is empty
+	if ( !cleanReason[0] && skill >= 0 && skill < SK_NUM_SKILLS ) {
+		Q_strncpyz( cleanReason, defaultSkillNames[skill], sizeof(cleanReason) );
 	}
 
-	color[0] = 1.0f; color[1] = 1.0f; color[2] = 1.0f; color[3] = alpha;
+	// Smart Stacking: If the newest active popup has the same skill and reason and is still active, accumulate
+	if ( xpPopups[0].time != 0 && (cg.time - xpPopups[0].time) < XP_POPUP_STAY_TIME &&
+	     xpPopups[0].skill == skill && !Q_stricmp( xpPopups[0].reason, cleanReason ) ) {
+		xpPopups[0].points += points;
+		xpPopups[0].time = cg.time;
+		return;
+	}
 
-	// DYNAMIC COORDINATES: Pushed down and outward to clear the crosshair
-	// (cgs.wideXoffset / 2) anchors it cleanly in the mid-right quadrant on wide screens
-	int px = 440 + (cgs.wideXoffset / 2);
-	int py = 300;
-	float scale = 0.2f;
+	// Otherwise, shift existing entries down
+	for ( i = MAX_XP_POPUPS - 1; i > 0; i-- ) {
+		xpPopups[i] = xpPopups[i - 1];
+	}
 
-	// Draw the tiny skill icon
-	trap_R_SetColor(color);
-	CG_DrawPic(px, py - 10, 14, 14, cgs.media.skillPics[xpPopupSkill]);
-	trap_R_SetColor(NULL);
+	// Insert new item at head
+	xpPopups[0].time = cg.time;
+	xpPopups[0].points = points;
+	xpPopups[0].skill = skill;
+	Q_strncpyz( xpPopups[0].reason, cleanReason, sizeof(xpPopups[0].reason) );
+}
 
-	// Draw the smooth TrueType text with a drop-shadow for readability
-	CG_Text_Paint_Ext(px + 18, py + 2, scale, scale, color, text, 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont2);
+void CG_DrawXPPopup( void ) {
+	int i;
+	int count = 0;
+	float scaleXP = 0.18f;
+	float scaleReason = 0.16f;
+	int lineHeight = 16;
+	int baseX = 640 + (cgs.wideXoffset * 2) - 240;
+	int baseY = 240;
+
+	for ( i = 0; i < MAX_XP_POPUPS; i++ ) {
+		int timeElapsed;
+		float alpha;
+		vec4_t colorXP, colorReason, colorIcon;
+		char textXP[32];
+		float remainder;
+		int px, py;
+		int xpWidth;
+
+		if ( xpPopups[i].time == 0 ) {
+			continue;
+		}
+
+		timeElapsed = cg.time - xpPopups[i].time;
+		if ( timeElapsed > (XP_POPUP_STAY_TIME + XP_POPUP_FADE_TIME) ) {
+			xpPopups[i].time = 0;
+			continue;
+		}
+
+		if ( timeElapsed <= XP_POPUP_STAY_TIME ) {
+			alpha = 1.0f;
+		} else {
+			alpha = 1.0f - ((float)(timeElapsed - XP_POPUP_STAY_TIME) / (float)XP_POPUP_FADE_TIME);
+		}
+
+		// Vertical stacking position
+		px = baseX;
+		py = baseY + (count * lineHeight);
+		count++;
+
+		// Color setup
+		colorXP[0] = 1.0f; colorXP[1] = 0.85f; colorXP[2] = 0.2f; colorXP[3] = alpha;      // Gold / Yellow
+		colorReason[0] = 1.0f; colorReason[1] = 1.0f; colorReason[2] = 1.0f; colorReason[3] = alpha; // White
+		colorIcon[0] = 1.0f; colorIcon[1] = 1.0f; colorIcon[2] = 1.0f; colorIcon[3] = alpha;
+
+		// Skill Icon
+		if ( xpPopups[i].skill >= 0 && xpPopups[i].skill < SK_NUM_SKILLS ) {
+			trap_R_SetColor( colorIcon );
+			CG_DrawPic( px, py - 11, 14, 14, cgs.media.skillPics[xpPopups[i].skill] );
+			trap_R_SetColor( NULL );
+		}
+
+		// Format XP string (handling integers vs decimals cleanly)
+		remainder = (float)fabs(xpPopups[i].points - (int)xpPopups[i].points);
+		if ( remainder > 0.05f ) {
+			Com_sprintf( textXP, sizeof(textXP), "+%.1f XP", xpPopups[i].points );
+		} else {
+			Com_sprintf( textXP, sizeof(textXP), "+%d XP", (int)xpPopups[i].points );
+		}
+
+		// Draw XP amount in gold bold font
+		CG_Text_Paint_Ext( px + 18, py + 1, scaleXP, scaleXP, colorXP, textXP, 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont1 );
+
+		// Draw reason text in clean body font
+		if ( xpPopups[i].reason[0] ) {
+			xpWidth = CG_Text_Width_Ext( textXP, scaleXP, 0, &cgs.media.limboFont1 );
+			CG_Text_Paint_Ext( px + 18 + xpWidth + 6, py + 1, scaleReason, scaleReason, colorReason, xpPopups[i].reason, 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont2 );
+		}
+	}
 }
 /*
 =================
@@ -6088,8 +6178,7 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 
 void CG_DrawMissileCamera(rectDef_t *rect ) {
 
-	if ( !cg.latestMissile || !cg.latestMissile->currentValid ) {
-		cg.latestMissile = NULL;
+	if ( !cg.latestMissile  ) {
 		return;
 	}
 
@@ -6172,7 +6261,7 @@ void CG_DrawMissileCamera(rectDef_t *rect ) {
 
 // core: the Killer Cam (like the mortarcam in an overlayed window)..
 void CG_DrawKillerCamera(rectDef_t *rect ) {
-	if ( !cg.latestKiller || !cg.latestKiller->currentValid || (cg.killerCamTime && cg.time > cg.killerCamTime) ) {
+	if ( !cg.latestKiller || (cg.killerCamTime && cg.time > cg.killerCamTime) ) {
 		cg.killerCamTime = 0;
 		cg.latestKiller = NULL;
 		return;
@@ -6275,21 +6364,21 @@ void CG_DrawAnnouncer( void ) {
 			default:
 			case ANNOUNCER_NORMAL:
 				color[3] = color2[3] = fade;
-				scale = (1.1f - color[3]) * cg.centerPrintAnnouncerScale;
+				scale = (1.1f - color[3]) * cg.centerPrintAnnouncerScale * 0.38f;
 				break;
 			case ANNOUNCER_SINE:
 				color[3] = color2[3] = sin( M_PI * fade );
-				scale = (1.1f - color[3]) * cg.centerPrintAnnouncerScale;
+				scale = (1.1f - color[3]) * cg.centerPrintAnnouncerScale * 0.38f;
 				break;
 			case ANNOUNCER_INVERSE_SINE:
 				color[3] = color2[3] = 1-sin( M_PI * fade );
-				scale = (1.1f - color[3]) * cg.centerPrintAnnouncerScale;
+				scale = (1.1f - color[3]) * cg.centerPrintAnnouncerScale * 0.38f;
 				break;
 			case ANNOUNCER_TOP:
 				color[3] = 2*sin( M_PI * 0.5f * fade );
 				if ( color[3] > 1.0 ) color[3] = 1.0;
 				color2[3] = fade;
-				scale = (1.1f - (pow(fade, 4.0) * 0.5f)) * cg.centerPrintAnnouncerScale;
+				scale = (1.1f - (pow(fade, 4.0) * 0.5f)) * cg.centerPrintAnnouncerScale * 0.38f;
 				scale2 = scale * 0.5f;
 				break;
 		}
@@ -6300,7 +6389,7 @@ void CG_DrawAnnouncer( void ) {
 			y = (cg.centerPrintAnnouncerMode == ANNOUNCER_TOP)? (10 + h) : (SCREEN_HEIGHT - h) / 2;
 			w = CG_Text_Width_Ext(cg.centerPrintAnnouncerText2, scale2, 0, &cgs.media.limboFont1 );
 			x = (Ccg_WideX(SCREEN_WIDTH) - w) / 2;
-			CG_Text_Paint_Ext( x, y, scale2, scale2, color2, cg.centerPrintAnnouncerText2, 0, 0, 0, &cgs.media.limboFont1 );
+			CG_Text_Paint_Ext( x, y, scale2, scale2, color2, cg.centerPrintAnnouncerText2, 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont1 );
 		}
 
 		// text
@@ -6308,7 +6397,7 @@ void CG_DrawAnnouncer( void ) {
 		y = (cg.centerPrintAnnouncerMode == ANNOUNCER_TOP)? (20 + h) : (SCREEN_HEIGHT - h) / 2;
 		w = CG_Text_Width_Ext(cg.centerPrintAnnouncer, scale, 0, &cgs.media.limboFont1 );
 		x = (Ccg_WideX(SCREEN_WIDTH) - w) / 2;
-		CG_Text_Paint_Ext( x, y, scale, scale, color, cg.centerPrintAnnouncer, 0, 0, 0, &cgs.media.limboFont1 );
+		CG_Text_Paint_Ext( x, y, scale, scale, color, cg.centerPrintAnnouncer, 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont1 );
 	}
 }
 

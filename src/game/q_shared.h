@@ -1657,10 +1657,14 @@ typedef enum {
 	ET_COMMANDMAP_MARKER,
 	ET_WOLF_OBJECTIVE,
 	ET_MISSILECAM,			// Jaqboss, this thing shows things that aren't in watcher pvs
+	ET_AIRSTRIKE_PLANE,
 	ET_EVENTS				// any of the EV_* events can be added freestanding
 							// by setting eType to ET_EVENTS + eventNum
 							// this avoids having to set eFlags and eventNum
 } entityType_t;
+
+#define TIME_FRAME_PROPELLER	40
+#define NUM_FRAME_PROPELLER		4
 
 typedef struct entityState_s {
 	int				number;			// entity index

@@ -111,6 +111,7 @@ static void G_UpdateKillingSpree(gentity_t *ent, gentity_t *att, qboolean death)
 			
 			// award 3 battle sense xp per bounty point
 			G_AddSkillPoints( att, SK_BATTLE_SENSE, bounty * 3.f);
+			G_DEBUG_ADD_SKILL_POINTS( att, SK_BATTLE_SENSE, bounty * 3.f, "bounty" );
 		}
 	}
 
@@ -1779,6 +1780,12 @@ void G_Damage(gentity_t *targ,	gentity_t	*inflictor, gentity_t	*attacker,	vec3_t
 		if ( attacker ) {
 			targ->client->ps.persistant[PERS_ATTACKER] = attacker->s.number;
 
+			if ( attacker->client ) {
+				targ->client->dmgReceivedSts[attacker->s.number].damageReceived += take;
+				targ->client->dmgReceivedSts[attacker->s.number].mods = mod;
+				targ->client->dmgReceivedSts[attacker->s.number].lastHitTime = level.time;
+			}
+
 			// IRATA: correct the stats - there is no attack initiated for goomba
 			// -> any goomba damage is an attack of the foot
 			// Check this for mirroring damage
@@ -1932,8 +1939,10 @@ void G_Damage(gentity_t *targ,	gentity_t	*inflictor, gentity_t	*attacker,	vec3_t
 				targ->sound2to3 = (dflags & DAMAGE_RADIUS) ? 1 : 0;
 
 				if( targ->client ) {
-					if( G_GetTeamFromEntity( inflictor ) != G_GetTeamFromEntity( targ ) )
+					if( G_GetTeamFromEntity( inflictor ) != G_GetTeamFromEntity( targ ) ) {
 						G_AddKillSkillPoints( attacker, mod, hr, (dflags & DAMAGE_RADIUS));
+					}
+					G_AddKillAssistPoints( targ, attacker );
 				}
 
 				if( targ->health < -999 ) {

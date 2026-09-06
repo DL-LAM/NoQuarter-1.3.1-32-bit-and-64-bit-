@@ -735,6 +735,7 @@ typedef struct {
 	int					deaths;
 	int					game_points;
 	int					kills;
+	int					kill_assists;
 	int					referee;
 	int					rounds;
 	int					spec_invite;
@@ -829,6 +830,12 @@ typedef struct ipFilter_s {
 #define LAG_MAX_DROP_THRESHOLD 800
 #define LAG_MIN_DROP_THRESHOLD (LAG_MAX_DROP_THRESHOLD - 200)
 #define LAG_DECAY 1.02f
+
+typedef struct {
+	int damageReceived;
+	int mods;
+	int lastHitTime;
+} damageReceivedStats_t;
 
 // client data that stays across multiple respawns, but is cleared
 // on each level change or team change at ClientBegin()
@@ -1064,6 +1071,7 @@ struct gclient_s
 	int			speedScale;
 
 	combatstate_t	combatState;
+	damageReceivedStats_t dmgReceivedSts[MAX_CLIENTS];
 
 	// unlagged history
 	int				topMarker;
@@ -2203,6 +2211,7 @@ extern vmCvar_t 	g_ammoCabinetTime;
 extern vmCvar_t 	g_healthCabinetTime;
 extern vmCvar_t 	g_infiniteCabinets;
 extern vmCvar_t 	g_soldierShotgun;
+extern vmCvar_t 	g_alliedCovertWeapon;
 extern vmCvar_t 	g_maxWarp;
 extern vmCvar_t		g_antiwarp; // uses zinx etpro antiwarp. overrides g_maxWarp
 extern vmCvar_t 	g_dropObj;
@@ -2541,6 +2550,7 @@ void G_LoseSkillPoints( gentity_t *ent, skillType_t skill, float points );
 void G_XPDecay(gentity_t *ent, int seconds, qboolean force);
 void G_AddKillSkillPoints( gentity_t *attacker, meansOfDeath_t mod, hitRegion_t hr, qboolean splash );
 void G_AddKillSkillPointsForDestruction( gentity_t *attacker, meansOfDeath_t mod, g_constructible_stats_t *constructibleStats );
+void G_AddKillAssistPoints( gentity_t *target, gentity_t *attacker );
 void G_LoseKillSkillPoints( gentity_t *tker, meansOfDeath_t mod, hitRegion_t hr, qboolean splash );
 
 void G_DebugOpenSkillLog( void );
@@ -2550,7 +2560,12 @@ void G_DebugAddSkillPoints( gentity_t *ent, skillType_t skill, float points, con
 void G_ReassignSkillLevel( skillType_t );
 
 #define G_DEBUG_ADD_SKILL_POINTS(ent, skill, points, reason) \
-	if (g_debugSkills.integer) G_DebugAddSkillPoints(ent, skill, points, reason)
+	do { \
+		if ( (points) > 0 && (ent) && (ent)->client && !((ent)->r.svFlags & SVF_BOT) ) { \
+			trap_SendServerCommand( (ent) - g_entities, va("xpgain %i %f \"%s\"\n", (int)(skill), (float)(points), (reason) ? (reason) : "") ); \
+		} \
+		if (g_debugSkills.integer) G_DebugAddSkillPoints(ent, skill, points, reason); \
+	} while(0)
 
 
 // void G_CheckForNeededClasses( team_t team );

@@ -398,23 +398,42 @@ void Text_PaintChar(float x, float y, float w, float h, float scale, float s, fl
 	trap_R_DrawStretchPic( x, y, w, h, s, t, s2, t2, hShader );
 }
 
-void Text_Paint_Ext( float x, float y, float scalex, float scaley, vec4_t color, const char *text, float adjust, int limit, int style, fontInfo_t* font ) {
-	scalex *= font->glyphScale;
-	scaley *= font->glyphScale;
+void Text_Paint_Centred_Ext( float x, float y, float scalex, float scaley, vec4_t color, const char *text, float adjust, int limit, int style, fontInfo_t* font ) {
+	x -= Text_Width_Ext( text, scalex, limit, font ) * 0.5f;
 
-	if( text ) {
+	Text_Paint_Ext( x, y, scalex, scaley, color, text, adjust, limit, style, font );
+}
+
+void Text_Paint_RightAligned_Ext( float x, float y, float scalex, float scaley, vec4_t color, const char *text, float adjust, int limit, int style, fontInfo_t* font ) {
+	x -= Text_Width_Ext( text, scalex, limit, font );
+
+	Text_Paint_Ext( x, y, scalex, scaley, color, text, adjust, limit, style, font );
+}
+
+void Text_Paint_Ext( float x, float y, float scalex, float scaley, vec4_t color, const char *text, float adjust, int limit, int style, fontInfo_t* font ) {
+	if( text && font ) {
 		glyphInfo_t *glyph;
 		vec4_t newColor;
 		int len, count = 0, index;
 		const char *s = text;
-		
+		float newAlpha = 1.0f;
 
-		trap_R_SetColor( color );
-		memcpy(&newColor[0], &color[0], sizeof(vec4_t));
+		scalex *= font->glyphScale;
+		scaley *= font->glyphScale;
+
 		len = strlen(text);
 		if (limit > 0 && len > limit) {
 			len = limit;
 		}
+
+		Vector4Copy(color, newColor);
+
+		if (style == ITEM_TEXTSTYLE_BLINK || style == ITEM_TEXTSTYLE_PULSE) {
+			newAlpha = (float)fabs(sin((double)uiInfo.uiDC.realTime / (style == ITEM_TEXTSTYLE_BLINK ? BLINK_DIVISOR : PULSE_DIVISOR)));
+			newColor[3] = newAlpha * color[3];
+		}
+
+		trap_R_SetColor( newColor );
 
 		while (s && *s && count < len) {
 			index = (unsigned char)*s;
@@ -426,7 +445,6 @@ void Text_Paint_Ext( float x, float y, float scalex, float scaley, vec4_t color,
 				continue;
 			}
 
-			glyph = &font->glyphs[index];
 			if ( Q_IsColorString( s ) ) {
 				if( *(s+1) == COLOR_NULL ) {
 					memcpy(&newColor[0], &color[0], sizeof(vec4_t));
@@ -435,23 +453,42 @@ void Text_Paint_Ext( float x, float y, float scalex, float scaley, vec4_t color,
 					memcpy( newColor, g_color_table[ColorIndex(*(s+1))], sizeof( newColor ) );
 					newColor[3] = color[3];
 				}
+
+				if (style == ITEM_TEXTSTYLE_BLINK || style == ITEM_TEXTSTYLE_PULSE) {
+					newColor[3] = newAlpha * color[3];
+				}
+
 				trap_R_SetColor( newColor );
 				s += 2;
 				continue;
 			}
 			else {
+				glyph = &font->glyphs[index];
 				float yadj = scaley * glyph->top;
-				if (style == ITEM_TEXTSTYLE_SHADOWED || style == ITEM_TEXTSTYLE_SHADOWEDMORE) {
-					int ofs = style == ITEM_TEXTSTYLE_SHADOWED ? 1 : 2;
+				float px = x + (glyph->pitch * scalex);
+				float py = y - yadj;
+
+				if (style == ITEM_TEXTSTYLE_SHADOWED || style == ITEM_TEXTSTYLE_SHADOWEDMORE || style == ITEM_TEXTSTYLE_OUTLINESHADOWED) {
+					const float ofs = (style == ITEM_TEXTSTYLE_SHADOWEDMORE) ? TEXTSTYLE_SHADOWEDMORE_OFFSET : TEXTSTYLE_SHADOWED_OFFSET;
 					colorBlack[3] = newColor[3];
-
 					trap_R_SetColor( colorBlack );
-					Text_PaintCharExt( x + (glyph->pitch * scalex) + ofs, y - yadj + ofs, glyph->imageWidth, glyph->imageHeight, scalex, scaley, glyph->s, glyph->t, glyph->s2, glyph->t2, glyph->glyph );
+					Text_PaintCharExt( px + ofs, py + ofs, glyph->imageWidth, glyph->imageHeight, scalex, scaley, glyph->s, glyph->t, glyph->s2, glyph->t2, glyph->glyph );
+					colorBlack[3] = 1.0f;
 					trap_R_SetColor( newColor );
-
-					colorBlack[3] = 1.0;
 				}
-				Text_PaintCharExt( x + (glyph->pitch * scalex), y - yadj, glyph->imageWidth, glyph->imageHeight, scalex, scaley, glyph->s, glyph->t, glyph->s2, glyph->t2, glyph->glyph );
+
+				if (style == ITEM_TEXTSTYLE_OUTLINED || style == ITEM_TEXTSTYLE_OUTLINESHADOWED) {
+					colorBlack[3] = newColor[3];
+					trap_R_SetColor( colorBlack );
+					Text_PaintCharExt( px - TEXTSTYLE_OUTLINED_OFFSET, py, glyph->imageWidth, glyph->imageHeight, scalex, scaley, glyph->s, glyph->t, glyph->s2, glyph->t2, glyph->glyph );
+					Text_PaintCharExt( px + TEXTSTYLE_OUTLINED_OFFSET, py, glyph->imageWidth, glyph->imageHeight, scalex, scaley, glyph->s, glyph->t, glyph->s2, glyph->t2, glyph->glyph );
+					Text_PaintCharExt( px, py - TEXTSTYLE_OUTLINED_OFFSET, glyph->imageWidth, glyph->imageHeight, scalex, scaley, glyph->s, glyph->t, glyph->s2, glyph->t2, glyph->glyph );
+					Text_PaintCharExt( px, py + TEXTSTYLE_OUTLINED_OFFSET, glyph->imageWidth, glyph->imageHeight, scalex, scaley, glyph->s, glyph->t, glyph->s2, glyph->t2, glyph->glyph );
+					colorBlack[3] = 1.0f;
+					trap_R_SetColor( newColor );
+				}
+
+				Text_PaintCharExt( px, py, glyph->imageWidth, glyph->imageHeight, scalex, scaley, glyph->s, glyph->t, glyph->s2, glyph->t2, glyph->glyph );
 
 				x += (glyph->xSkip * scalex) + adjust;
 				s++;
@@ -535,11 +572,14 @@ char* Text_AutoWrap_Paint_Chunk(float x, float y, int width, float scale, vec4_t
 				}
 
 				if (!dummy) {
-					if (style == ITEM_TEXTSTYLE_SHADOWED || style == ITEM_TEXTSTYLE_SHADOWEDMORE) {
-						int ofs = style == ITEM_TEXTSTYLE_SHADOWED ? 1 : 2;
+					float px = x + (glyph->pitch * useScale);
+					float py = y - yadj;
+
+					if (style == ITEM_TEXTSTYLE_SHADOWED || style == ITEM_TEXTSTYLE_SHADOWEDMORE || style == ITEM_TEXTSTYLE_OUTLINESHADOWED) {
+						const float ofs = (style == ITEM_TEXTSTYLE_SHADOWEDMORE) ? TEXTSTYLE_SHADOWEDMORE_OFFSET : TEXTSTYLE_SHADOWED_OFFSET;
 						colorBlack[3] = newColor[3];
 						trap_R_SetColor( colorBlack );
-						Text_PaintChar(x + ofs, y - yadj + ofs,
+						Text_PaintChar(px + ofs, py + ofs,
 															glyph->imageWidth,
 															glyph->imageHeight,
 															useScale,
@@ -549,9 +589,53 @@ char* Text_AutoWrap_Paint_Chunk(float x, float y, int width, float scale, vec4_t
 															glyph->t2,
 															glyph->glyph);
 						trap_R_SetColor( newColor );
-						colorBlack[3] = 1.0;
+						colorBlack[3] = 1.0f;
 					}
-					Text_PaintChar(x, y - yadj,
+
+					if (style == ITEM_TEXTSTYLE_OUTLINED || style == ITEM_TEXTSTYLE_OUTLINESHADOWED) {
+						colorBlack[3] = newColor[3];
+						trap_R_SetColor( colorBlack );
+						Text_PaintChar(px - TEXTSTYLE_OUTLINED_OFFSET, py,
+															glyph->imageWidth,
+															glyph->imageHeight,
+															useScale,
+															glyph->s,
+															glyph->t,
+															glyph->s2,
+															glyph->t2,
+															glyph->glyph);
+						Text_PaintChar(px + TEXTSTYLE_OUTLINED_OFFSET, py,
+															glyph->imageWidth,
+															glyph->imageHeight,
+															useScale,
+															glyph->s,
+															glyph->t,
+															glyph->s2,
+															glyph->t2,
+															glyph->glyph);
+						Text_PaintChar(px, py - TEXTSTYLE_OUTLINED_OFFSET,
+															glyph->imageWidth,
+															glyph->imageHeight,
+															useScale,
+															glyph->s,
+															glyph->t,
+															glyph->s2,
+															glyph->t2,
+															glyph->glyph);
+						Text_PaintChar(px, py + TEXTSTYLE_OUTLINED_OFFSET,
+															glyph->imageWidth,
+															glyph->imageHeight,
+															useScale,
+															glyph->s,
+															glyph->t,
+															glyph->s2,
+															glyph->t2,
+															glyph->glyph);
+						trap_R_SetColor( newColor );
+						colorBlack[3] = 1.0f;
+					}
+
+					Text_PaintChar(px, py,
 														glyph->imageWidth,
 														glyph->imageHeight,
 														useScale,
@@ -633,12 +717,15 @@ void Text_PaintWithCursor(float x, float y, float scale, vec4_t color, const cha
 		while (s && *s && count < len) {
 			glyph = &font->glyphs[(unsigned char)*s];			// NERVE - SMF - this needs to be an unsigned cast for localization
 
-			yadj = useScale * glyph->top;
-			if (style == ITEM_TEXTSTYLE_SHADOWED || style == ITEM_TEXTSTYLE_SHADOWEDMORE) {
-				int ofs = style == ITEM_TEXTSTYLE_SHADOWED ? 1 : 2;
+			float yadj = useScale * glyph->top;
+			float px = x + (glyph->pitch * useScale);
+			float py = y - yadj;
+
+			if (style == ITEM_TEXTSTYLE_SHADOWED || style == ITEM_TEXTSTYLE_SHADOWEDMORE || style == ITEM_TEXTSTYLE_OUTLINESHADOWED) {
+				const float ofs = (style == ITEM_TEXTSTYLE_SHADOWEDMORE) ? TEXTSTYLE_SHADOWEDMORE_OFFSET : TEXTSTYLE_SHADOWED_OFFSET;
 				colorBlack[3] = newColor[3];
 				trap_R_SetColor( colorBlack );
-				Text_PaintChar(x + (glyph->pitch * useScale) + ofs, y - yadj + ofs,
+				Text_PaintChar(px + ofs, py + ofs,
 													glyph->imageWidth,
 													glyph->imageHeight,
 													useScale,
@@ -647,11 +734,54 @@ void Text_PaintWithCursor(float x, float y, float scale, vec4_t color, const cha
 													glyph->s2,
 													glyph->t2,
 													glyph->glyph);
-				colorBlack[3] = 1.0;
+				colorBlack[3] = 1.0f;
 				trap_R_SetColor( newColor );
 			}
 
-			Text_PaintChar(x + (glyph->pitch * useScale), y - yadj,
+			if (style == ITEM_TEXTSTYLE_OUTLINED || style == ITEM_TEXTSTYLE_OUTLINESHADOWED) {
+				colorBlack[3] = newColor[3];
+				trap_R_SetColor( colorBlack );
+				Text_PaintChar(px - TEXTSTYLE_OUTLINED_OFFSET, py,
+													glyph->imageWidth,
+													glyph->imageHeight,
+													useScale,
+													glyph->s,
+													glyph->t,
+													glyph->s2,
+													glyph->t2,
+													glyph->glyph);
+				Text_PaintChar(px + TEXTSTYLE_OUTLINED_OFFSET, py,
+													glyph->imageWidth,
+													glyph->imageHeight,
+													useScale,
+													glyph->s,
+													glyph->t,
+													glyph->s2,
+													glyph->t2,
+													glyph->glyph);
+				Text_PaintChar(px, py - TEXTSTYLE_OUTLINED_OFFSET,
+													glyph->imageWidth,
+													glyph->imageHeight,
+													useScale,
+													glyph->s,
+													glyph->t,
+													glyph->s2,
+													glyph->t2,
+													glyph->glyph);
+				Text_PaintChar(px, py + TEXTSTYLE_OUTLINED_OFFSET,
+													glyph->imageWidth,
+													glyph->imageHeight,
+													useScale,
+													glyph->s,
+													glyph->t,
+													glyph->s2,
+													glyph->t2,
+													glyph->glyph);
+				colorBlack[3] = 1.0f;
+				trap_R_SetColor( newColor );
+			}
+
+			Text_PaintChar(px, py,
 												glyph->imageWidth,
 												glyph->imageHeight,
 												useScale,
@@ -830,8 +960,7 @@ void _UI_Refresh( int realtime ) {
 		uiClientState_t	cstate;
 		trap_GetClientState( &cstate );
 		if(cstate.connState <= CA_DISCONNECTED || cstate.connState >= CA_ACTIVE) {
-			// core: correct for widescreen cursor coordinates..
-			UI_DrawHandlePic( Cui_WideX(uiInfo.uiDC.cursorx), uiInfo.uiDC.cursory, 32, 32, uiInfo.uiDC.Assets.cursor);
+			UI_DrawHandlePic( uiInfo.uiDC.cursorx, uiInfo.uiDC.cursory, 32, 32, uiInfo.uiDC.Assets.cursor);
 		}
 	}
 
@@ -901,7 +1030,21 @@ qboolean Asset_Parse(int handle) {
 			if( fontIndex < 0 || fontIndex >= 6 ) {
 				return qfalse;
 			}
-			trap_R_RegisterFont( tempStr, pointSize, &uiInfo.uiDC.Assets.fonts[fontIndex] );
+			if (!Q_stricmp(tempStr, "ariblk") && ui_customFont1.string[0] != 0) {
+				trap_R_RegisterFont( ui_customFont1.string, pointSize, &uiInfo.uiDC.Assets.fonts[fontIndex] );
+				if ( uiInfo.uiDC.Assets.fonts[fontIndex].glyphs[0].glyph == 0 ) {
+					trap_R_RegisterFont( "ariblk", pointSize, &uiInfo.uiDC.Assets.fonts[fontIndex] );
+				}
+			}
+			else if (!Q_stricmp(tempStr, "courbd") && ui_customFont2.string[0] != 0) {
+				trap_R_RegisterFont( ui_customFont2.string, pointSize, &uiInfo.uiDC.Assets.fonts[fontIndex] );
+				if ( uiInfo.uiDC.Assets.fonts[fontIndex].glyphs[0].glyph == 0 ) {
+					trap_R_RegisterFont( "courbd", pointSize, &uiInfo.uiDC.Assets.fonts[fontIndex] );
+				}
+			}
+			else {
+				trap_R_RegisterFont( tempStr, pointSize, &uiInfo.uiDC.Assets.fonts[fontIndex] );
+			}
 			uiInfo.uiDC.Assets.fontRegistered = qtrue;
 			continue;
 		}
@@ -7057,6 +7200,8 @@ vmCvar_t	ui_browserShowAntilag;	// TTimo
 vmCvar_t	ui_browserShowWeaponsRestricted;
 vmCvar_t	ui_browserShowTeamBalanced;
 vmCvar_t	ui_browserNQonly;
+vmCvar_t	ui_customFont1;
+vmCvar_t	ui_customFont2;
 
 vmCvar_t	ui_serverStatusTimeOut;
 
@@ -7396,6 +7541,8 @@ cvarTable_t		cvarTable[] = {
 
 	//bani
 	{ &ui_autoredirect, "ui_autoredirect", "0", CVAR_ARCHIVE },
+	{ &ui_customFont1, "ui_customFont1", "", CVAR_ARCHIVE },
+	{ &ui_customFont2, "ui_customFont2", "", CVAR_ARCHIVE },
 
 	{ NULL, "g_mapScriptDirectory",			 "",		 0 } // jaquboss, so i can quickly set it in UI
 };

@@ -2958,8 +2958,43 @@ void weapon_callAirStrike( gentity_t *ent ) {
 	VectorNormalize( dir ); // which adds randomness to pass direction below
 
 	for( j = 0; j < ent->count; ++j ) {
+		gentity_t *plane;
+		vec3_t planeDir, planeAngles, planeStart;
+
 		RotatePointAroundVector( bombaxis, dir, lookaxis, 90 + crandom() * 30 ); // munge the axis line a bit so it's not totally perpendicular
 		VectorNormalize( bombaxis );
+
+		// Spawn airstrike flyover plane
+		VectorCopy( bombaxis, planeDir );
+		VectorNormalize( planeDir );
+		vectoangles( planeDir, planeAngles );
+
+		plane = G_Spawn();
+		plane->classname = "air strike plane";
+		plane->s.eType = ET_AIRSTRIKE_PLANE;
+		plane->s.weapon = WP_SMOKE_MARKER;
+		plane->s.teamNum = ent->s.teamNum;
+		plane->parent = ent->parent;
+		plane->r.ownerNum = ent->r.ownerNum;
+		plane->r.svFlags = SVF_BROADCAST;
+
+		// Calculate start position (-4000 units before target) and linear flight across sky
+		VectorMA( ent->s.pos.trBase, -4000.f, planeDir, planeStart );
+		planeStart[2] = traceheight;
+		SnapVector( planeStart );
+
+		plane->s.pos.trType = TR_LINEAR;
+		plane->s.pos.trTime = level.time + ( j * SECONDS_2 );
+		VectorCopy( planeStart, plane->s.pos.trBase );
+		VectorScale( planeDir, 2000.f, plane->s.pos.trDelta ); // 2000 units/second flight speed
+
+		VectorCopy( planeAngles, plane->s.apos.trBase );
+		VectorCopy( planeAngles, plane->r.currentAngles );
+		VectorCopy( planeStart, plane->r.currentOrigin );
+
+		plane->think = G_FreeEntity;
+		plane->nextthink = level.time + 6000 + ( j * SECONDS_2 );
+		trap_LinkEntity( plane );
 
 		VectorCopy( bombaxis, pos );
 		VectorScale( pos,(float)(-.5f * BOMBSPREAD * NUMBOMBS ), pos );

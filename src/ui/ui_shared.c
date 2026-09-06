@@ -753,12 +753,6 @@ void Item_UpdatePosition(itemDef_t *item) {
 void Menu_UpdatePosition(menuDef_t *menu) {
 	int i;
 	float x, y;
-	float xoffset = Cui_WideXoffset();
-	Rectangle *r;
-	qboolean fullscreenItem = qfalse;
-	qboolean fullscreenMenu = qfalse;
-	const char *menuName = NULL;
-	const char *itemName = NULL;
 
 	if (menu == NULL) {
 		return;
@@ -767,43 +761,8 @@ void Menu_UpdatePosition(menuDef_t *menu) {
 	x = menu->window.rect.x;
 	y = menu->window.rect.y;
 
-	r = &menu->window.rect;
-	fullscreenMenu = (r->x == 0 && r->y == 0 && r->w == 640 && r->h == 480);
-	menuName = menu->window.name;
-	for (i = 0; i < menu->itemCount; ++i) {
-		itemName = menu->items[i]->window.name;
-		// fullscreen menu/item..
-		r = &menu->items[i]->window.rectClient;
-		fullscreenItem = (r->x == 0 && r->y == 0 && r->w == 640 && r->h == 480);
-		if (fullscreenItem) {
-			Cui_WideRect(r);
-		}
-		// alignment..
-		if ( (fullscreenMenu && !fullscreenItem) || !Q_stricmp(menuName,"main") ) {
-			// align to right of screen..
-			if ( !Q_stricmp(itemName,"atvi_logo") ||
-				!Q_stricmp(itemName,"id_logo") )
-			{
-				Item_SetScreenCoords(menu->items[i], x+2*xoffset, y);
-			}
-			// horizontally centered..
-			else if ( !Q_stricmp(itemName,"et_logo") ||
-				!Q_stricmp(itemName,"nq_logo") )
-			{
-				Item_SetScreenCoords(menu->items[i], x+xoffset, y);
-			}
-			// normal (left aligned)..
-			else if (!Q_stricmp(menuName,"main")) {
-				Item_SetScreenCoords(menu->items[i], x, y);
-			// horizontally centered..
-			} else {
-				Item_SetScreenCoords(menu->items[i], x+xoffset, y);
-			}
-		}
-		// normal (left aligned)..
-		else {
-			Item_SetScreenCoords(menu->items[i], x, y);
-		}
+	for (i = 0; i < menu->itemCount; i++) {
+		Item_SetScreenCoords(menu->items[i], x, y);
 	}
 }
 
@@ -851,10 +810,7 @@ qboolean IsVisible(int flags) {
 
 qboolean Rect_ContainsPoint(rectDef_t *rect, float x, float y) {
 	if (rect) {
-		// core: correcting for widescreen cursor coordinates..
-		x = Cui_WideX(x);
-
-		if (x >= Cui_WideX(rect->x) && x < Cui_WideX(rect->x + rect->w) && y >= rect->y && y < rect->y + rect->h) {
+		if (x >= rect->x && x <= rect->x + rect->w && y >= rect->y && y <= rect->y + rect->h) {
 			return qtrue;
 		}
 	}
@@ -3208,7 +3164,7 @@ static void Scroll_Slider_ThumbFunc(void *p) {
 	}
 
 	// core: correcting for widescreen cursor coordinates..
-	cursorx = Cui_WideX(DC->cursorx);
+	cursorx = DC->cursorx;
 
 	if (cursorx < x) {
 		cursorx = x;
@@ -3296,7 +3252,7 @@ qboolean Item_Slider_HandleKey(itemDef_t *item, int key, qboolean down)
 				testRect.x -= value;
 				testRect.w = (SLIDER_WIDTH + (float)SLIDER_THUMB_WIDTH / 2);
 				if (Rect_ContainsPoint(&testRect, DC->cursorx, DC->cursory)) {
-					float work = Cui_WideX(DC->cursorx) - x;	// core: correcting for widescreen cursor coordinates..
+					float work = DC->cursorx - x;
 					value = work / SLIDER_WIDTH;
 					value *= (editDef->maxVal - editDef->minVal);
 					value += editDef->minVal;
@@ -4703,17 +4659,10 @@ qboolean Item_Bind_HandleKey(itemDef_t *item, int key, qboolean down)
 
 void AdjustFrom640(float *x, float *y, float *w, float *h)
 {
-	float aspectratio;
 	*x *= DC->xscale;
 	*y *= DC->yscale;
 	*w *= DC->xscale;
 	*h *= DC->yscale;
-	// core: adjusting for possible widescreens..
-	aspectratio = (float)(DC->glconfig.vidWidth) / DC->glconfig.vidHeight;
-	if ( aspectratio != RATIO43 ) {
-		*x *= RATIO43 / aspectratio;
-		*w *= RATIO43 / aspectratio;
-	}
 }
 
 void Item_Model_Paint(itemDef_t *item) {

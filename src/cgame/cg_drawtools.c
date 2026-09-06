@@ -1145,110 +1145,39 @@ static void UI_DrawBannerString2( int x, int y, const char* str, vec4_t color )
 }
 
 void UI_DrawBannerString( int x, int y, const char* str, int style, vec4_t color ) {
-	const char *	s = str;
-	int				ch;
-	int				width = 0;
+	float scale = 0.35f;
+	int textstyle = (style & UI_DROPSHADOW) ? ITEM_TEXTSTYLE_SHADOWED : ITEM_TEXTSTYLE_NORMAL;
 
-	// find the width of the drawn text
-	while ( *s ) {
-		ch = *s;
-		if ( ch == ' ' ) {
-			width += PROPB_SPACE_WIDTH;
-		}
-		else if ( ch >= 'A' && ch <= 'Z' ) {
-			width += propMapB[ch - 'A'][2] + PROPB_GAP_WIDTH;
-		}
-		s++;
+	if ( !str || !*str ) {
+		return;
 	}
-	width -= PROPB_GAP_WIDTH;
 
 	switch( style & UI_FORMATMASK ) {
 		case UI_CENTER:
-			x -= width / 2;
+			CG_Text_Paint_Centred_Ext( x, y, scale, scale, color, str, 0, 0, textstyle, &cgs.media.limboFont1 );
 			break;
-
 		case UI_RIGHT:
-			x -= width;
+			CG_Text_Paint_RightAligned_Ext( x, y, scale, scale, color, str, 0, 0, textstyle, &cgs.media.limboFont1 );
 			break;
-
 		case UI_LEFT:
 		default:
+			CG_Text_Paint_Ext( x, y, scale, scale, color, str, 0, 0, textstyle, &cgs.media.limboFont1 );
 			break;
 	}
-
-	if ( style & UI_DROPSHADOW ) {
-		vec4_t			drawcolor;
-		drawcolor[0] = drawcolor[1] = drawcolor[2] = 0;
-		drawcolor[3] = color[3];
-		UI_DrawBannerString2( x+2, y+2, str, drawcolor );
-	}
-
-	UI_DrawBannerString2( x, y, str, color );
 }
 
 
 int UI_ProportionalStringWidth( const char* str ) {
-	const char *	s = str;
-	int				ch;
-	int				charWidth;
-	int				width = 0;
-
-	while ( *s ) {
-		ch = *s & 127;
-		charWidth = propMap[ch][2];
-		if ( charWidth != -1 ) {
-			width += charWidth;
-			width += PROP_GAP_WIDTH;
-		}
-		s++;
+	if ( !str || !*str ) {
+		return 0;
 	}
-
-	width -= PROP_GAP_WIDTH;
-	return width;
+	return CG_Text_Width_Ext( str, 0.25f, 0, &cgs.media.limboFont2 );
 }
 
 static void UI_DrawProportionalString2( int x, int y, const char* str, vec4_t color, float sizeScale, qhandle_t charset )
 {
-	const char* s;
-	unsigned char	ch;
-	float	ax;
-	float	ay;
-	float	aw;
-	float	ah;
-	float	frow;
-	float	fcol;
-	float	fwidth;
-	float	fheight;
-
-	// draw the colored text
-	trap_R_SetColor( color );
-
-	ax = x * cgs.screenXScale + cgs.screenXBias;
-	ay = y * cgs.screenYScale;
-
-	s = str;
-	while ( *s )
-	{
-		ch = *s & 127;
-		if ( ch == ' ' ) {
-			aw = (float)PROP_SPACE_WIDTH * cgs.screenXScale * sizeScale;
-		} else if ( propMap[ch][2] != -1 ) {
-			fcol = (float)propMap[ch][0] / 256.0f;
-			frow = (float)propMap[ch][1] / 256.0f;
-			fwidth = (float)propMap[ch][2] / 256.0f;
-			fheight = (float)PROP_HEIGHT / 256.0f;
-			aw = (float)propMap[ch][2] * cgs.screenXScale * sizeScale;
-			ah = (float)PROP_HEIGHT * cgs.screenYScale * sizeScale;
-			trap_R_DrawStretchPic( ax, ay, aw, ah, fcol, frow, fcol+fwidth, frow+fheight, charset );
-		} else {
-			aw = 0;
-		}
-
-		ax += (aw + (float)PROP_GAP_WIDTH * cgs.screenXScale * sizeScale);
-		s++;
-	}
-
-	trap_R_SetColor( NULL );
+	float scale = 0.25f * sizeScale;
+	CG_Text_Paint_Ext( x, y, scale, scale, color, str, 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont2 );
 }
 
 /*
@@ -1274,59 +1203,32 @@ UI_DrawProportionalString
 =================
 */
 void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t color ) {
-	vec4_t	drawcolor;
-	int		width;
 	float	sizeScale = UI_ProportionalSizeScale( style );
+	float	scale = 0.25f * sizeScale;
+	int		textstyle = (style & UI_DROPSHADOW) ? ITEM_TEXTSTYLE_SHADOWED : ITEM_TEXTSTYLE_NORMAL;
+
+	if ( !str || !*str ) {
+		return;
+	}
+
+	if ( style & UI_PULSE ) {
+		textstyle = ITEM_TEXTSTYLE_PULSE;
+	}
 
 	switch( style & UI_FORMATMASK ) {
 		case UI_CENTER:
-			width = UI_ProportionalStringWidth( str ) * sizeScale;
-			x -= width / 2;
+			CG_Text_Paint_Centred_Ext( x, y, scale, scale, color, str, 0, 0, textstyle, &cgs.media.limboFont2 );
 			break;
 
 		case UI_RIGHT:
-			width = UI_ProportionalStringWidth( str ) * sizeScale;
-			x -= width;
+			CG_Text_Paint_RightAligned_Ext( x, y, scale, scale, color, str, 0, 0, textstyle, &cgs.media.limboFont2 );
 			break;
 
 		case UI_LEFT:
 		default:
+			CG_Text_Paint_Ext( x, y, scale, scale, color, str, 0, 0, textstyle, &cgs.media.limboFont2 );
 			break;
 	}
-
-	if ( style & UI_DROPSHADOW ) {
-		drawcolor[0] = drawcolor[1] = drawcolor[2] = 0;
-		drawcolor[3] = color[3];
-		UI_DrawProportionalString2( x+2, y+2, str, drawcolor, sizeScale, cgs.media.charsetProp );
-	}
-
-	if ( style & UI_INVERSE ) {
-		drawcolor[0] = color[0] * 0.8;
-		drawcolor[1] = color[1] * 0.8;
-		drawcolor[2] = color[2] * 0.8;
-		drawcolor[3] = color[3];
-		UI_DrawProportionalString2( x, y, str, drawcolor, sizeScale, cgs.media.charsetProp );
-		return;
-	}
-
-	// JOSEPH 12-29-99
-	if ( style & UI_PULSE ) {
-		//drawcolor[0] = color[0] * 0.8;
-		//drawcolor[1] = color[1] * 0.8;
-		//drawcolor[2] = color[2] * 0.8;
-		drawcolor[3] = color[3];
-		UI_DrawProportionalString2( x, y, str, color, sizeScale, cgs.media.charsetProp );
-
-		drawcolor[0] = color[0];
-		drawcolor[1] = color[1];
-		drawcolor[2] = color[2];
-		drawcolor[3] = 0.5 + 0.5 * sin( cg.time / PULSE_DIVISOR );
-		UI_DrawProportionalString2( x, y, str, drawcolor, sizeScale, cgs.media.charsetPropGlow );
-		return;
-	}
-	// END JOSEPH
-
-	UI_DrawProportionalString2( x, y, str, color, sizeScale, cgs.media.charsetProp );
 }
 
 #define	MAX_VA_STRING		32000
