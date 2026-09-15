@@ -1993,6 +1993,11 @@ void CG_CalcEntityLerpPositions( centity_t *cent ) {
 
 // static void CG_TargetingPointer( centity_t *cent ); // IRATA unused
 
+#undef NUM_FRAME_PROPELLER
+#define NUM_FRAME_PROPELLER 10
+#undef TIME_FRAME_PROPELLER
+#define TIME_FRAME_PROPELLER (1000 / NUM_FRAME_PROPELLER)
+
 /*
 ===============
 CG_MovePlane
@@ -2001,7 +2006,7 @@ CG_MovePlane
 void CG_MovePlane( centity_t *cent ) {
 	refEntity_t ent;
 
-	if ( !cg_drawAirstrikePlanes.integer || cent->currentState.time < 0 ) {
+	if ( !cg_drawAirstrikePlanes.integer || cent->currentState.time < 0 || cg.time < cent->currentState.pos.trTime ) {
 		return;
 	}
 

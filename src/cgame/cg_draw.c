@@ -1648,7 +1648,9 @@ static void CG_DrawCenterString( void ) {
 	int		l;
 	int		y;
 	float	*color;
-	float	scale = 0.20f;
+	float	scale = 0.22f;
+	int		lineHeight = 12;
+	int		baseY;
 
 	if ( !cg.centerPrintTime ) {
 		return;
@@ -1663,7 +1665,13 @@ static void CG_DrawCenterString( void ) {
 
 	start = cg.centerPrint;
 
-	y = cg.centerPrintY - cg.centerPrintLines * 12 / 2;
+	// Shift lower if positioned at or above popup messages (360) so it never collides with kill popups on the left
+	baseY = cg.centerPrintY;
+	if ( baseY < 380 ) {
+		baseY = 384;
+	}
+
+	y = baseY - (cg.centerPrintLines * lineHeight) / 2;
 
 	while ( 1 ) {
 		char linebuffer[1024];
@@ -1676,9 +1684,9 @@ static void CG_DrawCenterString( void ) {
 		}
 		linebuffer[l] = 0;
 
-		CG_Text_Paint_Centred_Ext( 320 + cgs.wideXoffset, y, scale, scale, color, linebuffer, 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont1 );
+		CG_Text_Paint_Centred_Ext( 320 + cgs.wideXoffset, y, scale, scale, color, linebuffer, 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgs.media.limboFont2 );
 
-		y += 12;
+		y += lineHeight;
 
 		while ( *start && ( *start != '\n' ) ) {
 			start++;

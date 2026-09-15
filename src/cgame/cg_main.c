@@ -1914,8 +1914,14 @@ static void CG_RegisterGraphics( void ) {
 	cgs.media.hMountedFPMG42 =		trap_R_RegisterModel( "models/multiplayer/mg42/v_mg42.md3" );
 	cgs.media.hMountedFPBrowning =	trap_R_RegisterModel( "models/multiplayer/browning/tankmounted.md3" );
 
-	cgs.media.airstrikePlane[0] =	trap_R_RegisterModel( "models/mapobjects/planes/ju87.md3" );
-	cgs.media.airstrikePlane[1] =	trap_R_RegisterModel( "models/mapobjects/planes/spitfire.md3" );
+	cgs.media.airstrikePlane[0] =	trap_R_RegisterModel( "models/mapobjects/etl_plane/junker88.md3" );
+	if ( !cgs.media.airstrikePlane[0] ) {
+		cgs.media.airstrikePlane[0] = trap_R_RegisterModel( "models/mapobjects/planes/ju87.md3" );
+	}
+	cgs.media.airstrikePlane[1] =	trap_R_RegisterModel( "models/mapobjects/etl_plane/b-25.md3" );
+	if ( !cgs.media.airstrikePlane[1] ) {
+		cgs.media.airstrikePlane[1] = trap_R_RegisterModel( "models/mapobjects/planes/spitfire.md3" );
+	}
 
 	// medic icon for commandmap
 	cgs.media.medicIcon_cm			= trap_R_RegisterShaderNoMip("sprites/voiceMedic_cm");
