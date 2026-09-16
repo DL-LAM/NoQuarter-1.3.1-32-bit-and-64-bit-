@@ -1,4 +1,4 @@
-// No Quarter 1.3.0 config descriptions
+// No Quarter 1.3.1 config descriptions
 // Visit www.shitstorm.org/noquarter for more documentation.
 
 // ********************************************************
@@ -314,6 +314,25 @@ set jp_insanity 0
 // 16	  - CovertOps can pickup any weapon.
 set g_unlockWeapons 0
 
+// g_soldierShotgun - Allows Soldiers to equip the Winchester M97 Shotgun.
+// 0 - Disabled
+// 1 - Enabled (Soldiers can select the shotgun in the limbo menu)
+// Default: 1
+set g_soldierShotgun 1
+
+// g_infiniteCabinets - Toggles whether health and ammo cabinets have unlimited supplies.
+// 0 - Normal (cabinets run out and regenerate according to g_ammoCabinetTime / g_healthCabinetTime)
+// 1 - Infinite (cabinets never run empty)
+// Default: 0
+set g_infiniteCabinets 0
+
+// g_alliedCovertWeapon - Selects the primary weapon available to Allied Covert Ops.
+// 0 - Johnson M1941
+// 1 - BAR (Browning Automatic Rifle)
+// 2 - FG42
+// Default: 0
+set g_alliedCovertWeapon 0
+
 // nq_War - War modes!
 // The first bit enables/disables war-mode.
 // The other bits enable/disable weapons available in war-mode.
@@ -359,9 +378,15 @@ set g_dropObj 1
 // Default: 0
 set g_slashkill 0
 
-// g_spawnInvul - Sets spawn shield protection length.
+// g_spawnInvul - Sets spawn shield protection length in seconds.
 // Default: 3
 set g_spawnInvul 3
+
+// g_noAttackInvul - When enabled, firing a weapon removes spawn shield invulnerability immediately.
+// 0 - Keep spawn shield when attacking
+// 1 - Remove spawn shield immediately upon attacking
+// Default: 0
+set g_noAttackInvul 1
 
 // g_dropAmmo - Sets the amount of ammo packs a Field Ops drops when killed.
 // Don't set g_dropAmmo to a very high value as this may crash your server.
@@ -710,7 +735,20 @@ seta skill_covertops "20 50 90 140 200 270 350 440 540"
 // Default: 0
 set g_countryflags 0
 
-// see http://wolfwiki.anime.net/index.php/Lua_Mod_API
+// g_fixedphysics - Enables fixed physics rate for smooth jumping and movement (ET:Legacy / modern ET).
+// When enabled, movement physics are calculated at a fixed rate regardless of client or server FPS.
+// 0 - Disabled (uses frame rate)
+// 1 - Enabled
+// Default: 0 (Set to 1 for competitive / modern servers)
+set g_fixedphysics 1
+
+// g_fixedphysicsfps - Target frames per second for fixed physics simulation.
+// Default: 125
+set g_fixedphysicsfps 125
+
+// Lua modules - specify space-separated names of Lua modules to load.
+// To enable WolfAdmin (included in NQ 1.3.1), set: set lua_modules "wolfadmin"
+// Default: ""
 set lua_modules ""
 set lua_allowedModules ""
 
