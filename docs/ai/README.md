@@ -4,6 +4,8 @@ This directory contains configuration blueprints to create a **100% offline, loc
 
 With this setup, future developers or server administrators can troubleshoot issues, write new CVARs, analyze crash dumps, and extend the mod completely offline without an internet connection or external API keys.
 
+> 📖 **Comprehensive Manual**: For detailed hardware recommendations, in-depth terminal usage, VS Code Continue.dev integration, and local RAG indexing, see the **[Complete Ollama Setup & Usage Guide](OLLAMA_GUIDE.md)**.
+
 ---
 
 ## 🚀 Quick Start (Using Ollama)
