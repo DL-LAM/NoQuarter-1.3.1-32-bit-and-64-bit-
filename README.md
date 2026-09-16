@@ -161,6 +161,7 @@ To make troubleshooting and future development effortless without needing access
 * **Splash Damage & id Software**: Original creators of *Wolfenstein: Enemy Territory*.
 * **Omni-Bot Team**: Bot support and interface integration.
 * **Community**: All players and server administrators keeping *Enemy Territory* alive!
+* **NQ V1.3.1 Updates**: Hawkeye
 
 ---
 
