@@ -6186,7 +6186,8 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 
 void CG_DrawMissileCamera(rectDef_t *rect ) {
 
-	if ( !cg.latestMissile  ) {
+	if ( !cg.latestMissile || !cg.latestMissile->currentValid ) {
+		cg.latestMissile = NULL;
 		return;
 	}
 
@@ -6269,7 +6270,7 @@ void CG_DrawMissileCamera(rectDef_t *rect ) {
 
 // core: the Killer Cam (like the mortarcam in an overlayed window)..
 void CG_DrawKillerCamera(rectDef_t *rect ) {
-	if ( !cg.latestKiller || (cg.killerCamTime && cg.time > cg.killerCamTime) ) {
+	if ( !cg.latestKiller || !cg.latestKiller->currentValid || (cg.killerCamTime && cg.time > cg.killerCamTime) ) {
 		cg.killerCamTime = 0;
 		cg.latestKiller = NULL;
 		return;

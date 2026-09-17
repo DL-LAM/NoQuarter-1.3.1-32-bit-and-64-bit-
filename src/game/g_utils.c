@@ -2372,8 +2372,7 @@ void G_ParseCampaigns( void ) {
 			}
 
 			dirlen = strlen(dirptr);
-			strcpy(filename, "scripts/");
-			strcat(filename, dirptr);
+			Com_sprintf(filename, sizeof(filename), "scripts/%s", dirptr);
 
 			if( G_LoadCampaignsFromFile(filename) ) {
 				mapFound = qtrue;

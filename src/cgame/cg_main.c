@@ -736,9 +736,11 @@ void CG_RestoreProfile(void) {
 	int i;
 
 	for( i=0; i<cg.cvarBackupsCount; ++i ) {
-		trap_Cvar_Set(cg.cvarBackups[i].cvarName, cg.cvarBackups[i].cvarValue);
+		if (cg.cvarBackups[i].cvarName[0]) {
+			trap_Cvar_Set(cg.cvarBackups[i].cvarName, cg.cvarBackups[i].cvarValue);
+		}
 	}
-
+	cg.cvarBackupsCount = 0;
 }
 
 void CG_setClientFlags(void) {
@@ -1915,13 +1917,7 @@ static void CG_RegisterGraphics( void ) {
 	cgs.media.hMountedFPBrowning =	trap_R_RegisterModel( "models/multiplayer/browning/tankmounted.md3" );
 
 	cgs.media.airstrikePlane[0] =	trap_R_RegisterModel( "models/mapobjects/etl_plane/junker88.md3" );
-	if ( !cgs.media.airstrikePlane[0] ) {
-		cgs.media.airstrikePlane[0] = trap_R_RegisterModel( "models/mapobjects/planes/ju87.md3" );
-	}
 	cgs.media.airstrikePlane[1] =	trap_R_RegisterModel( "models/mapobjects/etl_plane/b-25.md3" );
-	if ( !cgs.media.airstrikePlane[1] ) {
-		cgs.media.airstrikePlane[1] = trap_R_RegisterModel( "models/mapobjects/planes/spitfire.md3" );
-	}
 
 	// medic icon for commandmap
 	cgs.media.medicIcon_cm			= trap_R_RegisterShaderNoMip("sprites/voiceMedic_cm");
@@ -3339,20 +3335,32 @@ void jP_SetHUDColors(void) {
 }
 
 qhandle_t CG_GetGameModel ( int index ) {
-    // Chached game file
-    if (index < GAMEMODEL_MAX) {
-        return cgs.cachedModels[index];
-    }
+	if ( index < 0 ) {
+		return 0;
+	}
+	// Cached game file
+	if ( index < GAMEMODEL_MAX ) {
+		return cgs.cachedModels[index];
+	}
+	if ( index - GAMEMODEL_MAX >= MAX_MODELS ) {
+		return 0;
+	}
 
 	return (cgs.gameModels[index-GAMEMODEL_MAX] ? cgs.gameModels[index-GAMEMODEL_MAX] : 0);
 }
 
 sfxHandle_t CG_GetGameSound ( int index ) {
-    // Cached game file
-    if (index < GAMESOUND_MAX) {
-        return cgs.cachedSounds[index];
-    }
-    return cgs.gameSounds[index-GAMESOUND_MAX] ? cgs.gameSounds[index-GAMESOUND_MAX] : 0;
+	if ( index < 0 ) {
+		return 0;
+	}
+	// Cached game file
+	if ( index < GAMESOUND_MAX ) {
+		return cgs.cachedSounds[index];
+	}
+	if ( index - GAMESOUND_MAX >= MAX_SOUNDS ) {
+		return 0;
+	}
+	return cgs.gameSounds[index-GAMESOUND_MAX] ? cgs.gameSounds[index-GAMESOUND_MAX] : 0;
 }
 
 // dvl - real time stamp

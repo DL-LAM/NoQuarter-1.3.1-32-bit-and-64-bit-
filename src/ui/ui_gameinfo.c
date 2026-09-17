@@ -246,8 +246,7 @@ void UI_LoadArenas( void ) {
 	dirptr  = dirlist;
 	for (i = 0; i < numdirs && uiInfo.mapCount < MAX_MAPS; i++, dirptr += dirlen+1) {
 		dirlen = strlen(dirptr);
-		strcpy(filename, "scripts/");
-		strcat(filename, dirptr);
+		Com_sprintf(filename, sizeof(filename), "scripts/%s", dirptr);
 		UI_LoadArenasFromFile(filename);
 	}
 	// CHRUKER: b090 - Sorting the map list
@@ -533,8 +532,7 @@ void UI_LoadCampaigns( void ) {
 	dirptr  = dirlist;
 	for (i = 0; i < numdirs && uiInfo.campaignCount < MAX_CAMPAIGNS; i++, dirptr += dirlen+1) {
 		dirlen = strlen(dirptr);
-		strcpy(filename, "scripts/");
-		strcat(filename, dirptr);
+		Com_sprintf(filename, sizeof(filename), "scripts/%s", dirptr);
 		UI_LoadCampaignsFromFile(filename);
 	}
 	if (UI_OutOfMemory()) {
