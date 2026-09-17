@@ -4,7 +4,7 @@ import glob
 import subprocess
 import shutil
 
-ROOT_DIR = r"C:\Users\Dylan\Documents\ETFiles\WET-NoQuarter-master\NQV1.3.0dev\trunk"
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC_DIR = os.path.join(ROOT_DIR, "src")
 ZIG_EXE = None
 
@@ -97,7 +97,7 @@ LUASQL_SRC = [
     "sqlite3/sqlite3.c",
 ]
 
-QAGAME_SRC = BG_SRC + [
+QAGAME_SRC = BG_SRC + LUA_SRC + [
     "game/bg_profiler_hook.c",
     "game/etpro_mdx.c",
     "game/et-antiwarp.c",
@@ -243,7 +243,11 @@ def build_target(arch, target_triple, out_dir):
     lua_out = os.path.join(out_dir, "liblua5.1.so")
     lua_sources = [os.path.join(SRC_DIR, f) for f in LUA_SRC]
     print(f"Compiling {lua_out}...")
-    cmd = [ZIG_EXE, "cc"] + common_flags + ["-DLUA_USE_LINUX", "-o", lua_out] + lua_sources + ["-lm", "-ldl"]
+    cmd = [ZIG_EXE, "cc"] + common_flags + [
+        "-DLUA_USE_LINUX",
+        "-Wl,-soname,liblua5.1.so",
+        "-o", lua_out
+    ] + lua_sources + ["-lm", "-ldl"]
     res = subprocess.run(cmd)
     if res.returncode != 0:
         print(f"Failed to build {lua_out}")
@@ -257,9 +261,14 @@ def build_target(arch, target_triple, out_dir):
     print(f"Compiling {sqlite_out}...")
     cmd = [ZIG_EXE, "cc"] + common_flags + [
         "-DSQLITE_ENABLE_COLUMN_METADATA", "-DSQLITE_ENABLE_FTS3",
-        "-L" + out_dir, "-llua5.1",
+        "-Wl,-soname,sqlite3.so",
         "-o", sqlite_out
-    ] + sqlite_sources + ["-lm", "-ldl", "-lpthread"]
+    ] + sqlite_sources + [
+        "-L" + out_dir, "-llua5.1",
+        "-Wl,-rpath,$ORIGIN",
+        "-Wl,-z,origin",
+        "-lm", "-ldl", "-lpthread"
+    ]
     res = subprocess.run(cmd)
     if res.returncode != 0:
         print(f"Failed to build {sqlite_out}")
@@ -274,8 +283,9 @@ def build_target(arch, target_triple, out_dir):
     qagame_sources = [os.path.normpath(os.path.join(SRC_DIR, f)) for f in QAGAME_SRC]
     print(f"Compiling {qagame_out}...")
     cmd = [ZIG_EXE, "c++"] + common_flags + [
-        "-DGAMEDLL", "-DNEW_ANIMS", "-DET_LUA", "-DOMNIBOTS",
-        "-L" + out_dir, "-llua5.1",
+        "-DGAMEDLL", "-DNEW_ANIMS", "-DET_LUA", "-DLUA_USE_LINUX", "-DOMNIBOTS",
+        "-Wl,-rpath,$ORIGIN",
+        "-Wl,-z,origin",
         "-o", qagame_out
     ] + qagame_sources + ["-lm", "-ldl"]
     res = subprocess.run(cmd)

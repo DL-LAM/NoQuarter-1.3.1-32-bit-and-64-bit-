@@ -132,28 +132,6 @@ To package your binaries into PK3 archives, create zip files (without root direc
 
 ---
 
-## 📚 Documentation & Architecture Guides
-
-Unlike older legacy releases, NoQuarter 1.3.1 includes full documentation on the engine architecture, cross-platform compilation, CVARs, Lua APIs, and historical bugfixes:
-
-* **[Developer Knowledge Base](docs/DEVELOPER_KNOWLEDGE_BASE.md)**: In-depth technical manual covering id Tech 3 architecture, 32-bit vs 64-bit struct synchronization, the rendering pipeline, HUD widescreen math, and solved engine pitfalls.
-* **[Developer & AI Agent Rules (`AGENT.md`)](AGENT.md)**: Universal instructions for human contributors and AI coding agents (Cursor, Copilot, Claude Code, Antigravity).
-* **[Server Configuration Guide](docs/noquarter_commented.txt)**: Fully documented reference of every server cvar, team setting, and gameplay toggle.
-* **[Weapon Configuration Guide](docs/nq_weapons_commented.txt)**: Detailed damage, recoil, spread, and magazine tables.
-* **[Lua API Reference](docs/nqluadocu.htm)**: Official NoQuarter Lua scripting documentation covering entity fields, client fields, bitmasks, and engine callbacks.
-
----
-
-## 🤖 Local & Offline AI Developer Assistant (`nq-dev`)
-
-To make troubleshooting and future development effortless without needing access to private historical chat logs, this repository includes an offline AI assistant configuration:
-
-* **Ollama Modelfile**: Located at `docs/ai/Modelfile`. Build a customized, completely offline developer assistant (`nq-dev`) pre-loaded with NoQuarter 1.3.1 architecture rules, engine gotchas, and C code safety constraints.
-* **Setup Guide**: Follow **[docs/ai/README.md](docs/ai/README.md)** to run `nq-dev` locally in your terminal or integrate it directly into VS Code via the **Continue.dev** extension.
-* **Zero-Setup AI IDE Support**: `.cursorrules` and `.github/copilot-instructions.md` are included so tools like Cursor, Windsurf, and GitHub Copilot immediately operate with complete codebase context upon cloning.
-
----
-
 ## 📜 Credits & Acknowledgments
 
 * **NoQuarter Development Team**: IRATA, jaquboss, Meyer, ReyalP, Lucifer, and contributors.
@@ -161,7 +139,6 @@ To make troubleshooting and future development effortless without needing access
 * **Splash Damage & id Software**: Original creators of *Wolfenstein: Enemy Territory*.
 * **Omni-Bot Team**: Bot support and interface integration.
 * **Community**: All players and server administrators keeping *Enemy Territory* alive!
-* **NQ V1.3.1 Updates**: Hawkeye
 
 ---
 

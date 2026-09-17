@@ -84,12 +84,7 @@ hash (register const char *str, register unsigned int len)
   return hval;
 }
 
-#ifdef __GNUC__
-__inline
-#ifdef __GNUC_STDC_INLINE__
-__attribute__ ((__gnu_inline__))
-#endif
-#endif
+
 const struct g_strtoken_t *
 in_word_set (register const char *str, register unsigned int len)
 {
@@ -315,9 +310,7 @@ in_word_set (register const char *str, register unsigned int len)
 	  return hval;
 	}
 
-	#ifdef __GNUC__
-	__inline
-	#endif
+
 	const struct g_strtoken_t *
 	in_word_set (register const char *str, register unsigned int len)
 	{
