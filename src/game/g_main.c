@@ -626,6 +626,7 @@ cvarTable_t		gameCvarTable[] =
 
 	{ &g_password,							"g_password",							"none", 								CVAR_USERINFO,												0,		qfalse },
 	{ &sv_privatepassword,					"sv_privatepassword",					"", 									CVAR_TEMP,													0,		qfalse },
+	// [NQ 1.3.1 - Security]: Referee authentication password (server-side only, non-broadcast)
 	{ &refereePassword,						"refereePassword",						"none",									0,															0,		qfalse },
 
 	{ &g_censor,							"g_censor",								"",										0 },

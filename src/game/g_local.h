@@ -903,6 +903,7 @@ typedef struct
 	unsigned int		clientMaxPackets;		// Client com_maxpacket settings
 	unsigned int		clientTimeNudge;		// Client cl_timenudge settings
 	int					cmd_debounce;			// Dampening of command spam
+	int					authFailures;			// [NQ 1.3.1 - Security]: Track consecutive failed rcon/ref auth attempts
 	unsigned int		invite;					// Invitation to a team to join
 #ifdef MV_SUPPORT
 	mview_t				mv[MULTIVIEW_MAXVIEWS];	// Multiview portals
