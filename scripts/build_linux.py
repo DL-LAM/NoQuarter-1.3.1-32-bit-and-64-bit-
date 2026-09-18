@@ -4,7 +4,7 @@ import glob
 import subprocess
 import shutil
 
-ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT_DIR = sys.argv[1] if len(sys.argv) > 1 else r"C:\Users\Dylan\Documents\ETFiles\WET-NoQuarter-master\NQV1.3.0dev\trunk\NoQuarter-v1.3.1-Source"
 SRC_DIR = os.path.join(ROOT_DIR, "src")
 ZIG_EXE = None
 

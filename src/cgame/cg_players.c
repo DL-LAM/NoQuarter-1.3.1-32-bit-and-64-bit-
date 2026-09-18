@@ -1602,7 +1602,9 @@ static void CG_PlayerAngles( centity_t *cent, vec3_t legs[3], vec3_t torso[3], v
 	cgsnap = &cg_entities[cg.snap->ps.clientNum];
 
 	if(	cgsnap == cent && (cg.snap->ps.pm_flags & PMF_LADDER) ) {
-		memcpy( torso, legs, sizeof(torso) );
+		VectorCopy( legs[0], torso[0] );
+		VectorCopy( legs[1], torso[1] );
+		VectorCopy( legs[2], torso[2] );
 	}
 }
 

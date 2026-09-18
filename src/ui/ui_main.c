@@ -4231,11 +4231,11 @@ void UI_RunMenuScript(char **args) {
 					int res = trap_LAN_AddServer(AS_FAVORITES, name, addr);
 					if (res == 0) {
 						// server already in the list
-						Com_Printf( trap_TranslateString( "Favorite already in list\n" ) );
+						Com_Printf( "%s", trap_TranslateString( "Favorite already in list\n" ) );
 					}
 					else if (res == -1) {
 						// list full
-						Com_Printf( trap_TranslateString( "Favorite list full\n" ) );
+						Com_Printf( "%s", trap_TranslateString( "Favorite list full\n" ) );
 					}
 					else {
 						// successfully added
@@ -4267,11 +4267,11 @@ void UI_RunMenuScript(char **args) {
 					int res = trap_LAN_AddServer(AS_FAVORITES, name, addr);
 					if (res == 0) {
 						// server already in the list
-						Com_Printf( trap_TranslateString( "Favorite already in list\n" ) );
+						Com_Printf( "%s", trap_TranslateString( "Favorite already in list\n" ) );
 					}
 					else if (res == -1) {
 						// list full
-						Com_Printf( trap_TranslateString( "Favorite list full\n" ) );
+						Com_Printf( "%s", trap_TranslateString( "Favorite list full\n" ) );
 					}
 					else {
 						// successfully added
@@ -4295,11 +4295,11 @@ void UI_RunMenuScript(char **args) {
 				int res = trap_LAN_AddServer(AS_FAVORITES, name, addr);
 				if (res == 0) {
 					// server already in the list
-					Com_Printf( trap_TranslateString( "Favorite already in list\n" ) );
+					Com_Printf( "%s", trap_TranslateString( "Favorite already in list\n" ) );
 				}
 				else if (res == -1) {
 					// list full
-					Com_Printf( trap_TranslateString( "Favorite list full\n" ) );
+					Com_Printf( "%s", trap_TranslateString( "Favorite list full\n" ) );
 				}
 				else {
 					// successfully added

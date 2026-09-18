@@ -1532,7 +1532,7 @@ typedef struct {
 
 	sfxHandle_t	sfx_artilleryExp[3];
 	sfxHandle_t	sfx_artilleryDist;
-	sfxHandle_t	sfx_artilleryDist_1[2];
+	sfxHandle_t	sfx_artilleryDist_1[3];
 
 	sfxHandle_t	sfx_airstrikeExp[3];
 	sfxHandle_t	sfx_airstrikeDist;

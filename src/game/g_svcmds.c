@@ -972,13 +972,13 @@ qboolean ConsoleChat(qboolean chatClient)
 	}
 	if (g_logOptions.integer & LOGOPTS_CHATS) {
 		if(chatClient) {
-			G_LogPrintf(va("chat(client): %d: %s\n",
+			G_LogPrintf("chat(client): %d: %s\n",
 				clientNum,
-				ConcatArgs(1)));
+				ConcatArgs(1));
 		}
 		else {
-			G_LogPrintf(va("chat(client): %s\n",
-				ConcatArgs(1)));
+			G_LogPrintf("chat(client): %s\n",
+				ConcatArgs(1));
 		}
 	}
 	return qtrue;
@@ -1276,19 +1276,19 @@ void CC_csinfo(void)
 
 		if ( arg1 ) {
 			if ( (arg1numeric && value == i) || (!arg1numeric && !Q_stricmp(valuestr,str)) ) {
-				G_Printf(va("%-4i %-8i %s\n", i, size, str));
+				G_Printf("%-4i %-8i %s\n", i, size, str);
 				// value 239 is taken from SBP()
 				for ( j=0; j<=(int)(size/(239-1)); j++ ) {
 					Q_strncpyz( cspart, (char *)&cs[j*(239-1)], 239 );
-					G_Printf(va("%s", cspart));
+					G_Printf("%s", cspart);
 				}
 				G_Printf("\n");
 			}
 		} else {
-			G_Printf(va("%-4i %-8i %s\n", i, size, str));
+			G_Printf("%-4i %-8i %s\n", i, size, str);
 		}
 	}
-	G_Printf(va("--------------------------------------------\nTotal CONFIGSTRING Length: %i\n--------------------------------------------\n", total));
+	G_Printf("--------------------------------------------\nTotal CONFIGSTRING Length: %i\n--------------------------------------------\n", total);
 }
 
 void CC_csdump(void)
@@ -1500,7 +1500,7 @@ void CC_weapRestrictions(void)
 			// make up some strings..
 			// not restricted? == empty string, which makes it more clear to read.
 			if (weapon_restrictions[i].disabled) {
-				G_Printf(va("%-13s %s\n", BG_Weapons[i].statname, "--disabled--"));
+				G_Printf("%-13s %s\n", BG_Weapons[i].statname, "--disabled--");
 			} else {
 				if (weapon_restrictions[i].minplayers <= 1) {
 					Q_strncpyz(minplayers, "   ", sizeof(minplayers));
@@ -1517,7 +1517,7 @@ void CC_weapRestrictions(void)
 				} else {
 					Q_strncpyz(percentage, va("%3i",weapon_restrictions[i].percentage), sizeof(percentage));
 				}
-				G_Printf(va("%-13s %s %s %s\n", BG_Weapons[i].statname, minplayers, maxweap, percentage));
+				G_Printf("%-13s %s %s %s\n", BG_Weapons[i].statname, minplayers, maxweap, percentage);
 			}
 		}
 		if (count == 0) {
@@ -1768,7 +1768,7 @@ qboolean ConsoleCommand( void )
 	if(!Q_stricmp(cmd, "announce")) {
 		trap_SendServerCommand( -1, va("announce \"%s\n\"", Q_AddCR(ConcatArgs(1))));
 		if (g_logOptions.integer & LOGOPTS_CHATS) {
-			G_LogPrintf(va("announce: %s\n", Q_AddCR(ConcatArgs(1))));
+			G_LogPrintf("announce: %s\n", Q_AddCR(ConcatArgs(1)));
 		}
 		return qtrue;
 	}
@@ -1776,7 +1776,7 @@ qboolean ConsoleCommand( void )
 	if(!Q_stricmp(cmd, "cp")) {
 		trap_SendServerCommand( -1, va("cp \"%s\n\"",Q_AddCR(ConcatArgs(1))) );
 		if (g_logOptions.integer & LOGOPTS_CHATS) {
-			G_LogPrintf(va("cp: %s\n", Q_AddCR(ConcatArgs(1))));
+			G_LogPrintf("cp: %s\n", Q_AddCR(ConcatArgs(1)));
 		}
 		return qtrue;
 	}
@@ -1784,7 +1784,7 @@ qboolean ConsoleCommand( void )
 	if(!Q_stricmp(cmd, "cpmsay") || !Q_stricmp(cmd, "cpm")) {
 		trap_SendServerCommand( -1, va("cpm \"%s\" 1\n",ConcatArgs(1)) );
 		if (g_logOptions.integer & LOGOPTS_CHATS) {
-			G_LogPrintf(va("cpm: %s\n", ConcatArgs(1)));
+			G_LogPrintf("cpm: %s\n", ConcatArgs(1));
 		}
 		return qtrue;
 	}

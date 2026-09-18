@@ -78,7 +78,7 @@ int G_voteCmdCheck(gentity_t *ent, char *arg, char *arg2, qboolean fRefereeCmd) 
 			int hResult = aVoteInfo[i].pVoteCommand(ent, i, arg, arg2, fRefereeCmd);
 
 			if(hResult == G_OK) {
-				Com_sprintf(arg, VOTE_MAXSTRING, aVoteInfo[i].pszVoteMessage);
+				Com_sprintf(arg, VOTE_MAXSTRING, "%s", aVoteInfo[i].pszVoteMessage);
 				level.voteInfo.vote_fn = aVoteInfo[i].pVoteCommand;
 			}
 			else {
@@ -356,6 +356,12 @@ int G_Kick_v( gentity_t *ent, unsigned int dwVoteIndex, char *arg, char *arg2, q
 	// Vote action (vote has passed)
 	}
 	else {
+		int pid = atoi( level.voteInfo.vote_value );
+
+		if ( pid < 0 || pid >= level.maxclients || level.clients[pid].pers.connected == CON_DISCONNECTED ) {
+			return G_INVALID;
+		}
+
 		// Kick a player
 		// IRATA - sound for kick
 		if( g_announcer.integer & ANNOUNCE_KICKSOUND) {
@@ -364,9 +370,9 @@ int G_Kick_v( gentity_t *ent, unsigned int dwVoteIndex, char *arg, char *arg2, q
 
 		// tjw: clientkick doesn't work in 2.60
 		//trap_SendConsoleCommand( EXEC_APPEND, va( "clientkick %d\n", atoi( level.voteInfo.vote_value ) ) );
-		trap_DropClient(atoi(level.voteInfo.vote_value), "You have been kicked", 120);
+		trap_DropClient(pid, "You have been kicked", 120);
 
-		AP( va( "cp \"%s\n^3has been kicked!\n\"", level.clients[ atoi( level.voteInfo.vote_value ) ].pers.netname ) );
+		AP( va( "cp \"%s\n^3has been kicked!\n\"", level.clients[ pid ].pers.netname ) );
 	}
 
 	return G_OK;
@@ -416,6 +422,10 @@ int G_Mute_v(gentity_t *ent, unsigned int dwVoteIndex, char *arg, char *arg2, qb
 	}
 	else {
 		int pid = atoi(level.voteInfo.vote_value);
+
+		if ( pid < 0 || pid >= level.maxclients || level.clients[pid].pers.connected == CON_DISCONNECTED ) {
+			return G_INVALID;
+		}
 
 		// Mute a player
 		if( level.clients[pid].sess.referee != RL_RCON ) {
@@ -469,6 +479,10 @@ int G_UnMute_v(gentity_t *ent, unsigned int dwVoteIndex, char *arg, char *arg2, 
 	}
 	else {
 		int pid = atoi(level.voteInfo.vote_value);
+
+		if ( pid < 0 || pid >= level.maxclients || level.clients[pid].pers.connected == CON_DISCONNECTED ) {
+			return G_INVALID;
+		}
 
 		// Mute a player
 		if( level.clients[pid].sess.referee != RL_RCON ) {
@@ -775,7 +789,13 @@ int G_Referee_v(gentity_t *ent, unsigned int dwVoteIndex, char *arg, char *arg2,
 	}
 	else {
 		// Voting in a new referee
-		gclient_t *cl = &level.clients[atoi(level.voteInfo.vote_value)];
+		int pid = atoi(level.voteInfo.vote_value);
+		gclient_t *cl;
+
+		if ( pid < 0 || pid >= level.maxclients ) {
+			return G_INVALID;
+		}
+		cl = &level.clients[pid];
 
 		if(cl->pers.connected == CON_DISCONNECTED) {
 			AP("print \"Player left before becoming referee\n\"");
@@ -784,7 +804,7 @@ int G_Referee_v(gentity_t *ent, unsigned int dwVoteIndex, char *arg, char *arg2,
 			cl->sess.referee = RL_REFEREE;	// FIXME: Differentiate voted refs from passworded refs
 			cl->sess.spec_invite = TEAM_AXIS | TEAM_ALLIES;
 			AP(va("cp \"%s^7 is now a referee!\n\"", cl->pers.netname));
-			ClientUserinfoChanged( atoi(level.voteInfo.vote_value) );
+			ClientUserinfoChanged( pid );
 		}
 	}
 	return(G_OK);
@@ -1154,12 +1174,18 @@ int G_Unreferee_v(gentity_t *ent, unsigned int dwVoteIndex, char *arg, char *arg
 	}
 	else {
 		// Stripping of referee status
-		gclient_t *cl = &level.clients[atoi(level.voteInfo.vote_value)];
+		int pid = atoi(level.voteInfo.vote_value);
+		gclient_t *cl;
+
+		if ( pid < 0 || pid >= level.maxclients || level.clients[pid].pers.connected == CON_DISCONNECTED ) {
+			return G_INVALID;
+		}
+		cl = &level.clients[pid];
 
 		cl->sess.referee = RL_NONE;
 		cl->sess.spec_invite = 0;
 		AP(va("cp \"%s^7\nis no longer a referee\n\"", cl->pers.netname));
-		ClientUserinfoChanged( atoi(level.voteInfo.vote_value) );
+		ClientUserinfoChanged( pid );
 	}
 
 	return(G_OK);

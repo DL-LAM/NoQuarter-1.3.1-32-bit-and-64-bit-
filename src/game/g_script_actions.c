@@ -100,7 +100,7 @@ qboolean PreParse_ScriptAction_Accum( gentity_t *ent, char *params, g_script_pre
 	bufferIndex = atoi(token);
 	if (bufferIndex >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
 		// CHRUKER: b055 - Was printing 10 as the last bufferindex, but its actually 9
-		G_Error( Error_OutsideRange );
+		G_Error( "%s", Error_OutsideRange );
 	}
 	preparsed_params->data_int[0] = bufferIndex;
 
@@ -120,21 +120,21 @@ qboolean PreParse_ScriptAction_Accum( gentity_t *ent, char *params, g_script_pre
 	switch( lastTokenHash ) {
 		case INC_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			preparsed_params->data_int[2] = atoi(token);
 			break;
 
 		case ABORT_IF_LESS_THAN_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			preparsed_params->data_int[2] = atoi(token);
 			break;
 
 		case ABORT_IF_GREATER_THAN_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			preparsed_params->data_int[2] = atoi(token);
 			break;
@@ -142,7 +142,7 @@ qboolean PreParse_ScriptAction_Accum( gentity_t *ent, char *params, g_script_pre
 		case ABORT_IF_NOT_EQUAL_HASH:
 		case ABORT_IF_NOT_EQUALS_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			preparsed_params->data_int[2] = atoi(token);
 			break;
@@ -150,56 +150,56 @@ qboolean PreParse_ScriptAction_Accum( gentity_t *ent, char *params, g_script_pre
 		case ABORT_IF_EQUAL_HASH:
 		case ABORT_IF_EQUALS_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			preparsed_params->data_int[2] = atoi(token);
 			break;
 
 		case BITSET_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			preparsed_params->data_int[2] = (1<<atoi(token));
 			break;
 
 		case BITRESET_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			preparsed_params->data_int[2] = ~(1<<atoi(token));
 			break;
 
 		case ABORT_IF_BITSET_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			preparsed_params->data_int[2] = (1<<atoi(token));
 			break;
 
 		case ABORT_IF_NOT_BITSET_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			preparsed_params->data_int[2] = (1<<atoi(token));
 			break;
 
 		case SET_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			preparsed_params->data_int[2] = atoi(token);
 			break;
 
 		case RANDOM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			preparsed_params->data_int[2] = atoi(token);
 			break;
 
 		case TRIGGER_IF_EQUAL_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			preparsed_params->data_int[2] = atoi(token);
 
@@ -224,7 +224,7 @@ qboolean PreParse_ScriptAction_Accum( gentity_t *ent, char *params, g_script_pre
 
 		case WAIT_WHILE_EQUAL_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			preparsed_params->data_int[2] = atoi(token);
 			break;
@@ -242,21 +242,21 @@ qboolean PreParse_ScriptAction_Accum( gentity_t *ent, char *params, g_script_pre
 		// accum/constant
 		case DEC_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			preparsed_params->data_int[2] = atoi(token);
 			break;
 
 		case MUL_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			preparsed_params->data_int[2] = atoi(token);
 			break;
 
 		case DIV_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			preparsed_params->data_int[2] = atoi(token);
 			break;
@@ -264,33 +264,33 @@ qboolean PreParse_ScriptAction_Accum( gentity_t *ent, char *params, g_script_pre
 		// accum/accum
 		case INC_ACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
 
 		case ABORT_IF_LESS_THAN_ACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
 
 		case ABORT_IF_GREATER_THAN_ACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
@@ -298,77 +298,77 @@ qboolean PreParse_ScriptAction_Accum( gentity_t *ent, char *params, g_script_pre
 		case ABORT_IF_NOT_EQUAL_ACCUM_HASH:
 		case ABORT_IF_NOT_EQUALS_ACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
 
 		case ABORT_IF_EQUAL_ACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
 
 		case SET_ACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
 
 		case RANDOM_ACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
 
 		case DEC_ACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
 
 		case MUL_ACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
 
 		case DIV_ACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
@@ -379,33 +379,33 @@ qboolean PreParse_ScriptAction_Accum( gentity_t *ent, char *params, g_script_pre
 		// accum/globalaccum
 		case INC_GLOBALACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
 
 		case ABORT_IF_LESS_THAN_GLOBALACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
 
 		case ABORT_IF_GREATER_THAN_GLOBALACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
@@ -413,77 +413,77 @@ qboolean PreParse_ScriptAction_Accum( gentity_t *ent, char *params, g_script_pre
 		case ABORT_IF_NOT_EQUAL_GLOBALACCUM_HASH:
 		case ABORT_IF_NOT_EQUALS_GLOBALACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
 
 		case ABORT_IF_EQUAL_GLOBALACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
 
 		case SET_GLOBALACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
 
 		case RANDOM_GLOBALACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
 
 		case DEC_GLOBALACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
 
 		case MUL_GLOBALACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
 
 		case DIV_GLOBALACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
@@ -523,7 +523,7 @@ qboolean PreParse_ScriptAction_GlobalAccum( gentity_t *ent, char *params, g_scri
 	bufferIndex = atoi(token);
 	if (bufferIndex >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
 		// CHRUKER: b055 - Was printing 10 as the last bufferindex, but its actually 9
-		G_Error( Error_OutsideRange );
+		G_Error( "%s", Error_OutsideRange );
 	}
 	preparsed_params->data_int[0] = bufferIndex;
 
@@ -543,21 +543,21 @@ qboolean PreParse_ScriptAction_GlobalAccum( gentity_t *ent, char *params, g_scri
 	switch( lastTokenHash ) {
 		case INC_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			preparsed_params->data_int[2] = atoi(token);
 			break;
 
 		case ABORT_IF_LESS_THAN_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			preparsed_params->data_int[2] = atoi(token);
 			break;
 
 		case ABORT_IF_GREATER_THAN_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			preparsed_params->data_int[2] = atoi(token);
 			break;
@@ -565,7 +565,7 @@ qboolean PreParse_ScriptAction_GlobalAccum( gentity_t *ent, char *params, g_scri
 		case ABORT_IF_NOT_EQUAL_HASH:
 		case ABORT_IF_NOT_EQUALS_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			preparsed_params->data_int[2] = atoi(token);
 			break;
@@ -573,56 +573,56 @@ qboolean PreParse_ScriptAction_GlobalAccum( gentity_t *ent, char *params, g_scri
 		case ABORT_IF_EQUAL_HASH:
 		case ABORT_IF_EQUALS_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			preparsed_params->data_int[2] = atoi(token);
 			break;
 
 		case BITSET_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			preparsed_params->data_int[2] = (1<<atoi(token));
 			break;
 
 		case BITRESET_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			preparsed_params->data_int[2] = ~(1<<atoi(token));
 			break;
 
 		case ABORT_IF_BITSET_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			preparsed_params->data_int[2] = (1<<atoi(token));
 			break;
 
 		case ABORT_IF_NOT_BITSET_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			preparsed_params->data_int[2] = (1<<atoi(token));
 			break;
 
 		case SET_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			preparsed_params->data_int[2] = atoi(token);
 			break;
 
 		case RANDOM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			preparsed_params->data_int[2] = atoi(token);
 			break;
 
 		case TRIGGER_IF_EQUAL_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			preparsed_params->data_int[2] = atoi(token);
 
@@ -648,14 +648,14 @@ qboolean PreParse_ScriptAction_GlobalAccum( gentity_t *ent, char *params, g_scri
 
 		case WAIT_WHILE_EQUAL_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			preparsed_params->data_int[2] = atoi(token);
 			break;
 
 		case SET_TO_DYNAMITECOUNT_HASH:
 			if( !*token ) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 				G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): globalaccum %s requires a targetname parameter\n", lastToken );
 			}
 
@@ -668,21 +668,21 @@ qboolean PreParse_ScriptAction_GlobalAccum( gentity_t *ent, char *params, g_scri
 		// accum/constant
 		case DEC_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			preparsed_params->data_int[2] = atoi(token);
 			break;
 
 		case MUL_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			preparsed_params->data_int[2] = atoi(token);
 			break;
 
 		case DIV_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			preparsed_params->data_int[2] = atoi(token);
 			break;
@@ -690,33 +690,33 @@ qboolean PreParse_ScriptAction_GlobalAccum( gentity_t *ent, char *params, g_scri
 		// accum/accum
 		case INC_ACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
 
 		case ABORT_IF_LESS_THAN_ACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
 
 		case ABORT_IF_GREATER_THAN_ACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
@@ -724,77 +724,77 @@ qboolean PreParse_ScriptAction_GlobalAccum( gentity_t *ent, char *params, g_scri
 		case ABORT_IF_NOT_EQUAL_ACCUM_HASH:
 		case ABORT_IF_NOT_EQUALS_ACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
 
 		case ABORT_IF_EQUAL_ACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
 
 		case SET_ACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
 
 		case RANDOM_ACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
 
 		case DEC_ACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
 
 		case MUL_ACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
 
 		case DIV_ACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
@@ -805,33 +805,33 @@ qboolean PreParse_ScriptAction_GlobalAccum( gentity_t *ent, char *params, g_scri
 		// accum/globalaccum
 		case INC_GLOBALACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
 
 		case ABORT_IF_LESS_THAN_GLOBALACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
 
 		case ABORT_IF_GREATER_THAN_GLOBALACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
@@ -839,77 +839,77 @@ qboolean PreParse_ScriptAction_GlobalAccum( gentity_t *ent, char *params, g_scri
 		case ABORT_IF_NOT_EQUAL_GLOBALACCUM_HASH:
 		case ABORT_IF_NOT_EQUALS_GLOBALACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
 
 		case ABORT_IF_EQUAL_GLOBALACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
 
 		case SET_GLOBALACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
 
 		case RANDOM_GLOBALACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
 
 		case DEC_GLOBALACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
 
 		case MUL_GLOBALACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;
 
 		case DIV_GLOBALACCUM_HASH:
 			if (!token[0]) {
-				G_Error( Error_RequiresParam );
+				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
 			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
-				G_Error( Error_OutsideRange );
+				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
 			break;

@@ -2596,9 +2596,9 @@ void G_PrintClientSpammyCenterPrint(int entityNum, char* text);
 // Print to all
 #define AP(x) trap_SendServerCommand(-1, x)
 // Print to an ent, but not to bots..
-#define CP(x) if (ent && ent->client && !(g_entities[ent-g_entities].r.svFlags & SVF_BOT)) trap_SendServerCommand(ent-g_entities, x)
+#define CP(x) if (ent && ent->client && !(ent->r.svFlags & SVF_BOT)) trap_SendServerCommand(ent-g_entities, x)
 // Print to id = x, but not to bots..
-#define CPx(x, y) if (x == -1 || (g_entities[x].client && !(g_entities[x].r.svFlags & SVF_BOT))) trap_SendServerCommand(x, y)
+#define CPx(x, y) if ((x) == -1 || ((x) >= 0 && (x) < MAX_CLIENTS && g_entities[x].client && !(g_entities[x].r.svFlags & SVF_BOT))) trap_SendServerCommand(x, y)
 //
 #define SP(x) G_shrubbot_print(ent, x)
 //

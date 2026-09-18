@@ -213,11 +213,11 @@ void G_PrivateMessage(gentity_t *ent) {
 
 	for(i=0; i<pcount; ++i) {
 		// tjw: allow private message to self for etadmin_mod compat
-		if(pids[i] == ent-g_entities) self=qtrue;
+		if(ent && pids[i] == ent-g_entities) self=qtrue;
 		tmpent = &g_entities[pids[i]];
 		sent = qtrue;
 
-		if(COM_BitCheck(tmpent->client->sess.ignoreClients,(ent-g_entities))) {
+		if(ent && COM_BitCheck(tmpent->client->sess.ignoreClients,(ent-g_entities))) {
 			SP(va("%s^1 is ignoring you\n",	tmpent->client->pers.netname));
 			continue;
 		}
@@ -695,7 +695,7 @@ int ClientNumberFromString( gentity_t *to, char *s ) {
 				CPx( to-g_entities, va("print \"Bad client slot: [lof]%i\n\"", idnum));
 			}
 			else {
-				G_Printf(va("Bad client slot: %i\n",  idnum));
+				G_Printf("Bad client slot: %i\n",  idnum);
 			}
 			return -1;
 		}
@@ -706,7 +706,7 @@ int ClientNumberFromString( gentity_t *to, char *s ) {
 				CPx( to-g_entities, va("print \"Client[lof] %i [lon]is not active\n\"", idnum));
 			}
 			else {
-				G_Printf(va("Client %i is not active\n", idnum));
+				G_Printf("Client %i is not active\n", idnum);
 			}
 			return -1;
 		}
@@ -717,7 +717,7 @@ int ClientNumberFromString( gentity_t *to, char *s ) {
 		CPx(to-g_entities, va("print \"User [lof]%s [lon]is not on the server\n\"", s));
 	}
 	else {
-		G_Printf(va("User %s is not on the server\n", s));
+		G_Printf("User %s is not on the server\n", s);
 	}
 	return(-1);
 }
@@ -1859,6 +1859,10 @@ int G_WeaponCount( gentity_t* ent, weapon_t weap ) {
 qboolean G_IsWeaponDisabled( gentity_t* ent, weapon_t weapon, qboolean quiet ) {
 	int wcount;
 
+	if ( weapon <= WP_NONE || weapon >= WP_NUM_WEAPONS ) {
+		return qtrue;
+	}
+
 	// core: no restrictions during war mode.. // IRATA: does the client knows this ?
 	if ( nq_War.integer & WARMODE_ENABLE ) {
 		return qfalse;
@@ -1926,6 +1930,13 @@ qboolean G_IsWeaponDisabled( gentity_t* ent, weapon_t weapon, qboolean quiet ) {
 void G_SetClientWeapons( gentity_t* ent, weapon_t w1, weapon_t w2, qboolean updateclient ) {
 	qboolean changed = qfalse;
 
+	if ( w1 < 0 || w1 >= WP_NUM_WEAPONS ) {
+		w1 = 0;
+	}
+	if ( w2 < 0 || w2 >= WP_NUM_WEAPONS ) {
+		w2 = 0;
+	}
+
 	if( ent->client->sess.latchPlayerWeapon2 != w2 ) {
 		ent->client->sess.latchPlayerWeapon2 = w2;
 		changed = qtrue;
@@ -1989,6 +2000,13 @@ void Cmd_Team_f( gentity_t *ent, unsigned int dwCommand, qboolean fValue ) {
 
 	w =		atoi( weap );
 	w2 =	atoi( weap2 );
+
+	if ( w < 0 || w >= WP_NUM_WEAPONS ) {
+		w = 0;
+	}
+	if ( w2 < 0 || w2 >= WP_NUM_WEAPONS ) {
+		w2 = 0;
+	}
 
 	// tjw: allow old-school q2 players to use the '/team r' or '/team b' commands without losing their class
 	if(*ptype) {
@@ -2112,6 +2130,10 @@ void Cmd_Follow_f( gentity_t *ent, unsigned int dwCommand, qboolean fValue ) {
 			CP(va("print \"%s team spectating is now disabled.\n\"", aTeams[i]));
 		}
 
+		return;
+	}
+
+	if ( i < 0 || i >= level.maxclients || level.clients[i].pers.connected != CON_CONNECTED ) {
 		return;
 	}
 
@@ -3484,7 +3506,7 @@ void Cmd_Vote_f( gentity_t *ent ) {
 
 	if( level.voteInfo.vote_fn == G_Kick_v ) {
 		int pid = atoi( level.voteInfo.vote_value );
-		if( !g_entities[ pid ].client ) {
+		if( pid < 0 || pid >= level.maxclients || !g_entities[ pid ].client ) {
 			return;
 		}
 
@@ -4462,7 +4484,7 @@ void Cmd_IntermissionWeaponStats_f ( gentity_t* ent ) {
 	trap_Argv( 1, buffer, sizeof( buffer ) );
 
 	clientNum = atoi( buffer );
-	if( clientNum < 0 || clientNum > MAX_CLIENTS ) {
+	if( clientNum < 0 || clientNum >= level.maxclients ) {
 		return;
 	}
 
@@ -4544,7 +4566,7 @@ void G_CalcClientAccuracies( void ) {
 
 			level.clients[ i ].acc		 = shots ? (100 * hits) / (float)shots : 0;
 #if _DEBUG
-			if (level.clients[ i ].headshots != headshots) G_Printf(va("G_CalcClientAccuracies DEBUG error: clientHS: %i WSHS: %i !!!\n",level.clients[ i ].headshots, headshots ));
+			if (level.clients[ i ].headshots != headshots) G_Printf("G_CalcClientAccuracies DEBUG error: clientHS: %i WSHS: %i !!!\n", level.clients[ i ].headshots, headshots );
 #endif
 			level.clients[ i ].headshots = headshots;								// jP
 		}
@@ -4601,10 +4623,12 @@ void Cmd_SelectedObjective_f ( gentity_t* ent ) {
 				break;
 			}
 			else {
-				dist = VectorDistanceSquared( level.limboCams[i].origin, g_entities[level.limboCams[i].targetEnt].r.currentOrigin );
-				if( nearest == -1 || dist < neardist ) {
-					nearest = i;
-					neardist = dist;
+				if( level.limboCams[i].targetEnt >= 0 && level.limboCams[i].targetEnt < MAX_GENTITIES ) {
+					dist = VectorDistanceSquared( level.limboCams[i].origin, g_entities[level.limboCams[i].targetEnt].r.currentOrigin );
+					if( nearest == -1 || dist < neardist ) {
+						nearest = i;
+						neardist = dist;
+					}
 				}
 			}
 		}
@@ -4853,6 +4877,14 @@ void Cmd_Bet_f( gentity_t* ent ) {
 	// lower the bet in case the other has insufficient credits..
 	trap_Argv( 2, amountstr, sizeof( amountstr ) );
 	amount = atoi(amountstr);
+	if ( amount <= 0 ) {
+		CP("print \"^dbet: ^9Bet amount must be greater than 0\n\"");
+		return;
+	}
+	if ( ent->client->sess.credits < amount ) {
+		CP("print \"^dbet: ^9You do not have enough credits\n\"");
+		return;
+	}
 	if ( vic->client->sess.credits < amount ) {
 		amount = vic->client->sess.credits;
 	}
@@ -5058,11 +5090,16 @@ ClientCommand
 =================
 */
 void ClientCommand( int clientNum ) {
-	gentity_t*	ent = g_entities + clientNum;
+	gentity_t*	ent;
 	char		cmd[MAX_TOKEN_CHARS];
 	int			cmdHash;
 	qboolean	muted = qfalse;
 
+	if ( clientNum < 0 || clientNum >= level.maxclients ) {
+		return;
+	}
+
+	ent = g_entities + clientNum;
 	if ( !ent->client )
 		return;		// not fully in game yet
 
@@ -5263,27 +5300,26 @@ void ClientCommand( int clientNum ) {
 		case BINDSEARCH_R_HASH: // core: received a bindsearch result..
 			{
 				char	argv[MAX_TOKEN_CHARS];
-				char	*result = va("%s","");
-				char	*txt = NULL;
+				char	result[MAX_STRING_CHARS];
 				int		i;
 				int		argc = trap_Argc();
+
+				result[0] = '\0';
 				// check number of arguments..
 				if ( argc < 2 ) {
-					G_Printf( va("BindSearch for player %s is not found\n", g_entities[clientNum].client->pers.netname) );
+					G_Printf( "BindSearch for player %s is not found\n", g_entities[clientNum].client->pers.netname );
 					return;
 				}
 				// combine the arguments into one string..
-				for ( i=0; i<argc; ++i ) {
-					trap_Argv( i+1, argv, sizeof(argv) );
-					result = strcat( result, va("%s ", argv) );
+				for ( i=1; i<argc; ++i ) {
+					trap_Argv( i, argv, sizeof(argv) );
+					Q_strcat( result, sizeof(result), argv );
+					Q_strcat( result, sizeof(result), " " );
 				}
-				txt = va("BindSearch for player %s => %s\n", g_entities[clientNum].client->pers.netname, result);
 				// display in console and log..
-				if ( g_dedicated.integer ) {
-					G_LogPrintf( txt );		// on a dedicated this will also print into the console
-				} else {
-					G_LogPrintf( txt );
-					G_Printf( txt );		// console
+				G_LogPrintf( "BindSearch for player %s => %s\n", g_entities[clientNum].client->pers.netname, result );
+				if ( !g_dedicated.integer ) {
+					G_Printf( "BindSearch for player %s => %s\n", g_entities[clientNum].client->pers.netname, result );
 				}
 			}
 			return;
@@ -5423,6 +5459,9 @@ char *ConcatArgs( int start ) {
 	int		len = 0;
 	char	arg[MAX_STRING_CHARS];
 
+	if ( start < 0 ) {
+		start = 0;
+	}
 	c = trap_Argc();
 
 	for ( i = start ; i < c ; ++i ) {

@@ -104,7 +104,8 @@ int G_FindConfigstringIndex( const char *name, int start, int max, qboolean crea
 	}
 
 	if ( i == max ) {
-		G_Error( va("G_FindConfigstringIndex: overflow (%i %i)", start, start+i) );
+		G_Printf( "^1WARNING: G_FindConfigstringIndex overflow (start %i, max %i) for '%s'\n", start, max, name );
+		return 0;
 	}
 
 	trap_SetConfigstring( start + i, name );
@@ -168,7 +169,8 @@ int G_FindNewConfigstringIndex( const char *name, int start, int max, qboolean c
 	}
 
 	if ( i == max ) {
-		G_Error( va("G_FindConfigstringIndex: overflow (%i %i)", start, start+i) );
+		G_Printf( "^1WARNING: G_FindNewConfigstringIndex overflow (start %i, max %i) for '%s'\n", start, max, name );
+		return 0;
 	}
 
 	if ( isModels ) {
@@ -2157,19 +2159,19 @@ static qboolean G_LoadCampaignsFromFile( const char *filename ) {
 	qboolean mapFound = qfalse;
 
 	if( !handle ) {
-		G_Printf( va( S_COLOR_RED "file not found: %s\n", filename ) );
+		G_Printf( S_COLOR_RED "file not found: %s\n", filename );
 		return qfalse;
 	}
 
 	if( !trap_PC_ReadToken( handle, &token ) ) {
 		trap_PC_FreeSource( handle );
-		G_Printf( va( S_COLOR_RED "error reading token in file: %s\n", filename ) );
+		G_Printf( S_COLOR_RED "error reading token in file: %s\n", filename );
 		return qfalse;
 	}
 
 	if( *token.string != '{' ) {
 		trap_PC_FreeSource( handle );
-		G_Printf( va( S_COLOR_RED "error invalid first token in file: %s\n", filename ) );
+		G_Printf( S_COLOR_RED "error invalid first token in file: %s\n", filename );
 		return qfalse;
 	}
 
@@ -2189,7 +2191,7 @@ static qboolean G_LoadCampaignsFromFile( const char *filename ) {
 			}
 
 			if( *token.string != '{' ) {
-				G_Printf( va( S_COLOR_RED "unexpected token '%s' inside: %s\n", token.string, filename ) );
+				G_Printf( S_COLOR_RED "unexpected token '%s' inside: %s\n", token.string, filename );
 				trap_PC_FreeSource( handle );
 				return qfalse;
 			}
@@ -2198,14 +2200,14 @@ static qboolean G_LoadCampaignsFromFile( const char *filename ) {
 				   !Q_stricmp( token.string, "description" ) ||
 				   !Q_stricmp( token.string, "image" ) ) {
 			if((s = PC_String_Parse(handle)) == NULL) {
-				G_Printf( va( S_COLOR_RED "unexpected end of file inside: %s\n", filename ) );
+				G_Printf( S_COLOR_RED "unexpected end of file inside: %s\n", filename );
 				trap_PC_FreeSource( handle );
 				return qfalse;
 			}
 		}
 		else if( !Q_stricmp( token.string, "shortname" ) ) {
 			if((s = PC_String_Parse(handle)) == NULL) {
-				G_Printf( va( S_COLOR_RED "unexpected end of file inside: %s\n", filename ) );
+				G_Printf( S_COLOR_RED "unexpected end of file inside: %s\n", filename );
 				trap_PC_FreeSource( handle );
 				return qfalse;
 			}
@@ -2215,17 +2217,17 @@ static qboolean G_LoadCampaignsFromFile( const char *filename ) {
 		}
 		else if( !Q_stricmp( token.string, "next" ) ) {
 			if((s = PC_String_Parse(handle)) == NULL) {
-				G_Printf( va( S_COLOR_RED "unexpected end of file inside: %s\n", filename ) );
+				G_Printf( S_COLOR_RED "unexpected end of file inside: %s\n", filename );
 				trap_PC_FreeSource( handle );
 				return qfalse;
 			}
 			else {
-				Q_strncpyz( g_campaigns[level.campaignCount].shortname, s, sizeof(g_campaigns[level.campaignCount].next) );
+				Q_strncpyz( g_campaigns[level.campaignCount].next, s, sizeof(g_campaigns[level.campaignCount].next) );
 			}
 		}
 		else if( !Q_stricmp( token.string, "type" ) ) {
 			if( !trap_PC_ReadToken( handle, &token ) ) {
-				G_Printf( va( S_COLOR_RED "unexpected end of file inside: %s\n", filename ) );
+				G_Printf( S_COLOR_RED "unexpected end of file inside: %s\n", filename );
 				trap_PC_FreeSource( handle );
 				return qfalse;
 			}

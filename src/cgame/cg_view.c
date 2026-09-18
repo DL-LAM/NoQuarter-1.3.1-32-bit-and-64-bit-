@@ -1310,7 +1310,7 @@ int CG_CalcViewValues( void ) {
 char* CG_MustParse( char** pString, const char* pErrorMsg ) {
 	char* token = COM_Parse( pString );
 	if(!*token) {
-		CG_Error( pErrorMsg );
+		CG_Error( "%s", pErrorMsg );
 	}
 	return token;
 }

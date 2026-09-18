@@ -35,7 +35,7 @@ static void G_xpsave_init_struct(g_xpsave_t* data) {
 		return;
 	}
 	// Initialise everything to zero
-	memset(data, 0, sizeof(data));
+	memset(data, 0, sizeof(*data));
 	// Set the signature and the version
 	data->signature			= XP_SAVE_SIGNATURE;
 	data->version			= XP_SAVE_CUR_VER;

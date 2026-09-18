@@ -899,7 +899,15 @@ qboolean G_shrubbot_cmd_check(gentity_t *ent) {
 			// Replace arguments
 			for (argIx = 1; argIx <= 9; argIx++) {
 				char arg[MAX_NAME_LENGTH];
+				int k;
+
 				Q_SayArgv(skip + argIx, arg, sizeof(arg));
+				// Sanitize arguments to prevent command injection (; and newlines)
+				for (k = 0; arg[k]; k++) {
+					if (arg[k] == ';' || arg[k] == '\n' || arg[k] == '\r') {
+						arg[k] = ' ';
+					}
+				}
 				cmdLine = Q_StrReplace(cmdLine, va("[%i]", argIx), arg);
 			}
 
@@ -2351,8 +2359,9 @@ int MuteNumbersFromString( char *s, int *plist) {
 	if(is_slot) {
 		i = atoi(s);
 
-		if(level.clients[i].pers.connected == CON_CONNECTED ||
-			level.clients[i].pers.connected == CON_CONNECTING) {
+		if(i >= 0 && i < level.maxclients &&
+			(level.clients[i].pers.connected == CON_CONNECTED ||
+			level.clients[i].pers.connected == CON_CONNECTING)) {
 				SanitizeString(level.clients[i].pers.netname, s2, qtrue);
 			} else {
 				return 0;
@@ -2440,9 +2449,9 @@ qboolean G_shrubbot_unmute(gentity_t *ent, int skiparg) {
 
 	// redeye - search for auto-muted players
 	n = ClientNumbersFromString(ms, pids);
-	pidEnt = &g_entities[pids[0]];
-	if ( n == 1 ) {
-		if ( pidEnt->client->sess.muted ) {
+	if ( n == 1 && pids[0] >= 0 && pids[0] < level.maxclients ) {
+		pidEnt = &g_entities[pids[0]];
+		if ( pidEnt->client && pidEnt->client->sess.muted ) {
 			// core: fix: let the mute status be put in CS_PLAYERS configstring
 			pidEnt->client->sess.muted = qfalse;
 			pidEnt->client->sess.auto_mute_time = -1;
@@ -2458,7 +2467,6 @@ qboolean G_shrubbot_unmute(gentity_t *ent, int skiparg) {
 	}
 
 	mutes = MuteNumbersFromString(ms, pids);
-	pidEnt = &g_entities[pids[0]];
 	if( mutes != 1) {
 		if ( Q_SayArgc() == 3+skiparg ) {
 			int num;
@@ -2481,14 +2489,23 @@ qboolean G_shrubbot_unmute(gentity_t *ent, int skiparg) {
 		}
 	}
 
-	// core: fix: let the mute status be put in CS_PLAYERS configstring
-	pidEnt->client->sess.muted = qfalse;
-	pidEnt->client->sess.auto_mute_time = -1;
-	pidEnt->client->sess.muted_by = UNMUTED;
-	ClientConfigStringChanged( pidEnt );
-	if ( recIndex != -1 ) {
+	recIndex = pids[0];
+	if ( recIndex >= 0 && g_shrubbot_mutes[recIndex] ) {
+		int j;
 		AP(va("chat \"^dunmute: ^*%s ^9has been unmuted\"", g_shrubbot_mutes[recIndex]->name ));
 		g_shrubbot_mutes[recIndex]->expires = t - SHRUBBOT_BAN_EXPIRE_OFFSET;
+
+		// Unmute online client if connected
+		for ( j = 0; j < level.numConnectedClients; j++ ) {
+			gentity_t *clEnt = &g_entities[level.sortedClients[j]];
+			if ( clEnt->client && (!Q_stricmp(clEnt->client->pers.cl_guid, g_shrubbot_mutes[recIndex]->guid) ||
+			     !Q_stricmp(clEnt->client->pers.netname, g_shrubbot_mutes[recIndex]->name)) ) {
+				clEnt->client->sess.muted = qfalse;
+				clEnt->client->sess.auto_mute_time = -1;
+				clEnt->client->sess.muted_by = UNMUTED;
+				ClientConfigStringChanged( clEnt );
+			}
+		}
 	}
 
 	_shrubbot_writeconfig();
@@ -5025,7 +5042,7 @@ void G_shrubbot_print_chat(gentity_t *ent, char *m) {
 		char m2[MAX_STRING_CHARS];
 
 		DecolorString(m, m2);
-		G_Printf(va("%s\n",m2));
+		G_Printf("%s\n", m2);
 	}
 }
 
@@ -5041,7 +5058,7 @@ void G_shrubbot_print(gentity_t *ent, char *m) {
 		char m2[MAX_STRING_CHARS];
 
 		DecolorString(m, m2);
-		G_Printf(m2);
+		G_Printf("%s", m2);
 	}
 }
 

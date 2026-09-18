@@ -1629,7 +1629,7 @@ char *CheckLocalhost( gentity_t *ent, char *userinfo ) {
 
 			if ( !valid ) {
 				reason = va("ClientUserinfoChanged: client hacking IP! clientnum: %d, name: %s", ent->client->ps.clientNum, ent->client->pers.netname);
-				G_Printf(reason);
+				G_Printf("%s\n", reason);
 				G_LogPrintf( "%s %s %s %s\n", reason, ent->client->pers.client_ip, strIP, ent->client->pers.cl_guid );
 				G_DPrintf( "%s %s %s %s\n", reason, ent->client->pers.client_ip, strIP, ent->client->pers.cl_guid );
 				// i think just disconnecting them is way too friendly..
@@ -1927,7 +1927,7 @@ void ClientUserinfoChanged( int clientNum ) {
 
 		SanitizeString(cs_name, censoredName, qtrue);
 		if (G_CensorText((char *)&censoredName,&censorNamesDictionary)) {
-			G_LogPrintf( va("ClientUserInfoChanged: Censored name \"%s\" (clientNum=%i, IP=%s)\n", cs_name, clientNum, client->pers.client_ip) );
+			G_LogPrintf( "ClientUserInfoChanged: Censored name \"%s\" (clientNum=%i, IP=%s)\n", cs_name, clientNum, client->pers.client_ip );
 			Q_strncpyz( cs_name, censoredName, sizeof( cs_name ) );
 			Info_SetValueForKey( userinfo, "name", censoredName);
 			trap_SetUserinfo( clientNum, userinfo );
@@ -2173,7 +2173,7 @@ char* IsFakepConnection(int clientNum, char const* ip, char const* rate) {
 				++count;
 				if ( count > max ) {
 					G_Printf("IsFakepConnection: too many connections from %s\n", ip);
-					G_LogPrintf( va("IsFakepConnection: too many connections from %s\n",ip) );
+					G_LogPrintf( "IsFakepConnection: too many connections from %s\n", ip );
 					// TODO should we drop / ban all connections from this IP ?
 					return va("Only %d connection%s per IP %s allowed on this server!",
 							max,
@@ -2324,7 +2324,7 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 
 			SanitizeString(cs_name, censoredName, qtrue);
 			if (G_CensorText((char *)&censoredName,&censorNamesDictionary)) {
-				G_LogPrintf( va("ClientConnect: Censored name \"%s\" (clientNum=%i, IP=%s)\n", cs_name, clientNum, cs_ip) );
+				G_LogPrintf( "ClientConnect: Censored name \"%s\" (clientNum=%i, IP=%s)\n", cs_name, clientNum, cs_ip );
 				Info_SetValueForKey( userinfo, "name", censoredName);
 				trap_SetUserinfo( clientNum, userinfo );
 				if (g_censorPenalty.integer & CNSRPNLTY_KICK) {
@@ -2557,11 +2557,11 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 
 	if ( !(ent->r.svFlags & SVF_BOT) || ((ent->r.svFlags & SVF_BOT) && (g_logOptions.integer & LOGOPTS_BOTS)) ) {
 		if (g_logOptions.integer & LOGOPTS_IP) {
-			G_LogPrintf( va("ClientConnect: %i, IP: %s, name: \"%s\"\n", clientNum, client->pers.client_ip, playername) );
+			G_LogPrintf( "ClientConnect: %i, IP: %s, name: \"%s\"\n", clientNum, client->pers.client_ip, playername );
 		}
 		else {
 			// also old way - no name
-			G_LogPrintf( va("ClientConnect: %i\n", clientNum) );
+			G_LogPrintf( "ClientConnect: %i\n", clientNum );
 		}
 	}
 
@@ -2708,33 +2708,28 @@ void ClientBegin( int clientNum ) {
 	// This has to be done after the client's connection is set to CON_CONNECTED..
 	cs_guid = va("%s",client->pers.cl_guid);
 	if ( G_shrubbot_mute_check(va("%s",client->pers.client_ip), cs_guid) ) {
-		int					pids[MAX_CLIENTS];
-		char 				*cs_name	= va("%s",client->pers.netname);
-		gentity_t			*pidEnt = NULL;
-		int					n;
+		time_t			expiretime;
 
-		n = ClientNumbersFromString(cs_name, pids);
-		pidEnt = &g_entities[pids[0]];
-		if ( n == 1 ) {
-			time_t			expiretime;
+		if ( time(&expiretime) ) {
+			int				seconds = 0, i;
 
-			if ( time(&expiretime) ) {
-				int				seconds, i;
-
-				for (i=0; g_shrubbot_mutes[i]; ++i) {
-					if ( !Q_stricmp(g_shrubbot_mutes[i]->guid, cs_guid) && !Q_stricmp(g_shrubbot_mutes[i]->name, cs_name) ) {
-						break;
-					}
+			for (i=0; g_shrubbot_mutes[i]; ++i) {
+				if ( !Q_stricmp(g_shrubbot_mutes[i]->guid, cs_guid) ) {
+					break;
 				}
-				seconds = g_shrubbot_mutes[i]->expires - (expiretime - SHRUBBOT_BAN_EXPIRE_OFFSET);
-				// core: fix: let the mute status be put in CS_PLAYERS configstring
-				pidEnt->client->sess.muted = qtrue;
-				pidEnt->client->sess.auto_mute_time = level.time + seconds*SECONDS_1;
-				pidEnt->client->sess.muted_by = MUTED_BY_SHRUB;
-				ClientConfigStringChanged( pidEnt );
 			}
+			if ( g_shrubbot_mutes[i] ) {
+				seconds = g_shrubbot_mutes[i]->expires - (expiretime - SHRUBBOT_BAN_EXPIRE_OFFSET);
+			}
+			if ( seconds < 0 ) {
+				seconds = 0;
+			}
+			// core: fix: let the mute status be put in CS_PLAYERS configstring
+			ent->client->sess.muted = qtrue;
+			ent->client->sess.auto_mute_time = level.time + seconds*SECONDS_1;
+			ent->client->sess.muted_by = MUTED_BY_SHRUB;
+			ClientConfigStringChanged( ent );
 		}
-
 	}
 
 	// locate ent at a spawn point
@@ -3329,11 +3324,11 @@ void ClientDisconnect( int clientNum ) {
 
 	if ( !(ent->r.svFlags & SVF_BOT) || ((ent->r.svFlags & SVF_BOT) && (g_logOptions.integer & LOGOPTS_BOTS)) ) {
 		if (g_logOptions.integer & LOGOPTS_IP) {
-			G_LogPrintf( va("ClientDisconnect: %i, IP: %s, name: \"%s\"\n", clientNum, ent->client->pers.client_ip, playername) );
+			G_LogPrintf( "ClientDisconnect: %i, IP: %s, name: \"%s\"\n", clientNum, ent->client->pers.client_ip, playername );
 		}
 		else {
 			// Old way - no name
-			G_LogPrintf( va("ClientDisconnect: %i\n", clientNum) );
+			G_LogPrintf( "ClientDisconnect: %i\n", clientNum );
 		}
 	}
 

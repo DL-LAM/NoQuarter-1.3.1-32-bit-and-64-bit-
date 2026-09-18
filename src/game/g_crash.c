@@ -105,10 +105,10 @@ void linux_dsoinfo() {
 	while(linkmap) {
 		if(linkmap->l_addr) {
 			if(strcmp(linkmap->l_name,"")==0) {
-				G_CrashLogPrintf("0x%08x\t(unknown)\n", linkmap->l_addr);
+				G_CrashLogPrintf("0x%08lx\t(unknown)\n", (unsigned long)linkmap->l_addr);
 			}
 			else {
-				G_CrashLogPrintf("0x%08x\t%s\n", linkmap->l_addr, linkmap->l_name);
+				G_CrashLogPrintf("0x%08lx\t%s\n", (unsigned long)linkmap->l_addr, linkmap->l_name);
 			}
 		}
 		linkmap=linkmap->l_next;

@@ -397,7 +397,7 @@ static void CG_SoundLoadSoundFiles( void ) {
 		return;
 	}
 	if ( len > sizeof(bigTextBuffer) ) {
-		CG_Error( S_COLOR_RED "%s is too big, make it smaller (max = %i bytes)\n", filename, sizeof(bigTextBuffer) );
+		CG_Error( S_COLOR_RED "%s is too big, make it smaller (max = %i bytes)\n", filename, (int)sizeof(bigTextBuffer) );
 	}
 	// load the file into memory
 	trap_FS_Read( bigTextBuffer, len, f );
@@ -411,7 +411,7 @@ static void CG_SoundLoadSoundFiles( void ) {
 		if (!token[0]) {
 			break;
 		}
-		Com_sprintf( soundFiles[numSounds++], MAX_QPATH, token );
+		Com_sprintf( soundFiles[numSounds++], MAX_QPATH, "%s", token );
 
 		// FIXME: sanity check MAX_SOUND_FILES limit
 	}
@@ -435,7 +435,7 @@ static void CG_SoundLoadSoundFiles( void ) {
 			continue;
 		}
 		if( len > sizeof(bigTextBuffer) ) {
-			CG_Error( S_COLOR_RED "%s is too big, make it smaller (max = %i bytes)\n", filename, sizeof(bigTextBuffer) );
+			CG_Error( S_COLOR_RED "%s is too big, make it smaller (max = %i bytes)\n", filename, (int)sizeof(bigTextBuffer) );
 		}
 		memset( bigTextBuffer, 0, sizeof(bigTextBuffer) );
 		trap_FS_Read( bigTextBuffer, len, f );

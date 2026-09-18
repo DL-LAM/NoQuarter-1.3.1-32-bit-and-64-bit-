@@ -1800,7 +1800,7 @@ void CG_PlayVoiceChat( bufferedVoiceChat_t *vchat ) {
 
 	if (!vchat->voiceOnly && !cg_noVoiceText.integer) {
 		CG_AddToTeamChat( vchat->message, vchat->clientNum, vchat->disguise );
-		CG_Printf( va( "[skipnotify]: %s\n", vchat->message ) ); // JPW NERVE
+		CG_Printf( "[skipnotify]: %s\n", vchat->message ); // JPW NERVE
 		CG_WriteToLog( "%s\n", vchat->message  );
 	}
 
@@ -2458,7 +2458,7 @@ void CG_scores_cmd(void) {
 }
 
 void CG_printFile(char *str) {
-	CG_Printf(str);
+	CG_Printf("%s", str);
 	if(cgs.dumpStatsFile > 0) {
 		char s[MAX_STRING_CHARS];
 
@@ -2632,9 +2632,9 @@ void CG_ServerCommand_gs( void ) {
 	}
 
 #ifdef _DEBUG
-	CG_Printf( va("Gamestate received:  models:%i shaders:%i skins:%i characters:%i sounds:%i remapshader:%i\n",
+	CG_Printf( "Gamestate received:  models:%i shaders:%i skins:%i characters:%i sounds:%i remapshader:%i\n",
 				countModels, countShaders, countSkins,
-				countCharacters, countSounds, countShaderstate) );
+				countCharacters, countSounds, countShaderstate );
 #endif
 }
 
@@ -3292,9 +3292,9 @@ void C_CSMethodCheck( void ) {
 	if ( cgs.csMethod == 0 ) return;
 
 #ifdef _DEBUG
-	CG_Printf( va("Gamestate for:  models:%i shaders:%i skins:%i characters:%i sounds:%i",
+	CG_Printf( "Gamestate for:  models:%i shaders:%i skins:%i characters:%i sounds:%i",
 				cgs.csMethod_Models, cgs.csMethod_Shaders, cgs.csMethod_Skins,
-				cgs.csMethod_Characters, cgs.csMethod_Sounds) );
+				cgs.csMethod_Characters, cgs.csMethod_Sounds );
 #endif
 
 	// models..

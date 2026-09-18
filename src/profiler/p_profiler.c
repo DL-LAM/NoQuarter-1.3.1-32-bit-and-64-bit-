@@ -34,13 +34,14 @@ static void profiler_SetBlockProfilerName(struct BlockProfiler* block, const cha
 		return;
 	}
 	strncpy(block->name, name, BLOCK_PROFILER_NAME_SZ);
+	block->name[BLOCK_PROFILER_NAME_SZ - 1] = '\0';
 	block->times.tag = block->name;
 }
 
 static void profiler_Error(struct BlockProfiler* block, const char* error_msg)
 {
 	if ( block->error_count++ == 0 )
-		G_Printf(error_msg);
+		G_Printf("%s", error_msg);
 }
 
 static void profiler_StartBlockProfiler(struct BlockProfiler* block, qboolean recursive)

@@ -542,7 +542,7 @@ void UI_LoadPanel_RenderLoadingText( panel_button_t* button )
 	}
 
 	if ( Downloading() )
-		Com_sprintf( buff, sizeof(buff), va("Connecting to:\n %s^*\n\n Needed paks: \n %s", cstate.servername, UI_Cvar_VariableString("com_missingFiles")) );
+		Com_sprintf( buff, sizeof(buff), "Connecting to:\n %s^*\n\n Needed paks: \n %s", cstate.servername, UI_Cvar_VariableString("com_missingFiles") );
 
 
 	BG_FitTextToWidth_Ext( buff, button->font->scalex, button->rect.w, sizeof(buff), button->font->font );

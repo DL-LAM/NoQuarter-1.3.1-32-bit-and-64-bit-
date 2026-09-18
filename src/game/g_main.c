@@ -2135,7 +2135,7 @@ qboolean G_ReadWeaponRestrictions(void) {
 		// read the file into memory..
 		len = trap_FS_FOpenFile("nq_weapons.cfg", &f, FS_READ);
 		if(len < 0)	{
-			G_Printf(va("^3Warning: could not open weapon restrictions config files \"nq_weapons.cfg\" or \"nq_weapons_%s.cfg\" - No restrictions are set!\n", mapname));
+			G_Printf("^3Warning: could not open weapon restrictions config files \"nq_weapons.cfg\" or \"nq_weapons_%s.cfg\" - No restrictions are set!\n", mapname);
 			return qfalse;
 		}
 		else {
@@ -2143,7 +2143,7 @@ qboolean G_ReadWeaponRestrictions(void) {
 		}
 	}
 	else {
-		G_Printf(va("Reading restrictions from file \"nq_weapons_%s.cfg\"\n", mapname));
+		G_Printf("Reading restrictions from file \"nq_weapons_%s.cfg\"\n", mapname);
 	}
 
 	cfg = malloc(len+1);
@@ -2924,7 +2924,7 @@ static void ServerCheck( void ) {
 		trap_Cvar_VariableStringBuffer( level.config.setl[i].name, versionStr, sizeof(versionStr) );
 
 		if ( Q_stricmp( versionStr, level.config.setl[i].value ) != 0) {
-			G_Printf(va("^1Warning: Server admin changed locked cvar, reload config! ('%s' should be %s not %s)\n", level.config.setl[i].name, level.config.setl[i].value, versionStr) );
+			G_Printf("^1Warning: Server admin changed locked cvar, reload config! ('%s' should be %s not %s)\n", level.config.setl[i].name, level.config.setl[i].value, versionStr );
 			msgWhine = qtrue;
 		}
 	}
@@ -3285,7 +3285,7 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 			trap_Cvar_Update( &csMethod );
 			// IRATA: log file is not open here
 			// G_LogPrintf( va("csMethod changed to %i\n", csMethod.integer) );
-			G_Printf( va("csMethod changed to %i\n", csMethod.integer) );
+			G_Printf( "csMethod changed to %i\n", csMethod.integer );
 		}
 	}
 
@@ -3293,7 +3293,7 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	if ( g_ForceCvarFile.string[0] ) {
 		char str[MAX_STRING_CHARS];
 
-		G_Printf( va("Executing g_ForceCvarFile %s\n", g_ForceCvarFile.string) );
+		G_Printf( "Executing g_ForceCvarFile %s\n", g_ForceCvarFile.string );
 		Q_strncpyz(str, "exec /", sizeof(str));
 		Q_strcat(str, sizeof(str), g_ForceCvarFile.string);
 		Q_strcat(str, sizeof(str), "\n");
@@ -6790,7 +6790,7 @@ void Cmd_ClearFlag_f(void) {
 		// todo: if (this cvar is no bitflagged cvar) continue..
 		value = gameCvarTable[i].vmCvar->integer & ~value;	// note: don't do this when the cvar is a floatingpoint value.. results will be erratic.
 		trap_Cvar_Set( cvarName, va("%i",value) );
-		G_LogPrintf(va("^9clearFlag: ^7new value for %s = %i\n",cvarName,value));
+		G_LogPrintf("^9clearFlag: ^7new value for %s = %i\n", cvarName, value);
 		return;
 	}
 	G_LogPrintf("^9clearFlag: ^7Cvar was not found. Nothing is cleared!\n");
@@ -6843,7 +6843,7 @@ void Cmd_SetFlag_f(void) {
 		// todo: if (this cvar is no bitflagged cvar) continue..
 		value |= gameCvarTable[i].vmCvar->integer;	// note: don't do this when the cvar is a floatingpoint value.. results will be erratic.
 		trap_Cvar_Set( cvarName, va("%i",value) );
-		G_LogPrintf(va("^9setFlag: ^7new value for %s = %i\n",cvarName,value));
+		G_LogPrintf("^9setFlag: ^7new value for %s = %i\n", cvarName, value);
 		return;
 	}
 	G_LogPrintf("^9setFlag: ^7Cvar was not found. Nothing is set!\n");

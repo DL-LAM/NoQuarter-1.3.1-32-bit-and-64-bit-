@@ -180,6 +180,7 @@ void G_ReadSessionData( gclient_t *client )
 	int mvc_l, mvc_h;
 #endif
 	char s[MAX_STRING_CHARS];
+	char dummy_nquid[33];
 	qboolean test;
 	qboolean load = qfalse;
 
@@ -193,10 +194,10 @@ void G_ReadSessionData( gclient_t *client )
 	// Jaybird - fixed to match with writesessiondata
 #ifdef MV_SUPPORT
 	//			 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23
-	sscanf( s, "%i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %u %s",
+	sscanf( s, "%i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %u %32s",
 #else
 	//			 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21
-	sscanf( s, "%i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %u %s",
+	sscanf( s, "%i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %u %32s",
 #endif
 		(int *)&client->sess.sessionTeam,		// 0
 		&client->sess.spectatorTime,			// 1
@@ -227,7 +228,7 @@ void G_ReadSessionData( gclient_t *client )
 #ifdef AUTO_GUID
 		(char*)&client->sess.nqKeyInfo.nquid
 #else
-		"" // write the nquid where no nquid is gone before
+		dummy_nquid // write the nquid where no nquid is gone before
 #endif
 		);
 

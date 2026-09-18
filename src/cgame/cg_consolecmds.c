@@ -380,7 +380,7 @@ static void CG_FTSayPlayerClass_f( void ) {
 
 	if ( cg.snap && ( cg.snap->ps.pm_type != PM_INTERMISSION ) ) {
 		if ( cgs.clientinfo[cg.clientNum].team == TEAM_SPECTATOR || cgs.clientinfo[cg.clientNum].team == TEAM_FREE ) {
-			CG_Printf ( CG_TranslateString( "Can't say class when spectator.\n" ) );
+			CG_Printf( "%s", CG_TranslateString( "Can't say class when spectator.\n" ) );
 			return;
 		}
 	}
@@ -411,7 +411,7 @@ static void CG_SayPlayerClass_f( void ) {
 
 	if ( cg.snap && ( cg.snap->ps.pm_type != PM_INTERMISSION ) ) {
 		if ( cgs.clientinfo[cg.clientNum].team == TEAM_SPECTATOR || cgs.clientinfo[cg.clientNum].team == TEAM_FREE ) {
-			CG_Printf ( CG_TranslateString( "Can't say class when spectator.\n" ) );
+			CG_Printf( "%s", CG_TranslateString( "Can't say class when spectator.\n" ) );
 			return;
 		}
 	}
@@ -440,7 +440,7 @@ static void CG_TeamVoiceChat_f( void ) {
 	// NOTE - This cg.snap will be the person you are following, but its just for intermission test
 	if ( cg.snap && ( cg.snap->ps.pm_type != PM_INTERMISSION ) ) {
 		if ( cgs.clientinfo[cg.clientNum].team == TEAM_SPECTATOR || cgs.clientinfo[cg.clientNum].team == TEAM_FREE ) {
-			CG_Printf ( CG_TranslateString( "Can't team voice chat as a spectator.\n" ) );
+			CG_Printf( "%s", CG_TranslateString( "Can't team voice chat as a spectator.\n" ) );
 			return;
 		}
 	}
@@ -460,7 +460,7 @@ static void CG_BuddyVoiceChat_f( void ) {
 	// NOTE - This cg.snap will be the person you are following, but its just for intermission test
 	if ( cg.snap && ( cg.snap->ps.pm_type != PM_INTERMISSION ) ) {
 		if ( cgs.clientinfo[cg.clientNum].team == TEAM_SPECTATOR || cgs.clientinfo[cg.clientNum].team == TEAM_FREE ) {
-			CG_Printf ( CG_TranslateString( "Can't buddy voice chat as a spectator.\n" ) );
+			CG_Printf( "%s", CG_TranslateString( "Can't buddy voice chat as a spectator.\n" ) );
 			return;
 		}
 	}
@@ -694,23 +694,23 @@ static void CG_Server_Help_f( void ) {
 		explain = (!Q_stricmpn("help",Str,4))? qtrue : explain;
 	}
 
-	CG_Printf(colorLine);
+	CG_Printf("%s", colorLine);
 	// check for special arguments..
 	if ( explain ) {
-		CG_Printf(va("%sNo Quarter %sSERVER%s help\n", colorDesc, colorSpecial, colorDesc));
-		CG_Printf(va("%sUsage:  nqadmin <cvar || special>\n\n",colorDesc));
-		CG_Printf(va("%sYou can enter a CVAR-name you want a description of.\n\n",colorDesc));
-		CG_Printf(va("%sYou can instead enter a special search-argument\n",colorDesc));
-		CG_Printf(va("%sto get a list of related CVARs.\n",colorDesc));
-		CG_Printf(va("%sThe special search-arguments are:\n",colorDesc));
+		CG_Printf( "%s", va("%sNo Quarter %sSERVER%s help\n", colorDesc, colorSpecial, colorDesc));
+		CG_Printf( "%s", va("%sUsage:  nqadmin <cvar || special>\n\n",colorDesc));
+		CG_Printf( "%s", va("%sYou can enter a CVAR-name you want a description of.\n\n",colorDesc));
+		CG_Printf( "%s", va("%sYou can instead enter a special search-argument\n",colorDesc));
+		CG_Printf( "%s", va("%sto get a list of related CVARs.\n",colorDesc));
+		CG_Printf( "%s", va("%sThe special search-arguments are:\n",colorDesc));
 		// IRATA: create this list by serverHelpCategoriesNAMES ?
-		CG_Printf(va("%sweapons      spawning     warmup       logging      \n",colorSpecial));
-		CG_Printf(va("%ssecurity     xp           configs      messages     \n",colorSpecial));
-		CG_Printf(va("%ssoldier      medic        engineer     fieldops     \n",colorSpecial));
-		CG_Printf(va("%scovertops    voting       damage       penalty      \n",colorSpecial));
-		CG_Printf(va("%sskill        bots         time         duration     \n",colorSpecial));
-		CG_Printf(va("%sdistance     shortcuts    lua          debug        \n",colorSpecial));
-		CG_Printf(va("%sperformance  restrict     network                   \n",colorSpecial));
+		CG_Printf( "%s", va("%sweapons      spawning     warmup       logging      \n",colorSpecial));
+		CG_Printf( "%s", va("%ssecurity     xp           configs      messages     \n",colorSpecial));
+		CG_Printf( "%s", va("%ssoldier      medic        engineer     fieldops     \n",colorSpecial));
+		CG_Printf( "%s", va("%scovertops    voting       damage       penalty      \n",colorSpecial));
+		CG_Printf( "%s", va("%sskill        bots         time         duration     \n",colorSpecial));
+		CG_Printf( "%s", va("%sdistance     shortcuts    lua          debug        \n",colorSpecial));
+		CG_Printf( "%s", va("%sperformance  restrict     network                   \n",colorSpecial));
 		return;
 	}
 
@@ -725,16 +725,16 @@ static void CG_Server_Help_f( void ) {
 		for ( i=0; i<count; ++i ) {
 			if ( Q_stricmpn(helpTexts[i].cvar, Str, strlen(Str)) ) continue;
 			// the CVar..
-			CG_Printf( va("%s%s\n",colorCVar,helpTexts[i].cvar) );
+			CG_Printf( "%s", va("%s%s\n",colorCVar,helpTexts[i].cvar) );
 			// the description..
 			for ( lineNr=0; lineNr<HELP_NUM_LINES; ++lineNr ) {
 				Txt = helpTexts[i].line[lineNr];
 				if ( strlen(Txt)==0 ) break;
-				CG_Printf(va("%s%s\n",colorDesc,Txt));
+				CG_Printf( "%s", va("%s%s\n",colorDesc,Txt));
 			}
 			// the default value..
-			CG_Printf(va("%sDefault value: \"%s\"\n",colorDef,helpTexts[i].defVal));
-			CG_Printf(colorLine);
+			CG_Printf( "%s", va("%sDefault value: \"%s\"\n",colorDef,helpTexts[i].defVal));
+			CG_Printf("%s", colorLine);
 		}
 		return;
 	}
@@ -749,7 +749,7 @@ static void CG_Server_Help_f( void ) {
 					for ( lineNr=0; lineNr<HELP_NUM_LINES; ++lineNr ) {
 						Txt = helpTexts[i].line[lineNr];
 						if ( strlen(Txt)==0 ) break;
-						CG_Printf(va("%s%s\n",colorDesc,Txt));
+						CG_Printf( "%s", va("%s%s\n",colorDesc,Txt));
 					}
 				}
 			}
@@ -757,16 +757,16 @@ static void CG_Server_Help_f( void ) {
 		else {
 			// Related CVars..
 			Txt = Q_strCapitalize((char *)Str);
-			CG_Printf( va("%s%s%s related CVars are:\n",colorSpecial,Txt,colorDesc) );
+			CG_Printf( "%s", va("%s%s%s related CVars are:\n",colorSpecial,Txt,colorDesc) );
 			for ( i=0; i<count; ++i ) {
 				if ( helpTexts[i].categories & category ) {
 					// print the CVar..
-					CG_Printf( va("%s%s\n",colorCVar,helpTexts[i].cvar) );
+					CG_Printf( "%s", va("%s%s\n",colorCVar,helpTexts[i].cvar) );
 				}
 			}
 		}
 	}
-	CG_Printf(colorLine);
+	CG_Printf("%s", colorLine);
 }
 
 
@@ -797,21 +797,21 @@ static void CG_Client_Help_f( void ) {
 		explain = (!Q_stricmpn("help",Str,4))? qtrue : explain;
 	}
 
-	CG_Printf(colorLine);
+	CG_Printf("%s", colorLine);
 	// check for special arguments..
 	if ( explain ) {
-		CG_Printf(va("%sNo Quarter %sCLIENT%s help.\n", colorDesc, colorSpecial, colorDesc));
-		CG_Printf(va("%sUsage:  nqhelp <cvar || special>\n\n",colorDesc));
-		CG_Printf(va("%sYou can enter a CVAR-name you want a description of.\n\n",colorDesc));
-		CG_Printf(va("%sYou can instead enter a special search-argument\n",colorDesc));
-		CG_Printf(va("%sto get a list of related CVars.\n",colorDesc));
-		CG_Printf(va("%sThe special search-arguments are:\n",colorDesc));
+		CG_Printf( "%s", va("%sNo Quarter %sCLIENT%s help.\n", colorDesc, colorSpecial, colorDesc));
+		CG_Printf( "%s", va("%sUsage:  nqhelp <cvar || special>\n\n",colorDesc));
+		CG_Printf( "%s", va("%sYou can enter a CVAR-name you want a description of.\n\n",colorDesc));
+		CG_Printf( "%s", va("%sYou can instead enter a special search-argument\n",colorDesc));
+		CG_Printf( "%s", va("%sto get a list of related CVars.\n",colorDesc));
+		CG_Printf( "%s", va("%sThe special search-arguments are:\n",colorDesc));
 		// IRATA: create this list by serverHelpCategoriesNAMES ?
-		CG_Printf(va("%svideo        audio        filter       tweak        \n",colorSpecial));
-		CG_Printf(va("%sweapon       hud          movement     cheat        \n",colorSpecial));
-		CG_Printf(va("%sdraw         client       fireteam     network      \n",colorSpecial));
-		CG_Printf(va("%sdemo         chat         debug        crosshair    \n",colorSpecial));
-		// CG_Printf(va("%sskill        bots         time         duration     \n",colorSpecial));
+		CG_Printf( "%s", va("%svideo        audio        filter       tweak        \n",colorSpecial));
+		CG_Printf( "%s", va("%sweapon       hud          movement     cheat        \n",colorSpecial));
+		CG_Printf( "%s", va("%sdraw         client       fireteam     network      \n",colorSpecial));
+		CG_Printf( "%s", va("%sdemo         chat         debug        crosshair    \n",colorSpecial));
+		// CG_Printf( "%s", va("%sskill        bots         time         duration     \n",colorSpecial));
 
 		return;
 	}
@@ -827,16 +827,16 @@ static void CG_Client_Help_f( void ) {
 		for ( i=0; i<count; ++i ) {
 			if ( Q_stricmpn(clientHelpTexts[i].cvar, Str, strlen(Str)) ) continue;
 			// the CVar..
-			CG_Printf( va("%s%s\n",colorCVar,clientHelpTexts[i].cvar) );
+			CG_Printf( "%s", va("%s%s\n",colorCVar,clientHelpTexts[i].cvar) );
 			// the description..
 			for ( lineNr=0; lineNr<HELP_NUM_LINES; ++lineNr ) {
 				Txt = clientHelpTexts[i].line[lineNr];
 				if ( strlen(Txt)==0 ) break;
-				CG_Printf(va("%s%s\n",colorDesc,Txt));
+				CG_Printf( "%s", va("%s%s\n",colorDesc,Txt));
 			}
 			// the default value..
-			CG_Printf(va("%sDefault value: \"%s\"\n",colorDef,clientHelpTexts[i].defVal));
-			CG_Printf(colorLine);
+			CG_Printf( "%s", va("%sDefault value: \"%s\"\n",colorDef,clientHelpTexts[i].defVal));
+			CG_Printf("%s", colorLine);
 		}
 		return;
 	}
@@ -851,7 +851,7 @@ static void CG_Client_Help_f( void ) {
 					for ( lineNr=0; lineNr<HELP_NUM_LINES; ++lineNr ) {
 						Txt = clientHelpTexts[i].line[lineNr];
 						if ( strlen(Txt)==0 ) break;
-						CG_Printf(va("%s%s\n",colorDesc,Txt));
+						CG_Printf( "%s", va("%s%s\n",colorDesc,Txt));
 					}
 				}
 			}
@@ -859,16 +859,16 @@ static void CG_Client_Help_f( void ) {
 		else {
 			// Related CVars..
 			Txt = Q_strCapitalize((char *)Str);
-			CG_Printf( va("%s%s%s related CVars are:\n",colorSpecial,Txt,colorDesc) );
+			CG_Printf( "%s", va("%s%s%s related CVars are:\n",colorSpecial,Txt,colorDesc) );
 			for ( i=0; i<count; ++i ) {
 				if ( clientHelpTexts[i].categories & category ) {
 					// print the CVar..
-					CG_Printf( va("%s%s\n",colorCVar,clientHelpTexts[i].cvar) );
+					CG_Printf( "%s", va("%s%s\n",colorCVar,clientHelpTexts[i].cvar) );
 				}
 			}
 		}
 	}
-	CG_Printf(colorLine);
+	CG_Printf("%s", colorLine);
 
 }
 
@@ -1133,7 +1133,7 @@ static void CG_RestrictionInfo_f( void ) {
 	char	minplayers[4], maxweap[4], percentage[4];
 
 	// TODO: print current team infos ... allies, axis & spec ... + current player team?
-	CG_Printf(va("wrcinfo: %d total and %i team players in game:\n", cgs.numValidClients, CG_LimboPanel_TeamCount2( cg.snap->ps.persistant[PERS_TEAM] ) ));
+	CG_Printf( "%s", va("wrcinfo: %d total and %i team players in game:\n", cgs.numValidClients, CG_LimboPanel_TeamCount2( cg.snap->ps.persistant[PERS_TEAM] ) ));
 
 	// show all restricted weapons..
 	for (i=WP_NONE+1; i<WP_NUM_WEAPONS; ++i) {
@@ -1147,7 +1147,7 @@ static void CG_RestrictionInfo_f( void ) {
 		// make up some strings..
 		// not restricted? == empty string, which makes it more clear to read.
 		if (weapon_restrictions[i].disabled) {
-			CG_Printf(va("%-25s %s\n", BG_Weapons[i].statname, "^1disabled by admin^7"));
+			CG_Printf( "%s", va("%-25s %s\n", BG_Weapons[i].statname, "^1disabled by admin^7"));
 		} else {
 			// TODO: display what's required to get the weapon ??? ...
 
@@ -1170,7 +1170,7 @@ static void CG_RestrictionInfo_f( void ) {
 			// see CG_LimboPanel_WeaponIsDisabled
 			// -- uses CG_LimboPanel_TeamCount( -1 ) as spec?
 			// -- early out as spectator (qtrue) ....
-			CG_Printf(va("%-13s %s %s %s %s %s\n",
+			CG_Printf( "%s", va("%-13s %s %s %s %s %s\n",
 					BG_Weapons[i].name,
 					minplayers,
 					maxweap,
@@ -1185,7 +1185,7 @@ static void CG_RestrictionInfo_f( void ) {
 	}
 	else {
 		CG_Printf("------------------------------------------------------------\n");
-		CG_Printf(va("In total %d restriction rules set.\n", count));
+		CG_Printf( "%s", va("In total %d restriction rules set.\n", count));
 	}
 }
 
