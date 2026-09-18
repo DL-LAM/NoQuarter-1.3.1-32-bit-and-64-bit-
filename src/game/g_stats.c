@@ -840,6 +840,7 @@ static int QDECL G_SortPlayersDamageGiver( const void *a, const void *b ) {
 	return 0;
 }
 
+// [NQ 1.3.1 - Gameplay]: Award assist XP to top damage contributors on enemy kill
 void G_AddKillAssistPoints( gentity_t *target, gentity_t *attacker ) {
 	int i;
 	int rewardedPlayers;

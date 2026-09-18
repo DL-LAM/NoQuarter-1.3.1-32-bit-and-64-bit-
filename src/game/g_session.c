@@ -180,6 +180,7 @@ void G_ReadSessionData( gclient_t *client )
 	int mvc_l, mvc_h;
 #endif
 	char s[MAX_STRING_CHARS];
+	// [NQ 1.3.1 - Security]: Writable stack buffer preventing SIGSEGV crash when non-AUTO_GUID
 	char dummy_nquid[33];
 	qboolean test;
 	qboolean load = qfalse;
@@ -192,6 +193,7 @@ void G_ReadSessionData( gclient_t *client )
 
 	// jet Pilot - added killingSpree
 	// Jaybird - fixed to match with writesessiondata
+	// [NQ 1.3.1 - Security]: Clamped nquid format to %32s to prevent buffer overrun into adjacent memory
 #ifdef MV_SUPPORT
 	//			 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23
 	sscanf( s, "%i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %u %32s",
@@ -228,6 +230,7 @@ void G_ReadSessionData( gclient_t *client )
 #ifdef AUTO_GUID
 		(char*)&client->sess.nqKeyInfo.nquid
 #else
+		// [NQ 1.3.1 - Security]: Write to writable dummy buffer instead of read-only string literal to prevent SIGSEGV
 		dummy_nquid // write the nquid where no nquid is gone before
 #endif
 		);

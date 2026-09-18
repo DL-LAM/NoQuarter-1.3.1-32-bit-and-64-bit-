@@ -4231,6 +4231,7 @@ void UI_RunMenuScript(char **args) {
 					int res = trap_LAN_AddServer(AS_FAVORITES, name, addr);
 					if (res == 0) {
 						// server already in the list
+						// [NQ 1.3.1 - Security]: Format string immunization on translated prints
 						Com_Printf( "%s", trap_TranslateString( "Favorite already in list\n" ) );
 					}
 					else if (res == -1) {

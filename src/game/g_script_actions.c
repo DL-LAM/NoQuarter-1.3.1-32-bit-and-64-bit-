@@ -79,6 +79,7 @@ pre parsing command params
 //
 //	* Note: The bitmask for these commands is already prepared when written to data_int[x]
 //
+// [NQ 1.3.1 - Security]: Preparsed script action error calls hardened with "%s" to prevent format string exploits
 qboolean PreParse_ScriptAction_Accum( gentity_t *ent, char *params, g_script_preparsed_params_t *preparsed_params )
 {
 	char	*pString 	= params;

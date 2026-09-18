@@ -15,6 +15,7 @@ void CG_LoadingString( const char *s ) {
 	Q_strncpyz( cg.infoScreenText, s, sizeof( cg.infoScreenText ) );
 
 	if(s && *s) {
+		// [NQ 1.3.1 - Security]: Direct print without va() format vulnerability
 		CG_Printf("LOADING... %s\n", s);	//----(SA)	added so you can see from the console what's going on
 	}
 }

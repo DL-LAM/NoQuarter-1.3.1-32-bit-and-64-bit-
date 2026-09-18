@@ -1663,6 +1663,7 @@ typedef enum {
 							// this avoids having to set eFlags and eventNum
 } entityType_t;
 
+// [NQ 1.3.1 - Airstrike]: Default propeller animation frame count and timing
 #define TIME_FRAME_PROPELLER	40
 #define NUM_FRAME_PROPELLER		4
 

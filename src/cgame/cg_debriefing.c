@@ -1252,7 +1252,8 @@ qboolean CG_MapVoteList_KeyDown(panel_button_t* button, int key) {
 		}
 		return qtrue;
 	}
-	else if (key == K_MWHEELUP) {
+	// [NQ 1.3.1 - UI]: Mouse wheel scrolling support in debriefing map list
+		else if (key == K_MWHEELUP) {
 		cgs.dbMapVoteListOffset--;
 		if (cgs.dbMapVoteListOffset < 0) {
 			cgs.dbMapVoteListOffset = 0;

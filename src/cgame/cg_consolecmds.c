@@ -670,6 +670,7 @@ static void CG_KickUp_f( void ) {
 // core: Some help for the admin..
 // TODO: if param for cat or Cvar is given but invalid an ugly ColorLine is printed
 // give a message for something unkown
+// [NQ 1.3.1 - Security]: Format string immunization on all CG_Printf help outputs
 static void CG_Server_Help_f( void ) {
 	const char		*Str = NULL;
 	int				count = sizeof(helpTexts) / sizeof(helpTexts[0]) - 1;

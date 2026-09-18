@@ -359,6 +359,7 @@ void CG_DrawMMItems( void )
 	float			y = CG_MMPosY();
 	float			w = 0;
 	float			y_offset = 12.0f;
+	// [NQ 1.3.1 - HUD]: Compact limboFont2 popup fonts with drop-shadow for improved readability
 	float			scale = ( cg_smallFont.integer & SMALLFONT_MISSIONPOPUPS )? 0.14f : 0.17f;
 
 	if( cg_drawSmallPopupIcons.integer ) {

@@ -1629,6 +1629,7 @@ char *CheckLocalhost( gentity_t *ent, char *userinfo ) {
 
 			if ( !valid ) {
 				reason = va("ClientUserinfoChanged: client hacking IP! clientnum: %d, name: %s", ent->client->ps.clientNum, ent->client->pers.netname);
+				// [NQ 1.3.1 - Security]: Format string immunization on user netname logging
 				G_Printf("%s\n", reason);
 				G_LogPrintf( "%s %s %s %s\n", reason, ent->client->pers.client_ip, strIP, ent->client->pers.cl_guid );
 				G_DPrintf( "%s %s %s %s\n", reason, ent->client->pers.client_ip, strIP, ent->client->pers.cl_guid );
@@ -2718,6 +2719,7 @@ void ClientBegin( int clientNum ) {
 					break;
 				}
 			}
+			// [NQ 1.3.1 - BugFix]: NULL check on g_shrubbot_mutes[i] before reading expiration
 			if ( g_shrubbot_mutes[i] ) {
 				seconds = g_shrubbot_mutes[i]->expires - (expiretime - SHRUBBOT_BAN_EXPIRE_OFFSET);
 			}

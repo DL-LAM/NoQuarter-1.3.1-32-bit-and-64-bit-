@@ -250,6 +250,7 @@ static void MD5Final(struct MD5Context *ctx, unsigned char *digest) {
 	if(digest != NULL) {
 		memcpy(digest, ctx->buf, 16);
 	}
+	// [NQ 1.3.1 - Memory]: Zero entire struct MD5Context rather than pointer size
 	memset(ctx, 0, sizeof(*ctx));	/* In case it's sensitive */
 }
 

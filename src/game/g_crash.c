@@ -105,6 +105,7 @@ void linux_dsoinfo() {
 	while(linkmap) {
 		if(linkmap->l_addr) {
 			if(strcmp(linkmap->l_name,"")==0) {
+				// [NQ 1.3.1 - Linux]: 64-bit ELF address format specifier %08lx
 				G_CrashLogPrintf("0x%08lx\t(unknown)\n", (unsigned long)linkmap->l_addr);
 			}
 			else {

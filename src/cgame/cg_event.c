@@ -526,6 +526,7 @@ static void CG_Obituary( entityState_t *ent ) {
 
 		// print the text message
 		if ( do_centerprint ) {
+			// [NQ 1.3.1 - HUD]: Shifted center print down to SCREEN_HEIGHT * 0.80f (Y=384) to eliminate overlap with kill feed
 			CG_PriorityCenterPrint( s, SCREEN_HEIGHT - (SCREEN_HEIGHT * 0.20f), BIGCHAR_WIDTH * 0.6f, 1 );
 		}
 	}

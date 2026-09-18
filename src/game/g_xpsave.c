@@ -35,6 +35,7 @@ static void G_xpsave_init_struct(g_xpsave_t* data) {
 		return;
 	}
 	// Initialise everything to zero
+	// [NQ 1.3.1 - Memory]: Zero entire g_xpsave_t struct (80 bytes) rather than pointer size (4/8 bytes)
 	memset(data, 0, sizeof(*data));
 	// Set the signature and the version
 	data->signature			= XP_SAVE_SIGNATURE;

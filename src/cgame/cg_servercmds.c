@@ -2458,6 +2458,7 @@ void CG_scores_cmd(void) {
 }
 
 void CG_printFile(char *str) {
+	// [NQ 1.3.1 - Security]: Format string immunization
 	CG_Printf("%s", str);
 	if(cgs.dumpStatsFile > 0) {
 		char s[MAX_STRING_CHARS];
@@ -2662,6 +2663,7 @@ static void CG_ServerCommand( void ) {
 		return;
 	}
 
+	// [NQ 1.3.1 - HUD]: Intercept both ET:Legacy xpgain and xppopup network commands
 	// ET:LEGACY XP GAIN / MODERN XP POPUP: Intercept the network commands here!
 	if (!Q_stricmp(cmd, "xpgain")) {
 		int skill = atoi(CG_Argv(1));

@@ -2595,6 +2595,7 @@ void G_PrintClientSpammyCenterPrint(int entityNum, char* text);
 
 // Print to all
 #define AP(x) trap_SendServerCommand(-1, x)
+// [NQ 1.3.1 - Security]: Hardened client print macros with explicit NULL entity and slot bounds guards
 // Print to an ent, but not to bots..
 #define CP(x) if (ent && ent->client && !(ent->r.svFlags & SVF_BOT)) trap_SendServerCommand(ent-g_entities, x)
 // Print to id = x, but not to bots..

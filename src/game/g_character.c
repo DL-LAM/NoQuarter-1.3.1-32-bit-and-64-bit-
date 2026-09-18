@@ -156,6 +156,7 @@ static qboolean G_CheckForExistingAnimModelInfo( const char *animationGroup, con
 	} else {
 		*animModelInfo = firstFree;
 		// clear the structure out ready for use
+		// [NQ 1.3.1 - Memory]: Zero full animModelInfo_t struct rather than pointer size
 		memset( *animModelInfo, 0, sizeof(animModelInfo_t) );
 	}
 

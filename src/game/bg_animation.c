@@ -484,6 +484,7 @@ void BG_ParseConditionBits( char **text_pp, animStringItem_t *stringTable, int c
 
 	//indexBits = 0;
 	currentString[0] = '\0';
+	// [NQ 1.3.1 - Memory]: Zero both elements directly; parameter decays to pointer so memset(result, 0, sizeof(result)) only zeroed 4 bytes
 	result[0] = 0;
 	result[1] = 0;
 	memset( tempBits, 0, sizeof(tempBits) );
@@ -699,6 +700,7 @@ static void BG_ParseCommands( char **input, animScriptItem_t *scriptItem, animMo
 				BG_AnimParseError( "BG_ParseCommands: exceeded maximum number of animations (%i)", MAX_ANIMSCRIPT_ANIMCOMMANDS );
 			}
 			command = &scriptItem->commands[scriptItem->numCommands++];
+			// [NQ 1.3.1 - Memory]: Zero entire animScriptCommand_t struct via sizeof(*command) rather than pointer size
 			memset( command, 0, sizeof(*command) );
 		}
 

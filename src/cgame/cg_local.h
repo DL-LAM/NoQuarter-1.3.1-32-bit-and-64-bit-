@@ -1532,6 +1532,7 @@ typedef struct {
 
 	sfxHandle_t	sfx_artilleryExp[3];
 	sfxHandle_t	sfx_artilleryDist;
+	// [NQ 1.3.1 - Memory]: Expanded from [2] to [3] to eliminate buffer overflow overwriting sfx_airstrikeExp[0]
 	sfxHandle_t	sfx_artilleryDist_1[3];
 
 	sfxHandle_t	sfx_airstrikeExp[3];
@@ -1800,6 +1801,7 @@ typedef struct {
 	qhandle_t		nameshaderAllies;
 	qhandle_t		win;
 
+	// [NQ 1.3.1 - Airstrike]: Models for Axis/Allied airstrike plane flyover
 	qhandle_t		airstrikePlane[2];
 } cgMedia_t;
 

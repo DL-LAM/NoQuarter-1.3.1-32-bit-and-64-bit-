@@ -615,6 +615,7 @@ void CG_DrawPMItems( void )
 		y = 478 - numlines * lineHeight;
 	}
 
+	// [NQ 1.3.1 - HUD]: Compact limboFont2 popup fonts with drop-shadow for improved readability
 	scale = ( cg_smallFont.integer & SMALLFONT_POPUPS )? 0.14f : 0.17f;
 
 	if( cg_drawSmallPopupIcons.integer ) {

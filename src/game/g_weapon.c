@@ -2964,7 +2964,7 @@ void weapon_callAirStrike( gentity_t *ent ) {
 		RotatePointAroundVector( bombaxis, dir, lookaxis, 90 + crandom() * 30 ); // munge the axis line a bit so it's not totally perpendicular
 		VectorNormalize( bombaxis );
 
-		// Spawn airstrike flyover plane
+		// [NQ 1.3.1 - Airstrike]: Spawn ET_AIRSTRIKE_PLANE entity to animate flyover bomber across the sky
 		VectorCopy( bombaxis, planeDir );
 		VectorNormalize( planeDir );
 		vectoangles( planeDir, planeAngles );

@@ -902,7 +902,7 @@ qboolean G_shrubbot_cmd_check(gentity_t *ent) {
 				int k;
 
 				Q_SayArgv(skip + argIx, arg, sizeof(arg));
-				// Sanitize arguments to prevent command injection (; and newlines)
+				// [NQ 1.3.1 - Security]: Sanitize arguments to prevent command injection (; and newlines)
 				for (k = 0; arg[k]; k++) {
 					if (arg[k] == ';' || arg[k] == '\n' || arg[k] == '\r') {
 						arg[k] = ' ';
@@ -2359,6 +2359,7 @@ int MuteNumbersFromString( char *s, int *plist) {
 	if(is_slot) {
 		i = atoi(s);
 
+		// [NQ 1.3.1 - Bounds]: Client slot boundary check before dereferencing level.clients[i]
 		if(i >= 0 && i < level.maxclients &&
 			(level.clients[i].pers.connected == CON_CONNECTED ||
 			level.clients[i].pers.connected == CON_CONNECTING)) {
@@ -2449,6 +2450,7 @@ qboolean G_shrubbot_unmute(gentity_t *ent, int skiparg) {
 
 	// redeye - search for auto-muted players
 	n = ClientNumbersFromString(ms, pids);
+	// [NQ 1.3.1 - Bounds]: Validated client slot index before accessing g_entities
 	if ( n == 1 && pids[0] >= 0 && pids[0] < level.maxclients ) {
 		pidEnt = &g_entities[pids[0]];
 		if ( pidEnt->client && pidEnt->client->sess.muted ) {
@@ -2490,6 +2492,7 @@ qboolean G_shrubbot_unmute(gentity_t *ent, int skiparg) {
 	}
 
 	recIndex = pids[0];
+	// [NQ 1.3.1 - BugFix]: Safe mute record index validation and online player search (prevents crash when unmuting)
 	if ( recIndex >= 0 && g_shrubbot_mutes[recIndex] ) {
 		int j;
 		AP(va("chat \"^dunmute: ^*%s ^9has been unmuted\"", g_shrubbot_mutes[recIndex]->name ));
@@ -5042,6 +5045,7 @@ void G_shrubbot_print_chat(gentity_t *ent, char *m) {
 		char m2[MAX_STRING_CHARS];
 
 		DecolorString(m, m2);
+		// [NQ 1.3.1 - Security]: Explicit literal format string
 		G_Printf("%s\n", m2);
 	}
 }
@@ -5058,6 +5062,7 @@ void G_shrubbot_print(gentity_t *ent, char *m) {
 		char m2[MAX_STRING_CHARS];
 
 		DecolorString(m, m2);
+		// [NQ 1.3.1 - Security]: Explicit literal format string
 		G_Printf("%s", m2);
 	}
 }

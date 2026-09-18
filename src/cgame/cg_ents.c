@@ -1998,6 +1998,7 @@ void CG_CalcEntityLerpPositions( centity_t *cent ) {
 #undef TIME_FRAME_PROPELLER
 #define TIME_FRAME_PROPELLER (1000 / NUM_FRAME_PROPELLER)
 
+// [NQ 1.3.1 - Airstrike]: Smooth 10-frame propeller animation cycling and flyover plane rendering in CG_MovePlane
 /*
 ===============
 CG_MovePlane

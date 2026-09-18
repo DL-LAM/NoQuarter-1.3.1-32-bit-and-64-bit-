@@ -1993,6 +1993,7 @@ void G_UpdateNQinfo(void) {
 
 	Info_SetValueForKey(cs, "SS", va("%i", g_soldierShotgun.integer));
 
+	// [NQ 1.3.1 - Gameplay]: Allied Covert Ops alternative primary weapon selection (WP_BAR, WP_FG42, WP_JOHNSON)
 	if ( g_alliedCovertWeapon.integer == 1 ) {
 		bg_allies_playerclasses[PC_COVERTOPS].classWeapons[1] = WP_BAR;
 	} else if ( g_alliedCovertWeapon.integer == 2 ) {
@@ -6896,6 +6897,7 @@ void processClientNQKey(int clientNum, unsigned char* buffer, int buflen, int co
 	// DEBUG
 	//G_Printf("NQKEY of PACKET client %i: state: %i *%s* cl_nquid: *%s*\n", clientNum, level.clients[clientNum].pers.connected, NQKey, level.clients[clientNum].sess.nqKeyInfo.nquid);
 
+	// [NQ 1.3.1 - Security]: Exact packet payload length check preventing NQKey buffer overflow
 	if( buflen != PACKET_OFFSET + PB_GUID_LENGTH ) {
 		G_Printf("WARNING: Client dropped - %i sends invalid key packet size: %i\n", clientNum, buflen);
 		// slot is reset in ClientDisconnect

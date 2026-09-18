@@ -1310,6 +1310,7 @@ int CG_CalcViewValues( void ) {
 char* CG_MustParse( char** pString, const char* pErrorMsg ) {
 	char* token = COM_Parse( pString );
 	if(!*token) {
+		// [NQ 1.3.1 - Security]: Format string immunization
 		CG_Error( "%s", pErrorMsg );
 	}
 	return token;

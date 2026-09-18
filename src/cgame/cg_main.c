@@ -1916,6 +1916,7 @@ static void CG_RegisterGraphics( void ) {
 	cgs.media.hMountedFPMG42 =		trap_R_RegisterModel( "models/multiplayer/mg42/v_mg42.md3" );
 	cgs.media.hMountedFPBrowning =	trap_R_RegisterModel( "models/multiplayer/browning/tankmounted.md3" );
 
+	// [NQ 1.3.1 - Airstrike]: Direct registration of ET:Legacy bomber models (junker88.md3 / b-25.md3)
 	cgs.media.airstrikePlane[0] =	trap_R_RegisterModel( "models/mapobjects/etl_plane/junker88.md3" );
 	cgs.media.airstrikePlane[1] =	trap_R_RegisterModel( "models/mapobjects/etl_plane/b-25.md3" );
 
@@ -3334,6 +3335,7 @@ void jP_SetHUDColors(void) {
 	Vector4Set(HUD_Background, newBack[0],   newBack[1],   newBack[2],   HUD_Alpha);
 }
 
+// [NQ 1.3.1 - Bounds]: Upper and lower bounds validation to prevent out-of-bounds array access and client crash
 qhandle_t CG_GetGameModel ( int index ) {
 	if ( index < 0 ) {
 		return 0;
@@ -3349,6 +3351,7 @@ qhandle_t CG_GetGameModel ( int index ) {
 	return (cgs.gameModels[index-GAMEMODEL_MAX] ? cgs.gameModels[index-GAMEMODEL_MAX] : 0);
 }
 
+// [NQ 1.3.1 - Bounds]: Upper and lower bounds validation on game sounds
 sfxHandle_t CG_GetGameSound ( int index ) {
 	if ( index < 0 ) {
 		return 0;

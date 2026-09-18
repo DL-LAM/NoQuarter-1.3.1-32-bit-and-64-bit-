@@ -971,6 +971,7 @@ qboolean ConsoleChat(qboolean chatClient)
 		CPx(clientNum, va("chat \"%s\" -1 0",line));
 	}
 	if (g_logOptions.integer & LOGOPTS_CHATS) {
+		// [NQ 1.3.1 - Security]: Direct G_LogPrintf without va() prevents double format string evaluation of user chat
 		if(chatClient) {
 			G_LogPrintf("chat(client): %d: %s\n",
 				clientNum,

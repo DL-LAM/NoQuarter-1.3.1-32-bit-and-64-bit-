@@ -231,6 +231,7 @@ int QDECL UI_SortArenas( const void *a, const void *b ) {
 UI_LoadArenas
 ===============
 */
+// [NQ 1.3.1 - Bounds]: Expanded dirlist to 64KB and replaced strcpy/strcat with bounded Com_sprintf
 void UI_LoadArenas( void ) {
 
 	char		filename[128];

@@ -213,10 +213,12 @@ void G_PrivateMessage(gentity_t *ent) {
 
 	for(i=0; i<pcount; ++i) {
 		// tjw: allow private message to self for etadmin_mod compat
+		// [NQ 1.3.1 - Security]: Null entity guard before calculating client index
 		if(ent && pids[i] == ent-g_entities) self=qtrue;
 		tmpent = &g_entities[pids[i]];
 		sent = qtrue;
 
+		// [NQ 1.3.1 - Security]: Null entity guard before checking ignoreClients
 		if(ent && COM_BitCheck(tmpent->client->sess.ignoreClients,(ent-g_entities))) {
 			SP(va("%s^1 is ignoring you\n",	tmpent->client->pers.netname));
 			continue;
@@ -695,6 +697,7 @@ int ClientNumberFromString( gentity_t *to, char *s ) {
 				CPx( to-g_entities, va("print \"Bad client slot: [lof]%i\n\"", idnum));
 			}
 			else {
+				// [NQ 1.3.1 - Security]: Direct format string without va() double-evaluation
 				G_Printf("Bad client slot: %i\n",  idnum);
 			}
 			return -1;
@@ -1859,6 +1862,7 @@ int G_WeaponCount( gentity_t* ent, weapon_t weap ) {
 qboolean G_IsWeaponDisabled( gentity_t* ent, weapon_t weapon, qboolean quiet ) {
 	int wcount;
 
+	// [NQ 1.3.1 - Bounds]: Upper and lower weapon enum bounds check to prevent array overrun
 	if ( weapon <= WP_NONE || weapon >= WP_NUM_WEAPONS ) {
 		return qtrue;
 	}
@@ -1930,6 +1934,7 @@ qboolean G_IsWeaponDisabled( gentity_t* ent, weapon_t weapon, qboolean quiet ) {
 void G_SetClientWeapons( gentity_t* ent, weapon_t w1, weapon_t w2, qboolean updateclient ) {
 	qboolean changed = qfalse;
 
+	// [NQ 1.3.1 - Bounds]: Clamped weapon IDs to valid range
 	if ( w1 < 0 || w1 >= WP_NUM_WEAPONS ) {
 		w1 = 0;
 	}
@@ -2001,6 +2006,7 @@ void Cmd_Team_f( gentity_t *ent, unsigned int dwCommand, qboolean fValue ) {
 	w =		atoi( weap );
 	w2 =	atoi( weap2 );
 
+	// [NQ 1.3.1 - Bounds]: Clamped team command weapon selections to valid range
 	if ( w < 0 || w >= WP_NUM_WEAPONS ) {
 		w = 0;
 	}
@@ -2133,6 +2139,7 @@ void Cmd_Follow_f( gentity_t *ent, unsigned int dwCommand, qboolean fValue ) {
 		return;
 	}
 
+	// [NQ 1.3.1 - Bounds]: Client slot validation before following spectator
 	if ( i < 0 || i >= level.maxclients || level.clients[i].pers.connected != CON_CONNECTED ) {
 		return;
 	}
@@ -3506,6 +3513,7 @@ void Cmd_Vote_f( gentity_t *ent ) {
 
 	if( level.voteInfo.vote_fn == G_Kick_v ) {
 		int pid = atoi( level.voteInfo.vote_value );
+		// [NQ 1.3.1 - Bounds]: Vote target client slot bounds check
 		if( pid < 0 || pid >= level.maxclients || !g_entities[ pid ].client ) {
 			return;
 		}
@@ -4484,6 +4492,7 @@ void Cmd_IntermissionWeaponStats_f ( gentity_t* ent ) {
 	trap_Argv( 1, buffer, sizeof( buffer ) );
 
 	clientNum = atoi( buffer );
+	// [NQ 1.3.1 - Bounds]: Fixed off-by-one array index check (clientNum < level.maxclients)
 	if( clientNum < 0 || clientNum >= level.maxclients ) {
 		return;
 	}
@@ -4623,6 +4632,7 @@ void Cmd_SelectedObjective_f ( gentity_t* ent ) {
 				break;
 			}
 			else {
+				// [NQ 1.3.1 - Bounds]: Target entity index validation against MAX_GENTITIES
 				if( level.limboCams[i].targetEnt >= 0 && level.limboCams[i].targetEnt < MAX_GENTITIES ) {
 					dist = VectorDistanceSquared( level.limboCams[i].origin, g_entities[level.limboCams[i].targetEnt].r.currentOrigin );
 					if( nearest == -1 || dist < neardist ) {
@@ -4877,6 +4887,7 @@ void Cmd_Bet_f( gentity_t* ent ) {
 	// lower the bet in case the other has insufficient credits..
 	trap_Argv( 2, amountstr, sizeof( amountstr ) );
 	amount = atoi(amountstr);
+	// [NQ 1.3.1 - Security]: Betting credit validation preventing zero/negative credits and overdraw exploits
 	if ( amount <= 0 ) {
 		CP("print \"^dbet: ^9Bet amount must be greater than 0\n\"");
 		return;
@@ -5095,6 +5106,7 @@ void ClientCommand( int clientNum ) {
 	int			cmdHash;
 	qboolean	muted = qfalse;
 
+	// [NQ 1.3.1 - Bounds]: Client slot entry guard preventing out-of-bounds entity indexing
 	if ( clientNum < 0 || clientNum >= level.maxclients ) {
 		return;
 	}
@@ -5299,6 +5311,7 @@ void ClientCommand( int clientNum ) {
 
 		case BINDSEARCH_R_HASH: // core: received a bindsearch result..
 			{
+				// [NQ 1.3.1 - Security]: Safe stack buffer and direct format prints (eliminated static va strcat overflow)
 				char	argv[MAX_TOKEN_CHARS];
 				char	result[MAX_STRING_CHARS];
 				int		i;
@@ -5459,6 +5472,7 @@ char *ConcatArgs( int start ) {
 	int		len = 0;
 	char	arg[MAX_STRING_CHARS];
 
+	// [NQ 1.3.1 - Bounds]: Clamped negative start indices to 0
 	if ( start < 0 ) {
 		start = 0;
 	}

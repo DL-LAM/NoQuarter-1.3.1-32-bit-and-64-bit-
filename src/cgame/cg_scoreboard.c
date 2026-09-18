@@ -212,6 +212,7 @@ int SkillNumForClass( int classNum );
 WM_DrawClientScore
 =================
 */
+// [NQ 1.3.1 - HUD]: TrueType scoreboard rendering with shadowed drop text and right-aligned score/ping columns
 static void WM_DrawClientScore( int x, int y, score_t *score, float *color, float fade ) {
 	int maxchars, offset;
 	float tempx;

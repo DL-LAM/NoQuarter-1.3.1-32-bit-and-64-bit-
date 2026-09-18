@@ -1144,6 +1144,7 @@ static void UI_DrawBannerString2( int x, int y, const char* str, vec4_t color )
 	trap_R_SetColor( NULL );
 }
 
+// [NQ 1.3.1 - HUD]: Modernized UI_DrawBannerString to render TrueType fonts with drop shadow
 void UI_DrawBannerString( int x, int y, const char* str, int style, vec4_t color ) {
 	float scale = 0.35f;
 	int textstyle = (style & UI_DROPSHADOW) ? ITEM_TEXTSTYLE_SHADOWED : ITEM_TEXTSTYLE_NORMAL;
@@ -1202,6 +1203,7 @@ float UI_ProportionalSizeScale( int style ) {
 UI_DrawProportionalString
 =================
 */
+// [NQ 1.3.1 - HUD]: Modernized UI_DrawProportionalString to use TrueType fonts (limboFont2)
 void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t color ) {
 	float	sizeScale = UI_ProportionalSizeScale( style );
 	float	scale = 0.25f * sizeScale;

@@ -103,6 +103,7 @@ int G_FindConfigstringIndex( const char *name, int start, int max, qboolean crea
 		return 0;
 	}
 
+	// [NQ 1.3.1 - Stability]: Softened configstring overflow to warning rather than fatal G_Error server crash
 	if ( i == max ) {
 		G_Printf( "^1WARNING: G_FindConfigstringIndex overflow (start %i, max %i) for '%s'\n", start, max, name );
 		return 0;
@@ -2374,6 +2375,7 @@ void G_ParseCampaigns( void ) {
 			}
 
 			dirlen = strlen(dirptr);
+			// [NQ 1.3.1 - Security]: Bounded Com_sprintf prevents stack buffer overflow on campaign filename
 			Com_sprintf(filename, sizeof(filename), "scripts/%s", dirptr);
 
 			if( G_LoadCampaignsFromFile(filename) ) {

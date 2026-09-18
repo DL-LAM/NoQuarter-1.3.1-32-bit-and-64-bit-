@@ -1780,6 +1780,7 @@ void G_Damage(gentity_t *targ,	gentity_t	*inflictor, gentity_t	*attacker,	vec3_t
 		if ( attacker ) {
 			targ->client->ps.persistant[PERS_ATTACKER] = attacker->s.number;
 
+			// [NQ 1.3.1 - Gameplay]: Kill assist damage accumulation
 			if ( attacker->client ) {
 				targ->client->dmgReceivedSts[attacker->s.number].damageReceived += take;
 				targ->client->dmgReceivedSts[attacker->s.number].mods = mod;

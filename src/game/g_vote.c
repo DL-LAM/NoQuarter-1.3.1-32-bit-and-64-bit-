@@ -78,6 +78,7 @@ int G_voteCmdCheck(gentity_t *ent, char *arg, char *arg2, qboolean fRefereeCmd) 
 			int hResult = aVoteInfo[i].pVoteCommand(ent, i, arg, arg2, fRefereeCmd);
 
 			if(hResult == G_OK) {
+				// [NQ 1.3.1 - Security]: Format string immunization on vote message copy
 				Com_sprintf(arg, VOTE_MAXSTRING, "%s", aVoteInfo[i].pszVoteMessage);
 				level.voteInfo.vote_fn = aVoteInfo[i].pVoteCommand;
 			}
@@ -358,6 +359,7 @@ int G_Kick_v( gentity_t *ent, unsigned int dwVoteIndex, char *arg, char *arg2, q
 	else {
 		int pid = atoi( level.voteInfo.vote_value );
 
+		// [NQ 1.3.1 - Bounds]: Client slot validation before kicking player
 		if ( pid < 0 || pid >= level.maxclients || level.clients[pid].pers.connected == CON_DISCONNECTED ) {
 			return G_INVALID;
 		}
@@ -423,6 +425,7 @@ int G_Mute_v(gentity_t *ent, unsigned int dwVoteIndex, char *arg, char *arg2, qb
 	else {
 		int pid = atoi(level.voteInfo.vote_value);
 
+		// [NQ 1.3.1 - Bounds]: Client slot validation before muting player
 		if ( pid < 0 || pid >= level.maxclients || level.clients[pid].pers.connected == CON_DISCONNECTED ) {
 			return G_INVALID;
 		}
@@ -1177,6 +1180,7 @@ int G_Unreferee_v(gentity_t *ent, unsigned int dwVoteIndex, char *arg, char *arg
 		int pid = atoi(level.voteInfo.vote_value);
 		gclient_t *cl;
 
+		// [NQ 1.3.1 - Bounds]: Client slot validation before removing referee status
 		if ( pid < 0 || pid >= level.maxclients || level.clients[pid].pers.connected == CON_DISCONNECTED ) {
 			return G_INVALID;
 		}

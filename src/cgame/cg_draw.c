@@ -3673,6 +3673,7 @@ static void CG_DrawWarmup( void ) {
 	}
 }
 
+// [NQ 1.3.1 - HUD]: Multi-item XP popup feed system with smart stacking and skill icons
 //==================================================================================// XP POPUP SYSTEM (ET:Legacy Style)
 #define MAX_XP_POPUPS 6
 #define XP_POPUP_STAY_TIME 2200

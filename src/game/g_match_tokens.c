@@ -85,6 +85,7 @@ hash (register const char *str, register unsigned int len)
 }
 
 
+// [NQ 1.3.1 - Linux]: Removed __inline to emit global public symbol for g_strparse.c under GCC/Zig
 const struct g_strtoken_t *
 in_word_set (register const char *str, register unsigned int len)
 {

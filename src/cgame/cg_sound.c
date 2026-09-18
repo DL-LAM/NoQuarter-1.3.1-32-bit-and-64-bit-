@@ -411,6 +411,7 @@ static void CG_SoundLoadSoundFiles( void ) {
 		if (!token[0]) {
 			break;
 		}
+		// [NQ 1.3.1 - Security]: Format string immunization on sound token copy
 		Com_sprintf( soundFiles[numSounds++], MAX_QPATH, "%s", token );
 
 		// FIXME: sanity check MAX_SOUND_FILES limit

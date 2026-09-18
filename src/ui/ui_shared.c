@@ -808,6 +808,7 @@ qboolean IsVisible(int flags) {
 	return (flags & WINDOW_VISIBLE && !(flags & WINDOW_FADINGOUT));
 }
 
+// [NQ 1.3.1 - UI/Widescreen]: Standard 640x480 coordinate space guarantees 1:1 mouse input accuracy on all aspect ratios
 qboolean Rect_ContainsPoint(rectDef_t *rect, float x, float y) {
 	if (rect) {
 		if (x >= rect->x && x <= rect->x + rect->w && y >= rect->y && y <= rect->y + rect->h) {

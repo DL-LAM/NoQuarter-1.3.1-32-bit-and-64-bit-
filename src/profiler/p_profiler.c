@@ -34,6 +34,7 @@ static void profiler_SetBlockProfilerName(struct BlockProfiler* block, const cha
 		return;
 	}
 	strncpy(block->name, name, BLOCK_PROFILER_NAME_SZ);
+	// [NQ 1.3.1 - Security]: Guaranteed null-termination on profiler block name
 	block->name[BLOCK_PROFILER_NAME_SZ - 1] = '\0';
 	block->times.tag = block->name;
 }
@@ -41,6 +42,7 @@ static void profiler_SetBlockProfilerName(struct BlockProfiler* block, const cha
 static void profiler_Error(struct BlockProfiler* block, const char* error_msg)
 {
 	if ( block->error_count++ == 0 )
+		// [NQ 1.3.1 - Security]: Format string immunization on profiler error output
 		G_Printf("%s", error_msg);
 }
 

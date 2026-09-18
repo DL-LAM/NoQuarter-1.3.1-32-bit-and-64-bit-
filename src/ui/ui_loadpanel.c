@@ -542,6 +542,7 @@ void UI_LoadPanel_RenderLoadingText( panel_button_t* button )
 	}
 
 	if ( Downloading() )
+		// [NQ 1.3.1 - Security]: Direct Com_sprintf without va() prevents format string attacks from malicious server names
 		Com_sprintf( buff, sizeof(buff), "Connecting to:\n %s^*\n\n Needed paks: \n %s", cstate.servername, UI_Cvar_VariableString("com_missingFiles") );
 
 
