@@ -259,10 +259,16 @@ static int _et_trap_Cvar_Set(lua_State *L)
 static int _et_MutePlayer(lua_State *L)
 {
 	int clientnum = luaL_checkint(L, 1);
-	gentity_t *ent = g_entities + clientnum;
+	gentity_t *ent;
 	int duration = luaL_checkint(L, 2);
 	const char *reason = luaL_optstring(L, 3, NULL );
 
+	// [NQ 1.3.1 - Security]: Validate client slot bounds
+	if ( clientnum < 0 || clientnum >= MAX_CLIENTS ) {
+		return 0;
+	}
+
+	ent = g_entities + clientnum;
 	if ( !ent->client ) {
 		return 0;
 	}
@@ -300,8 +306,14 @@ static int _et_MutePlayer(lua_State *L)
 static int _et_UnmutePlayer(lua_State *L)
 {
 	int clientnum = luaL_checkint(L, 1);
-	gentity_t *ent = g_entities + clientnum;
+	gentity_t *ent;
 
+	// [NQ 1.3.1 - Security]: Validate client slot bounds
+	if ( clientnum < 0 || clientnum >= MAX_CLIENTS ) {
+		return 0;
+	}
+
+	ent = g_entities + clientnum;
 	if ( !ent->client ) {
 		return 0;
 	}
@@ -353,6 +365,10 @@ static int _et_trap_DropClient(lua_State *L)
 	const char *reason = luaL_checkstring(L, 2);
 	int ban = trap_Cvar_VariableIntegerValue("g_defaultBanTime");
 	ban = luaL_optint(L, 3, ban);
+	// [NQ 1.3.1 - Security]: Validate client slot bounds
+	if (clientnum < 0 || clientnum >= MAX_CLIENTS) {
+		return 0;
+	}
 	trap_DropClient(clientnum, reason, ban);
 	return 0;
 }
@@ -363,6 +379,10 @@ static int _et_trap_SendServerCommand(lua_State *L)
 {
 	int clientnum = luaL_checkint(L, 1);
 	const char *cmd = luaL_checkstring(L, 2);
+	// [NQ 1.3.1 - Security]: Validate client slot bounds (-1 is broadcast, otherwise 0..MAX_CLIENTS-1)
+	if (clientnum != -1 && (clientnum < 0 || clientnum >= MAX_CLIENTS)) {
+		return 0;
+	}
 	trap_SendServerCommand(clientnum, cmd);
 	return 0;
 }
@@ -394,6 +414,10 @@ static int _et_G_Say(lua_State *L)
 	int clientnum = luaL_checkint(L, 1);
 	int mode = luaL_checkint(L, 2);
 	const char *text = luaL_checkstring(L, 3);
+	// [NQ 1.3.1 - Security]: Validate client slot bounds before indexing g_entities
+	if (clientnum < 0 || clientnum >= MAX_CLIENTS || !g_entities[clientnum].client) {
+		return 0;
+	}
 	G_Say(g_entities + clientnum, NULL, mode, text);
 	return 0;
 }
@@ -402,6 +426,10 @@ static int _et_G_Say(lua_State *L)
 static int _et_ClientUserinfoChanged(lua_State *L)
 {
 	int clientnum = luaL_checkint(L, 1);
+	// [NQ 1.3.1 - Security]: Validate client slot bounds
+	if (clientnum < 0 || clientnum >= MAX_CLIENTS) {
+		return 0;
+	}
 	ClientUserinfoChanged(clientnum);
 	return 0;
 }
@@ -447,6 +475,11 @@ static int _et_trap_GetUserinfo(lua_State *L)
 {
 	char buff[MAX_STRING_CHARS];
 	int clientnum = luaL_checkint(L, 1);
+	// [NQ 1.3.1 - Security]: Validate client slot bounds
+	if (clientnum < 0 || clientnum >= MAX_CLIENTS) {
+		lua_pushstring(L, "");
+		return 1;
+	}
 	trap_GetUserinfo(clientnum, buff, sizeof(buff));
 	lua_pushstring(L, buff);
 	return 1;
@@ -457,6 +490,10 @@ static int _et_trap_SetUserinfo(lua_State *L)
 {
 	int clientnum = luaL_checkint(L, 1);
 	const char *userinfo = luaL_checkstring(L, 2);
+	// [NQ 1.3.1 - Security]: Validate client slot bounds
+	if (clientnum < 0 || clientnum >= MAX_CLIENTS) {
+		return 0;
+	}
 	trap_SetUserinfo(clientnum, userinfo);
 	return 0;
 }
@@ -521,13 +558,26 @@ static int _et_trap_FS_FOpenFile(lua_State *L)
 // filedata = et.trap_FS_Read( fd, count )
 static int _et_trap_FS_Read(lua_State *L)
 {
-	char *filedata = "";
+	char *filedata;
 	fileHandle_t fd = luaL_checkint(L, 1);
 	int count = luaL_checkint(L, 2);
+
+	// [NQ 1.3.1 - Security]: Guard against negative/zero sizes and prevent heap memory leaks
+	if (count <= 0) {
+		lua_pushstring(L, "");
+		return 1;
+	}
+
 	filedata = malloc(count + 1);
+	if (!filedata) {
+		luaL_error(L, "et.trap_FS_Read: failed to allocate %d bytes", count + 1);
+		return 0;
+	}
+
 	trap_FS_Read(filedata, count, fd);
 	*(filedata + count) = '\0';
 	lua_pushstring(L, filedata);
+	free(filedata);
 	return 1;
 }
 
@@ -589,6 +639,10 @@ static int _et_G_Sound(lua_State *L)
 {
 	int entnum = luaL_checkint(L, 1);
 	int soundindex = luaL_checkint(L, 2);
+	// [NQ 1.3.1 - Security]: Validate entity slot bounds
+	if (entnum < 0 || entnum >= MAX_GENTITIES) {
+		return 0;
+	}
 	G_Sound(g_entities + entnum, soundindex);
 	return 0;
 }
@@ -598,6 +652,10 @@ static int _et_G_ClientSound( lua_State *L )
 {
 	int clientnum = luaL_checkint( L, 1 );
 	int soundindex = luaL_checkint( L, 2 );
+	// [NQ 1.3.1 - Security]: Validate client slot bounds
+	if (clientnum < 0 || clientnum >= MAX_CLIENTS) {
+		return 0;
+	}
 	G_ClientSound( g_entities + clientnum, soundindex );
 	return 0;
 }
@@ -621,6 +679,13 @@ static int _et_G_Damage(lua_State *L)
 	int dflags = luaL_checkint(L, 5);
 	int mod = luaL_checkint(L, 6);
 
+	// [NQ 1.3.1 - Security]: Validate entity slot bounds
+	if (target < 0 || target >= MAX_GENTITIES ||
+	    inflictor < 0 || inflictor >= MAX_GENTITIES ||
+	    attacker < 0 || attacker >= MAX_GENTITIES) {
+		return 0;
+	}
+
 	G_Damage(g_entities + target,
 		g_entities + inflictor,
 		g_entities + attacker,
@@ -636,9 +701,20 @@ static int _et_G_Damage(lua_State *L)
 // et.G_AddSkillPoints( ent, skill, points )
 static int _et_G_AddSkillPoints(lua_State *L)
 {
-	gentity_t *ent = g_entities + luaL_checkint(L, 1);
+	int entnum = luaL_checkint(L, 1);
 	int skill = luaL_checkint(L, 2);
 	float points = luaL_checknumber(L, 3);
+	gentity_t *ent;
+
+	// [NQ 1.3.1 - Security]: Validate client slot bounds
+	if (entnum < 0 || entnum >= MAX_CLIENTS) {
+		return 0;
+	}
+	ent = g_entities + entnum;
+	if (!ent->client) {
+		return 0;
+	}
+
 	G_AddSkillPoints(ent, skill, points);
 	return 0;
 }
@@ -646,9 +722,20 @@ static int _et_G_AddSkillPoints(lua_State *L)
 // et.G_LoseSkillPoints( ent, skill, points )
 static int _et_G_LoseSkillPoints( lua_State *L )
 {
-	gentity_t *ent = g_entities + luaL_checkint( L, 1 );
+	int entnum = luaL_checkint( L, 1 );
 	int skill = luaL_checkint( L, 2 );
 	float points = luaL_checknumber( L, 3 );
+	gentity_t *ent;
+
+	// [NQ 1.3.1 - Security]: Validate client slot bounds
+	if (entnum < 0 || entnum >= MAX_CLIENTS) {
+		return 0;
+	}
+	ent = g_entities + entnum;
+	if (!ent->client) {
+		return 0;
+	}
+
 	G_LoseSkillPoints( ent, skill, points );
 	return 0;
 }
@@ -1231,6 +1318,10 @@ static int _et_G_SetSpawnVar(lua_State *L)
 static int _et_trap_LinkEntity(lua_State *L)
 {
 	int entnum = luaL_checkint(L, 1);
+	// [NQ 1.3.1 - Security]: Validate entity slot bounds
+	if (entnum < 0 || entnum >= MAX_GENTITIES) {
+		return 0;
+	}
 	trap_LinkEntity(g_entities + entnum);
 	return 0;
 }
@@ -1239,6 +1330,10 @@ static int _et_trap_LinkEntity(lua_State *L)
 static int _et_trap_UnlinkEntity(lua_State *L)
 {
 	int entnum = luaL_checkint(L, 1);
+	// [NQ 1.3.1 - Security]: Validate entity slot bounds
+	if (entnum < 0 || entnum >= MAX_GENTITIES) {
+		return 0;
+	}
 	trap_UnlinkEntity(g_entities + entnum);
 	return 0;
 }
@@ -1246,10 +1341,21 @@ static int _et_trap_UnlinkEntity(lua_State *L)
 // (variable) = et.gentity_get( entnum, fieldname, arrayindex )
 int _et_gentity_get(lua_State *L)
 {
-	gentity_t *ent = g_entities + luaL_checkint(L, 1);
-	const char *fieldname = luaL_checkstring(L, 2);
-	gentity_field_t *field = _et_gentity_getfield(ent, (char *)fieldname);
+	int entnum = luaL_checkint(L, 1);
+	gentity_t *ent;
+	const char *fieldname;
+	gentity_field_t *field;
 	uintptr_t addr;
+
+	// [NQ 1.3.1 - Security]: Validate entity slot bounds
+	if ( entnum < 0 || entnum >= MAX_GENTITIES ) {
+		luaL_error(L, "entnum \"%d\" is out of range (0-%d)", entnum, MAX_GENTITIES - 1);
+		return 0;
+	}
+
+	ent = g_entities + entnum;
+	fieldname = luaL_checkstring(L, 2);
+	field = _et_gentity_getfield(ent, (char *)fieldname);
 
 	// break on invalid gentity field
 	if ( !field ) {
@@ -1316,11 +1422,22 @@ int _et_gentity_get(lua_State *L)
 // et.gentity_set( entnum, fieldname, arrayindex, (value) )
 static int _et_gentity_set(lua_State *L)
 {
-	gentity_t *ent = g_entities + luaL_checkint(L, 1);
-	const char *fieldname = luaL_checkstring(L, 2);
-	gentity_field_t *field = _et_gentity_getfield(ent, (char *)fieldname);
+	int entnum = luaL_checkint(L, 1);
+	gentity_t *ent;
+	const char *fieldname;
+	gentity_field_t *field;
 	uintptr_t addr;
 	const char *buffer;
+
+	// [NQ 1.3.1 - Security]: Validate entity slot bounds
+	if ( entnum < 0 || entnum >= MAX_GENTITIES ) {
+		luaL_error(L, "entnum \"%d\" is out of range (0-%d)", entnum, MAX_GENTITIES - 1);
+		return 0;
+	}
+
+	ent = g_entities + entnum;
+	fieldname = luaL_checkstring(L, 2);
+	field = _et_gentity_getfield(ent, (char *)fieldname);
 
 	// break on invalid gentity field
 	if ( !field ) {
@@ -1356,12 +1473,20 @@ static int _et_gentity_set(lua_State *L)
 		case FIELD_STRING:
 			buffer = luaL_checkstring(L, 3);
 			if( field->flags & FIELD_FLAG_NOPTR ) {
-				Q_strncpyz((char *)addr, buffer, MAX_STRING_CHARS);
+				// [NQ 1.3.1 - Security]: pers.netname buffer is MAX_NETNAME (36 bytes).
+				// Copying MAX_STRING_CHARS (1024) overflows into adjacent cl_guid and client_ip!
+				if ( !Q_stricmp(fieldname, "pers.netname") ) {
+					Q_strncpyz((char *)addr, buffer, MAX_NETNAME);
+				} else {
+					Q_strncpyz((char *)addr, buffer, MAX_STRING_CHARS);
+				}
 			}
 			else {
 				free(*(char **)addr);
 				*(char **)addr = malloc(strlen(buffer) + 1);
-				Q_strncpyz(*(char **)addr, buffer, (int)(strlen(buffer) + 1));
+				if ( *(char **)addr ) {
+					Q_strncpyz(*(char **)addr, buffer, (int)(strlen(buffer) + 1));
+				}
 			}
 			break;
 		case FIELD_FLOAT:
@@ -1392,6 +1517,10 @@ static int _et_G_AddEvent(lua_State *L)
 	int ent = luaL_checkint(L, 1);
 	int event = luaL_checkint(L, 2);
 	int eventparm = luaL_checkint(L, 3);
+	// [NQ 1.3.1 - Security]: Validate entity slot bounds
+	if (ent < 0 || ent >= MAX_GENTITIES) {
+		return 0;
+	}
 	G_AddEvent(g_entities + ent, event, eventparm);
 	return 0;
 }
@@ -1403,7 +1532,12 @@ static int _et_G_shrubbot_permission(lua_State *L)
 	int entnum = luaL_optint(L, 1, -1);
 	char flag = luaL_checkstring(L, 2)[0];
 	gentity_t *ent = NULL;
+	// [NQ 1.3.1 - Security]: Clamp entnum to valid client slots (0 <= entnum < MAX_CLIENTS) or console (-1)
 	if ( entnum > -1 ) {
+		if ( entnum >= MAX_CLIENTS ) {
+			lua_pushinteger(L, 0);
+			return 1;
+		}
 		ent = g_entities + entnum;
 	}
 	lua_pushinteger(L, G_shrubbot_permission(ent, flag));
@@ -1415,7 +1549,12 @@ static int _et_G_shrubbot_level(lua_State *L)
 {
 	int entnum = luaL_optint(L, 1, -1);
 	gentity_t *ent = NULL;
+	// [NQ 1.3.1 - Security]: Clamp entnum to valid client slots (0 <= entnum < MAX_CLIENTS) or console (-1)
 	if ( entnum > -1 ) {
+		if ( entnum >= MAX_CLIENTS ) {
+			lua_pushinteger(L, 0);
+			return 1;
+		}
 		ent = g_entities + entnum;
 	}
 	lua_pushinteger(L, G_shrubbot_level(ent));
@@ -1428,6 +1567,12 @@ static int _et_G_shrubbot_setlevel(lua_State *L)
 {
 	int clientNum = luaL_checkint(L, 1);
 	int shrublevel = luaL_checkint(L, 2);
+
+	// [NQ 1.3.1 - Security]: Validate client slot bounds
+	if (clientNum < 0 || clientNum >= MAX_CLIENTS) {
+		luaL_error(L, "clientNum \"%d\" is out of range (0-%d)", clientNum, MAX_CLIENTS - 1);
+		return 0;
+	}
 
 	if (G_shrubbot_setlevel_lua(clientNum, shrublevel)) {
 		return 1;
@@ -1447,6 +1592,12 @@ static int _et_G_XP_Set( lua_State *L)
 	int skill = luaL_checkint(L, 3);
 	int add = luaL_checkbool(L, 4);
 	float oldxp = 0.0f;
+
+	// [NQ 1.3.1 - Security]: Validate clientNum bounds before indexing g_entities
+	if ( clientNum < 0 || clientNum >= MAX_CLIENTS ) {
+		luaL_error(L, "clientNum \"%d\" is out of range (0-%d)", clientNum, MAX_CLIENTS - 1);
+		return 0;
+	}
 
 	ent = &g_entities[ clientNum ];
 
@@ -1510,7 +1661,8 @@ static int _et_G_ResetXP(lua_State *L)
 {
 	int entnum = luaL_optint(L, 1, -1);
 	gentity_t *ent = NULL;
-	if ( entnum > -1 ) {
+	// [NQ 1.3.1 - Security]: Validate client bounds
+	if ( entnum > -1 && entnum < MAX_CLIENTS ) {
 		ent = g_entities + entnum;
 	}
 	G_ResetXP(ent);

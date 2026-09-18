@@ -114,10 +114,18 @@ qboolean G_shrubbot_permission(gentity_t *ent, char flag) {
 		return qtrue;
 	}
 
+	// [NQ 1.3.1 - Security]: Validate entity is a valid client and has a legitimate unique GUID
+	if(!ent->client || (ent - g_entities < 0) || (ent - g_entities >= MAX_CLIENTS)) {
+		return qfalse;
+	}
+
 	guid = level.clients[ent-g_entities].pers.cl_guid;
+	if(!guid || !*guid || !Q_stricmp(guid, "NO_GUID") || !Q_stricmp(guid, "unknown")) {
+		return qfalse;
+	}
 
 	for(i=0; g_shrubbot_admins[i]; i++) {
-		if(!Q_stricmp(guid, g_shrubbot_admins[i]->guid)) {
+		if(g_shrubbot_admins[i]->guid[0] && !Q_stricmp(guid, g_shrubbot_admins[i]->guid)) {
 			flags = g_shrubbot_admins[i]->flags;
 			while(*flags) {
 				if(*flags == flag)
@@ -186,17 +194,25 @@ qboolean _shrubbot_admin_higher(gentity_t *admin, gentity_t *victim) {
 	// just in case
 	if(!victim) return qtrue;
 
+	// [NQ 1.3.1 - Security]: Validate client slots before accessing client table
+	if(!admin->client || (admin - g_entities < 0) || (admin - g_entities >= MAX_CLIENTS)) return qtrue;
+	if(!victim->client || (victim - g_entities < 0) || (victim - g_entities >= MAX_CLIENTS)) return qtrue;
+
 	guid = level.clients[admin-g_entities].pers.cl_guid;
-	for(i=0; g_shrubbot_admins[i]; i++) {
-		if(!Q_stricmp(guid, g_shrubbot_admins[i]->guid)) {
-			alevel = g_shrubbot_admins[i]->level;
+	if(guid && *guid && Q_stricmp(guid, "NO_GUID") && Q_stricmp(guid, "unknown")) {
+		for(i=0; g_shrubbot_admins[i]; i++) {
+			if(g_shrubbot_admins[i]->guid[0] && !Q_stricmp(guid, g_shrubbot_admins[i]->guid)) {
+				alevel = g_shrubbot_admins[i]->level;
+			}
 		}
 	}
 	guid = level.clients[victim-g_entities].pers.cl_guid;
-	for(i=0; g_shrubbot_admins[i]; i++) {
-		if(!Q_stricmp(guid, g_shrubbot_admins[i]->guid)) {
-			if(alevel < g_shrubbot_admins[i]->level)
-				return qfalse;
+	if(guid && *guid && Q_stricmp(guid, "NO_GUID") && Q_stricmp(guid, "unknown")) {
+		for(i=0; g_shrubbot_admins[i]; i++) {
+			if(g_shrubbot_admins[i]->guid[0] && !Q_stricmp(guid, g_shrubbot_admins[i]->guid)) {
+				if(alevel < g_shrubbot_admins[i]->level)
+					return qfalse;
+			}
 		}
 	}
 	return qtrue;
@@ -436,12 +452,20 @@ int G_shrubbot_level(gentity_t *ent) {
 		return MAX_SHRUBBOT_LEVELS;
 	}
 
+	// [NQ 1.3.1 - Security]: Validate entity is a valid client
+	if(!ent->client || (ent - g_entities < 0) || (ent - g_entities >= MAX_CLIENTS)) {
+		return 0;
+	}
+
 	guid = level.clients[ent-g_entities].pers.cl_guid;
 
-	// note: if there is no guid, the level should be 0
+	// [NQ 1.3.1 - Security]: If there is no legitimate unique GUID, the level must be 0
+	if(!guid || !*guid || !Q_stricmp(guid, "NO_GUID") || !Q_stricmp(guid, "unknown")) {
+		return 0;
+	}
 
 	for(i=0; g_shrubbot_admins[i]; i++) {
-		if(!Q_stricmp(g_shrubbot_admins[i]->guid, guid)) {
+		if(g_shrubbot_admins[i]->guid[0] && !Q_stricmp(g_shrubbot_admins[i]->guid, guid)) {
 			return g_shrubbot_admins[i]->level;
 		}
 	}
@@ -1364,8 +1388,10 @@ qboolean G_shrubbot_setlevel_lua(int slot, int shrubbotlevel) {
 
 		guid = level.clients[slot].pers.cl_guid;
 
-		if ( !Q_stricmp(guid, "unknown") || !Q_stricmp(guid, "NO_GUID") || !guid[0])  {
-			G_Printf("G_shrubbot_setlevel_lua WARNING: client has no GUID!\n");
+		// [NQ 1.3.1 - Security]: Reject setting admin level for players without a valid unique GUID
+		if ( !guid || !guid[0] || !Q_stricmp(guid, "unknown") || !Q_stricmp(guid, "NO_GUID") )  {
+			G_Printf("G_shrubbot_setlevel_lua: client %d has no valid GUID! Aborting.\n", slot);
+			return qfalse;
 		}
 
 		// tjw: use raw name
