@@ -36,6 +36,7 @@ option(WITH_HWBAN       "Build with Hardware Ban support" OFF)
 if(MSVC)
     add_compile_options(
         /W3
+        /Zi
         /wd4996 # deprecated functions
         /wd4244 # conversion possible loss of data
         /wd4305 # truncation
@@ -43,6 +44,7 @@ if(MSVC)
         /wd4267 # size_t to int conversion
         /MP     # multi-processor compilation
     )
+    set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /DEBUG")
     add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_DEPRECATE)
 else()
     add_compile_options(

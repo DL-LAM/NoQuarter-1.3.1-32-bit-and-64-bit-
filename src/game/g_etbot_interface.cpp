@@ -78,25 +78,35 @@ gentity_t *INDEXENT(const int _gameId)
 
 int ENTINDEX(gentity_t *_ent)
 {
-	return _ent-g_entities;
+	// [NQ 1.3.1 - Bounds]: Guard against null or out-of-range entity pointers
+	if(_ent && _ent >= g_entities && _ent < (g_entities + MAX_GENTITIES))
+		return (int)(_ent - g_entities);
+	return ENTITYNUM_NONE;
 }
 
 gentity_t *EntityFromHandle(GameEntity _ent)
 {
 	obint16 index = _ent.GetIndex();
-	if(m_EntityHandles[index].m_HandleSerial == _ent.GetSerial() && g_entities[index].inuse)
-		return &g_entities[index];
+	// [NQ 1.3.1 - Bounds]: Guard world entity and array bounds before indexing m_EntityHandles
 	if(index == ENTITYNUM_WORLD)
 		return &g_entities[ENTITYNUM_WORLD];
+	if(index >= 0 && index < MAX_GENTITIES)
+	{
+		if(m_EntityHandles[index].m_HandleSerial == _ent.GetSerial() && g_entities[index].inuse)
+			return &g_entities[index];
+	}
 	return NULL;
 }
 
 GameEntity HandleFromEntity(gentity_t *_ent)
 {
-	if(_ent)
-		return GameEntity(_ent-g_entities, m_EntityHandles[_ent-g_entities].m_HandleSerial);
-	else
-		return GameEntity();
+	// [NQ 1.3.1 - Bounds]: Ensure _ent points within g_entities array
+	if(_ent && _ent >= g_entities && _ent < (g_entities + MAX_GENTITIES))
+	{
+		int idx = (int)(_ent - g_entities);
+		return GameEntity(idx, m_EntityHandles[idx].m_HandleSerial);
+	}
+	return GameEntity();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1997,12 +2007,18 @@ public:
 
 	obResult ChangeTeam(int _client, int _newteam, const MessageHelper *_data)
 	{
+		// [NQ 1.3.1 - Bounds]: Guard against invalid client index or uninitialized client
+		if (_client < 0 || _client >= level.maxclients)
+			return InvalidEntity;
+
 #ifdef NOQUARTER
 		const char* teamName;
 #else
 		char* teamName;
 #endif
 		gentity_t* bot = &g_entities[_client];
+		if (!bot || !bot->client)
+			return InvalidEntity;
 
 		// find a team if we didn't get one and we need one ;-)
 		if (_newteam != ET_TEAM_ALLIES && _newteam != ET_TEAM_AXIS)
@@ -2091,7 +2107,13 @@ public:
 
 	obResult ChangeClass(int _client, int _newclass, const MessageHelper *_data)
 	{
+		// [NQ 1.3.1 - Bounds]: Guard against invalid client index or uninitialized client
+		if (_client < 0 || _client >= level.maxclients)
+			return InvalidEntity;
+
 		gentity_t* bot = &g_entities[_client];
+		if (!bot || !bot->client)
+			return InvalidEntity;
 
 		// find playerclass if we didn't got one
 		if (_newclass <= ET_CLASS_NULL || _newclass >= ET_CLASS_MAX)
@@ -2247,7 +2269,14 @@ public:
 	void UpdateBotInput(int _client, const ClientInput &_input)
 	{
 		static usercmd_t cmd;
+
+		// [NQ 1.3.1 - Bounds]: Guard against invalid client index or uninitialized client
+		if (_client < 0 || _client >= level.maxclients)
+			return;
+
 		gentity_t *bot = &g_entities[_client];
+		if (!bot || !bot->client)
+			return;
 
 		// only causes problems
 		bot->client->ps.pm_flags &= ~PMF_RESPAWNED;
@@ -3737,6 +3766,13 @@ public:
 		if(bot && bot->inuse && bot->client)
 		{
 			int iWeapon = bot->client->ps.weapon;
+			// [NQ 1.3.1 - Bounds]: Guard against invalid weapon index
+			if(iWeapon <= WP_NONE || iWeapon >= WP_NUM_WEAPONS)
+			{
+				_curclip = 0;
+				_maxclip = 0;
+				return Success;
+			}
 #ifdef NOQUARTER
 			_curclip = bot->client->ps.ammoclip[WeaponTable[(weapon_t)iWeapon].clipindex];
 #else
@@ -4284,7 +4320,7 @@ public:
 
 		GameEntity ge;
 
-		for( int i = 0; i < g_maxclients.integer; ++i )
+		for( int i = 0; i < g_maxclients.integer && i < obPlayerInfo::MaxPlayers; ++i )
 		{
 			if(!g_entities[i].inuse)
 				continue;
@@ -5728,6 +5764,25 @@ void Bot_Interface_ConsoleCommand()
 }
 
 extern "C" void script_mover_spawn(gentity_t *ent);
+#if defined(_WIN32)
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+static void SafeBotUpdate()
+{
+	__try {
+		g_BotFunctions.pfnUpdate();
+	}
+	__except(EXCEPTION_EXECUTE_HANDLER) {
+		G_Printf("^1[Omni-bot Warning]: Exception caught and prevented in bot update loop.\n");
+	}
+}
+#else
+static void SafeBotUpdate()
+{
+	g_BotFunctions.pfnUpdate();
+}
+#endif
+
 void Bot_Interface_Update()
 {
 	if(IsOmnibotLoaded())
@@ -5844,7 +5899,7 @@ void Bot_Interface_Update()
 		SendDeferredGoals();
 		//////////////////////////////////////////////////////////////////////////
 		// Call the libraries update.
-		g_BotFunctions.pfnUpdate();
+		SafeBotUpdate();
 		//////////////////////////////////////////////////////////////////////////
 	}
 }
