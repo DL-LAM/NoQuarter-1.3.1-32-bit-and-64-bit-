@@ -5737,7 +5737,8 @@ void Bot_Interface_Update()
 		{
 			// time triggers for Omni-bot
 #ifdef NOQUARTER
-			if ( level.framenum % sv_fps.integer == 0 )
+			// [NQ 1.3.1 - Bounds]: Guard against division by zero if sv_fps is 0 or uninitialized
+			if ( level.framenum % (sv_fps.integer > 0 ? sv_fps.integer : 20) == 0 )
 #else
 			if ( level.framenum % 20 == 0 ) //@sv_fps
 #endif

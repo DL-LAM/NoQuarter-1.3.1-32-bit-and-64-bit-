@@ -4346,7 +4346,7 @@ void Cmd_Activate2_f( gentity_t *ent ) {
 
 /*
 ============================
-Cmd_ClientMonsterSlickAngle
+G_UpdateSpawnCounts
 ============================
 */
 void G_UpdateSpawnCounts( void ) {
@@ -4354,7 +4354,12 @@ void G_UpdateSpawnCounts( void ) {
 	int		i, j, current, count, team;
 	char	cs[MAX_STRING_CHARS];
 
-	for( i = 0; i < level.numspawntargets; ++i ) {
+	// [NQ 1.3.1 - Bounds]: Guard against invalid or empty spawn targets
+	if( level.numspawntargets <= 0 ) {
+		return;
+	}
+
+	for( i = 0; i < level.numspawntargets && i < MAX_MULTI_SPAWNTARGETS; ++i ) {
 		trap_GetConfigstring( CS_MULTI_SPAWNTARGETS + i, cs, sizeof(cs) );
 
 		current = atoi(Info_ValueForKey( cs, "c" ));
@@ -4362,7 +4367,18 @@ void G_UpdateSpawnCounts( void ) {
 
 		count = 0;
 		for( j = 0; j < level.numConnectedClients; j++ ) {
-			client = &level.clients[ level.sortedClients[ j ] ];
+			int clNum = level.sortedClients[ j ];
+
+			// [NQ 1.3.1 - Bounds]: Validate client index and connection state
+			if( clNum < 0 || clNum >= level.maxclients ) {
+				continue;
+			}
+
+			client = &level.clients[ clNum ];
+
+			if( client->pers.connected != CON_CONNECTED ) {
+				continue;
+			}
 
 			if( client->sess.sessionTeam != TEAM_AXIS && client->sess.sessionTeam != TEAM_ALLIES ) {
 				continue;
@@ -4404,6 +4420,11 @@ Cmd_SetSpawnPoint_f
 ============
 */
 void SetPlayerSpawn( gentity_t* ent, int spawn, qboolean update ) {
+	// [NQ 1.3.1 - Bounds]: Ensure valid entity and client pointer
+	if( !ent || !ent->client ) {
+		return;
+	}
+
 	// jet Pilot - more logical than before
 	if( spawn < MAX_MULTI_SPAWNTARGETS && spawn >= 0 ) {
         ent->client->sess.spawnObjectiveIndex  = spawn;
