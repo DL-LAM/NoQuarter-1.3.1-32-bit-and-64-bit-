@@ -346,6 +346,8 @@ void G_refPlayerPut_cmd(gentity_t *ent, int team_id)
 	if((pid = ClientNumberFromString(ent, arg)) == -1) return;
 
 	player = g_entities + pid;
+	// [NQ 1.3.1 - Bounds]: Guard against NULL client pointer before referee sub-command deref
+	if(!player->client) { G_refPrintf(ent, "Invalid client slot."); return; }
 
 	// Can only move to other teams.
 	if(player->client->sess.sessionTeam == team_id) {
@@ -390,6 +392,8 @@ void G_refRemove_cmd(gentity_t *ent)
 	if((pid = ClientNumberFromString(ent, arg)) == -1) return;
 
 	player = g_entities + pid;
+	// [NQ 1.3.1 - Bounds]: Guard against NULL client pointer before referee sub-command deref
+	if(!player->client) { G_refPrintf(ent, "Invalid client slot."); return; }
 
 	// Can only remove active players.
 	if(player->client->sess.sessionTeam == TEAM_SPECTATOR) {
@@ -483,6 +487,8 @@ void G_refMute_cmd(gentity_t *ent, qboolean mute)
 	if((pid = ClientNumberFromString(ent, arg)) == -1) return;
 
 	player = g_entities + pid;
+	// [NQ 1.3.1 - Bounds]: Guard against NULL client pointer before referee sub-command deref
+	if(!player->client) { G_refPrintf(ent, "Invalid client slot."); return; }
 
 	// CHRUKER: b060 - Added mute check so that players that are muted
 	//          before granted referee status, can be unmuted
