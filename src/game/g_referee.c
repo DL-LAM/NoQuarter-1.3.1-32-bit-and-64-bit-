@@ -17,7 +17,9 @@
 #define AUTH_TRACK_EXPIRE_TIME	900000	// 15 minutes (in level.time milliseconds)
 
 typedef struct {
-	char		ip[MAX_IP_LENGTH];
+	// [NQ 1.3.1 - Security]: Use MAX_IP_LENGTH_V6 (48) to support IPv6 addresses.
+	// pers.client_ip remains MAX_IP_LENGTH (16) to avoid engine ABI changes.
+	char		ip[MAX_IP_LENGTH_V6];
 	int			failures;
 	int			lastTime;
 } authFailTrack_t;
@@ -47,7 +49,7 @@ static int G_RecordAuthFailure(gentity_t *ent)
 	if(client_ip && *client_ip && Q_stricmp(client_ip, "localhost")) {
 		for(i = 0; i < MAX_AUTH_TRACK_IPS; i++) {
 			if(authFailuresByIP[i].ip[0]) {
-				if(!Q_strncmp(authFailuresByIP[i].ip, client_ip, MAX_IP_LENGTH)) {
+				if(!Q_strncmp(authFailuresByIP[i].ip, client_ip, MAX_IP_LENGTH_V6)) {
 					// Expire entry if older than 15 minutes
 					if(level.time - authFailuresByIP[i].lastTime > AUTH_TRACK_EXPIRE_TIME) {
 						authFailuresByIP[i].failures = 0;
@@ -106,7 +108,7 @@ static void G_ClearAuthFailures(gentity_t *ent)
 
 	if(client_ip && *client_ip) {
 		for(i = 0; i < MAX_AUTH_TRACK_IPS; i++) {
-			if(authFailuresByIP[i].ip[0] && !Q_strncmp(authFailuresByIP[i].ip, client_ip, MAX_IP_LENGTH)) {
+			if(authFailuresByIP[i].ip[0] && !Q_strncmp(authFailuresByIP[i].ip, client_ip, MAX_IP_LENGTH_V6)) {
 				authFailuresByIP[i].ip[0] = '\0';
 				authFailuresByIP[i].failures = 0;
 				authFailuresByIP[i].lastTime = 0;

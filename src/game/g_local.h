@@ -57,6 +57,12 @@
 #define NQ_AURA_FRAME_FREQ		20
 #define NQ_AURA_RADIUS			512
 
+// [NQ 1.3.1 - Security]: IPv6-capable IP buffer length for auth failure tracking.
+// MAX_IP_LENGTH (q_shared.h) is 16 (IPv4 only). We define a wider constant here
+// for use only in authFailTrack_t.ip in g_referee.c; all other pers.client_ip fields
+// remain IPv4-sized to avoid touching the engine/shared ABI.
+#define MAX_IP_LENGTH_V6		48	// "xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx" = 39 + null + port
+
 // gentity->flags
 #define	FL_GODMODE				0x00000010
 #define	FL_NOTARGET				0x00000020
