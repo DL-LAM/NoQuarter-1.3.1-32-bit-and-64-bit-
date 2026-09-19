@@ -898,8 +898,9 @@ _UI_Refresh
 =================
 */
 
+// [NQ 1.3.1 - Widescreen]: Center pic across widescreen virtual width
 void UI_DrawCenteredPic(qhandle_t image, int w, int h) {
-  int x = (SCREEN_WIDTH - w) / 2;
+  int x = (int)((Cui_WideX(SCREEN_WIDTH) - w) / 2);
   int y = (SCREEN_HEIGHT - h) / 2;
   UI_DrawHandlePic(x, y, w, h, image);
 }
@@ -6595,6 +6596,13 @@ void _UI_Init( qboolean inGameLoad ) {
 
 	UI_ParseGLConfig();
 
+	// [NQ 1.3.1 - Widescreen]: Ensure windowAspect is explicitly initialized
+	if ( uiInfo.uiDC.glconfig.vidHeight > 0 ) {
+		uiInfo.uiDC.glconfig.windowAspect = (float)uiInfo.uiDC.glconfig.vidWidth / (float)uiInfo.uiDC.glconfig.vidHeight;
+	} else {
+		uiInfo.uiDC.glconfig.windowAspect = RATIO43;
+	}
+
 	// for 640x480 virtualized screen
 	uiInfo.uiDC.yscale = uiInfo.uiDC.glconfig.vidHeight * (1.0/480.0);
 	uiInfo.uiDC.xscale = uiInfo.uiDC.glconfig.vidWidth * (1.0/640.0);
@@ -6796,8 +6804,9 @@ void _UI_MouseEvent( int dx, int dy ) {
 	uiInfo.uiDC.cursorx += dx;
 	if (uiInfo.uiDC.cursorx < 0)
 		uiInfo.uiDC.cursorx = 0;
-	else if (uiInfo.uiDC.cursorx > SCREEN_WIDTH)
-		uiInfo.uiDC.cursorx = SCREEN_WIDTH;
+	// [NQ 1.3.1 - Widescreen]: Clamp cursor across the entire widescreen viewport
+	else if (uiInfo.uiDC.cursorx > Cui_WideX(SCREEN_WIDTH))
+		uiInfo.uiDC.cursorx = Cui_WideX(SCREEN_WIDTH);
 
 	uiInfo.uiDC.cursory += dy;
 	if (uiInfo.uiDC.cursory < 0)
@@ -6955,7 +6964,7 @@ void _UI_SetActiveMenu( uiMenuCommand_t menu ) {
 
 		// NERVE - SMF
 		case UIMENU_WM_QUICKMESSAGE:
-			uiInfo.uiDC.cursorx = 639;
+			uiInfo.uiDC.cursorx = (int)Cui_WideX(640) - 1;
 			uiInfo.uiDC.cursory = 479;
 			trap_Key_SetCatcher( KEYCATCH_UI );
 			Menus_CloseAll();
@@ -6963,7 +6972,7 @@ void _UI_SetActiveMenu( uiMenuCommand_t menu ) {
 			return;
 
 		case UIMENU_WM_QUICKMESSAGEALT:
-			uiInfo.uiDC.cursorx = 639;
+			uiInfo.uiDC.cursorx = (int)Cui_WideX(640) - 1;
 			uiInfo.uiDC.cursory = 479;
 			trap_Key_SetCatcher( KEYCATCH_UI );
 			Menus_CloseAll();
@@ -6971,7 +6980,7 @@ void _UI_SetActiveMenu( uiMenuCommand_t menu ) {
 			return;
 
 		case UIMENU_WM_CLASS:
-			uiInfo.uiDC.cursorx = 639;
+			uiInfo.uiDC.cursorx = (int)Cui_WideX(640) - 1;
 			uiInfo.uiDC.cursory = 479;
 			trap_Key_SetCatcher( KEYCATCH_UI );
 			Menus_CloseAll();
@@ -6979,7 +6988,7 @@ void _UI_SetActiveMenu( uiMenuCommand_t menu ) {
 			return;
 
 		case UIMENU_WM_CLASSALT:
-			uiInfo.uiDC.cursorx = 639;
+			uiInfo.uiDC.cursorx = (int)Cui_WideX(640) - 1;
 			uiInfo.uiDC.cursory = 479;
 			trap_Key_SetCatcher( KEYCATCH_UI );
 			Menus_CloseAll();
@@ -6987,7 +6996,7 @@ void _UI_SetActiveMenu( uiMenuCommand_t menu ) {
 			return;
 
 		case UIMENU_WM_FTQUICKMESSAGE:
-			uiInfo.uiDC.cursorx = 639;
+			uiInfo.uiDC.cursorx = (int)Cui_WideX(640) - 1;
 			uiInfo.uiDC.cursory = 479;
 			trap_Key_SetCatcher( KEYCATCH_UI );
 			Menus_CloseAll();
@@ -6995,7 +7004,7 @@ void _UI_SetActiveMenu( uiMenuCommand_t menu ) {
 			return;
 
 		case UIMENU_WM_FTQUICKMESSAGEALT:
-			uiInfo.uiDC.cursorx = 639;
+			uiInfo.uiDC.cursorx = (int)Cui_WideX(640) - 1;
 			uiInfo.uiDC.cursory = 479;
 			trap_Key_SetCatcher( KEYCATCH_UI );
 			Menus_CloseAll();
@@ -7003,7 +7012,7 @@ void _UI_SetActiveMenu( uiMenuCommand_t menu ) {
 			return;
 
 		case UIMENU_WM_TAPOUT:
-			uiInfo.uiDC.cursorx = 639;
+			uiInfo.uiDC.cursorx = (int)Cui_WideX(640) - 1;
 			uiInfo.uiDC.cursory = 479;
 			trap_Key_SetCatcher( KEYCATCH_UI );
 			Menus_CloseAll();
@@ -7011,7 +7020,7 @@ void _UI_SetActiveMenu( uiMenuCommand_t menu ) {
 			return;
 
 		case UIMENU_WM_TAPOUT_LMS:
-			uiInfo.uiDC.cursorx = 639;
+			uiInfo.uiDC.cursorx = (int)Cui_WideX(640) - 1;
 			uiInfo.uiDC.cursory = 479;
 			trap_Key_SetCatcher( KEYCATCH_UI );
 			Menus_CloseAll();
@@ -7090,10 +7099,10 @@ to prevent it from blinking away too rapidly on local or lan games.
 
 void UI_DrawConnectScreen( qboolean overlay ) {
 	if( !overlay ) {
-		// core: to avoid a flickering screen on widescreens, we erase it before drawing onto it..
-		float aspectratio = (float)(DC->glconfig.vidWidth) / DC->glconfig.vidHeight;
-		if (aspectratio != RATIO43) {
-			float xoffset = Cui_WideXoffset() * DC->xscale;
+		// [NQ 1.3.1 - Widescreen]: Erase widescreen pillarbox bars at correct vertical scale
+		float aspectratio = (float)(DC->glconfig.vidWidth) / (float)DC->glconfig.vidHeight;
+		if (aspectratio > RATIO43) {
+			float xoffset = Cui_WideXoffset() * DC->yscale;
 			trap_R_DrawStretchPic( 0, 0, xoffset, DC->glconfig.vidHeight, 0, 0, 1, 1, DC->registerShaderNoMip("gfx/2d/backtile") );
 			trap_R_DrawStretchPic( DC->glconfig.vidWidth - xoffset, 0, xoffset, DC->glconfig.vidHeight, 0, 0, 1, 1, DC->registerShaderNoMip("gfx/2d/backtile") );
 		}

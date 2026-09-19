@@ -95,34 +95,29 @@ void BackupYcoords( menuDef_t *menu ) {
 //---
 
 
-//--- core: widescreen support
+//--- [NQ 1.3.1 - Widescreen]: Widescreen support helpers
 // convert rectangle-coordinates for use with the current aspectratio.
 void Cui_WideRect( Rectangle *rect )
 {
-	float aspectratio = (float)(DC->glconfig.vidWidth) / DC->glconfig.vidHeight;
-	rect->x *= DC->xscale;
-	rect->y *= DC->yscale;
-	rect->w *= DC->xscale;
-	rect->h *= DC->yscale;
-	if (aspectratio != RATIO43) {
-		rect->x *= RATIO43 / aspectratio;
-		rect->w *= RATIO43 / aspectratio;
+	float aspectratio = (float)(DC->glconfig.vidWidth) / (float)DC->glconfig.vidHeight;
+	if ( aspectratio > RATIO43 ) {
+		rect->w = Cui_WideX( 640.0f );
 	}
 }
 
 // convert an x-coordinate for use with the current aspectratio.
-// (if the current aspectratio is 4:3, then leave the x-coordinate unchanged)
+// (if the current aspectratio is <= 4:3, then leave the x-coordinate unchanged)
 float Cui_WideX( float x )
 {
-	float aspectratio = (float)(DC->glconfig.vidWidth) / DC->glconfig.vidHeight;
-	return (aspectratio == RATIO43)? x : x * (aspectratio * RPRATIO43);	// aspectratio / (4/3)
+	float aspectratio = (float)(DC->glconfig.vidWidth) / (float)DC->glconfig.vidHeight;
+	return (aspectratio <= RATIO43) ? x : x * (aspectratio * RPRATIO43);	// aspectratio / (4/3)
 }
 
 // the horizontal center of screen pixel-difference of a 4:3 ratio vs. the current aspectratio
 float Cui_WideXoffset(void)
 {
-	float aspectratio = (float)(DC->glconfig.vidWidth) / DC->glconfig.vidHeight;
-	return (aspectratio == RATIO43)? 0.0f : ((640.0f * (aspectratio * RPRATIO43)) - 640.0f) * 0.5f;
+	float aspectratio = (float)(DC->glconfig.vidWidth) / (float)DC->glconfig.vidHeight;
+	return (aspectratio <= RATIO43) ? 0.0f : ((640.0f * (aspectratio * RPRATIO43)) - 640.0f) * 0.5f;
 }
 //---
 
@@ -750,19 +745,80 @@ void Item_UpdatePosition(itemDef_t *item) {
 }
 
 // menus
+// [NQ 1.3.1 - Widescreen]: Reposition menu elements and center subwindows for non-4:3 aspect ratios
 void Menu_UpdatePosition(menuDef_t *menu) {
 	int i;
 	float x, y;
+	float xoffset = Cui_WideXoffset();
+	Rectangle *r;
+	qboolean fullscreenItem = qfalse;
+	qboolean fullscreenMenu = qfalse;
+	const char *menuName = NULL;
+	const char *itemName = NULL;
 
 	if (menu == NULL) {
 		return;
 	}
 
-	x = menu->window.rect.x;
-	y = menu->window.rect.y;
+	if (menu->window.rectClient.w == 0 && menu->window.rectClient.h == 0) {
+		menu->window.rectClient = menu->window.rect;
+	}
 
-	for (i = 0; i < menu->itemCount; i++) {
-		Item_SetScreenCoords(menu->items[i], x, y);
+	// Use stored client rect as base coordinate to guarantee idempotence across updates
+	x = menu->window.rectClient.x;
+	y = menu->window.rectClient.y;
+
+	r = &menu->window.rectClient;
+	fullscreenMenu = (r->x == 0 && r->y == 0 && r->w == 640 && r->h == 480);
+	menuName = menu->window.name;
+
+	for (i = 0; i < menu->itemCount; ++i) {
+		itemName = menu->items[i]->window.name;
+		r = &menu->items[i]->window.rectClient;
+		fullscreenItem = (r->x == 0 && r->y == 0 && r->w == 640 && r->h == 480);
+
+		if (fullscreenItem) {
+			// Fullscreen background items span the full widescreen width
+			Item_SetScreenCoords(menu->items[i], 0, y);
+			menu->items[i]->window.rect.w = Cui_WideX(640.0f);
+		}
+		else if (!Q_stricmp(menuName, "main")) {
+			// Main menu branding layout:
+			if (!Q_stricmp(itemName, "atvi_logo") || !Q_stricmp(itemName, "id_logo")) {
+				// Right-aligned against the right edge of widescreen
+				Item_SetScreenCoords(menu->items[i], x + 2 * xoffset, y);
+			}
+			else if (!Q_stricmp(itemName, "et_logo") || !Q_stricmp(itemName, "nq_logo")) {
+				// Centered in widescreen display
+				Item_SetScreenCoords(menu->items[i], x + xoffset, y);
+			}
+			else {
+				// Left-aligned main menu buttons
+				Item_SetScreenCoords(menu->items[i], x, y);
+			}
+		}
+		else if (fullscreenMenu) {
+			// Fullscreen dialog overlay menus (quit, popupError, background_1 logos, etc.)
+			Item_SetScreenCoords(menu->items[i], x + xoffset, y);
+		}
+		else {
+			// Subwindows and dialogs (options, playonline, credits, etc.):
+			// Horizontally centered
+			Item_SetScreenCoords(menu->items[i], x + xoffset, y);
+		}
+	}
+
+	// Keep menu window rect in sync with centered subwindows
+	if (!fullscreenMenu && Q_stricmp(menuName, "main") != 0) {
+		menu->window.rect.x = x + xoffset;
+		menu->window.rect.y = y;
+		menu->window.rect.w = menu->window.rectClient.w;
+		menu->window.rect.h = menu->window.rectClient.h;
+	} else if (fullscreenMenu) {
+		menu->window.rect.x = 0;
+		menu->window.rect.y = 0;
+		menu->window.rect.w = Cui_WideX(640.0f);
+		menu->window.rect.h = 480;
 	}
 }
 
@@ -771,10 +827,13 @@ void Menu_PostParse(menuDef_t *menu) {
 		return;
 	}
 	if (menu->fullScreen) {
-		menu->window.rect.x = 0;
-		menu->window.rect.y = 0;
-		menu->window.rect.w = 640;
-		menu->window.rect.h = 480;
+		menu->window.rectClient.x = 0;
+		menu->window.rectClient.y = 0;
+		menu->window.rectClient.w = 640;
+		menu->window.rectClient.h = 480;
+		menu->window.rect = menu->window.rectClient;
+	} else if (menu->window.rectClient.w == 0 && menu->window.rectClient.h == 0) {
+		menu->window.rectClient = menu->window.rect;
 	}
 	Menu_UpdatePosition(menu);
 }
@@ -4658,12 +4717,21 @@ qboolean Item_Bind_HandleKey(itemDef_t *item, int key, qboolean down)
 }
 
 
+// [NQ 1.3.1 - Widescreen]: Adjust virtual 640x480 coordinates to screen resolution and aspect ratio
 void AdjustFrom640(float *x, float *y, float *w, float *h)
 {
+	float aspectratio;
+
 	*x *= DC->xscale;
 	*y *= DC->yscale;
 	*w *= DC->xscale;
 	*h *= DC->yscale;
+
+	aspectratio = (float)(DC->glconfig.vidWidth) / (float)DC->glconfig.vidHeight;
+	if ( aspectratio > RATIO43 ) {
+		*x *= RATIO43 / aspectratio;
+		*w *= RATIO43 / aspectratio;
+	}
 }
 
 void Item_Model_Paint(itemDef_t *item) {
@@ -5470,7 +5538,8 @@ void Menu_Paint(menuDef_t *menu, qboolean forcePaint) {
 	if (menu->fullScreen) {
 		// implies a background shader
 		// FIXME: make sure we have a default shader if fullscreen is set with no background
-		DC->drawHandlePic( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, menu->window.background );
+		// [NQ 1.3.1 - Widescreen]: Draw fullscreen background across the entire widescreen viewport
+		DC->drawHandlePic( 0, 0, Cui_WideX(SCREEN_WIDTH), SCREEN_HEIGHT, menu->window.background );
 	}
 	else if (menu->window.background) {
 		// this allows a background shader without being full screen
@@ -6833,9 +6902,14 @@ qboolean MenuParse_fullscreen( itemDef_t *item, int handle ) {
 	return qtrue;
 }
 
+// [NQ 1.3.1 - Widescreen]: Preserve unshifted authored rect in rectClient for idempotent updates
 qboolean MenuParse_rect( itemDef_t *item, int handle ) {
 	menuDef_t *menu = (menuDef_t*)item;
-	return(PC_Rect_Parse(handle, &menu->window.rect));
+	if (PC_Rect_Parse(handle, &menu->window.rect)) {
+		menu->window.rectClient = menu->window.rect;
+		return qtrue;
+	}
+	return qfalse;
 }
 
 qboolean MenuParse_style( itemDef_t *item, int handle ) {
