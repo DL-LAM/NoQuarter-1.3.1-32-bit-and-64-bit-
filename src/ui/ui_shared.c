@@ -753,6 +753,7 @@ void Menu_UpdatePosition(menuDef_t *menu) {
 	Rectangle *r;
 	qboolean fullscreenItem = qfalse;
 	qboolean fullscreenMenu = qfalse;
+	qboolean centered = qfalse;
 	const char *menuName = NULL;
 	const char *itemName = NULL;
 
@@ -770,6 +771,7 @@ void Menu_UpdatePosition(menuDef_t *menu) {
 
 	r = &menu->window.rectClient;
 	fullscreenMenu = (r->x == 0 && r->y == 0 && r->w == 640 && r->h == 480);
+	centered = (r->w == 608.0f);
 	menuName = menu->window.name;
 
 	for (i = 0; i < menu->itemCount; ++i) {
@@ -797,19 +799,19 @@ void Menu_UpdatePosition(menuDef_t *menu) {
 				Item_SetScreenCoords(menu->items[i], x, y);
 			}
 		}
-		else if (fullscreenMenu) {
-			// Fullscreen dialog overlay menus (quit, popupError, background_1 logos, etc.)
+		else if ((fullscreenMenu && !fullscreenItem) || centered) {
+			// Centered subwindows (e.g. 608-width dialogs) and dialog overlays
 			Item_SetScreenCoords(menu->items[i], x + xoffset, y);
 		}
 		else {
-			// Subwindows and dialogs (options, playonline, credits, etc.):
-			// Horizontally centered
-			Item_SetScreenCoords(menu->items[i], x + xoffset, y);
+			// Sidebar and docked menus (ingame_main, ingame_vote*, options, etc.):
+			// Left-aligned to prevent floating out into widescreen void
+			Item_SetScreenCoords(menu->items[i], x, y);
 		}
 	}
 
 	// Keep menu window rect in sync with centered subwindows
-	if (!fullscreenMenu && Q_stricmp(menuName, "main") != 0) {
+	if (centered) {
 		menu->window.rect.x = x + xoffset;
 		menu->window.rect.y = y;
 		menu->window.rect.w = menu->window.rectClient.w;
@@ -819,6 +821,11 @@ void Menu_UpdatePosition(menuDef_t *menu) {
 		menu->window.rect.y = 0;
 		menu->window.rect.w = Cui_WideX(640.0f);
 		menu->window.rect.h = 480;
+	} else {
+		menu->window.rect.x = x;
+		menu->window.rect.y = y;
+		menu->window.rect.w = menu->window.rectClient.w;
+		menu->window.rect.h = menu->window.rectClient.h;
 	}
 }
 
@@ -4731,6 +4738,7 @@ void AdjustFrom640(float *x, float *y, float *w, float *h)
 	if ( aspectratio > RATIO43 ) {
 		*x *= RATIO43 / aspectratio;
 		*w *= RATIO43 / aspectratio;
+		*x += Cui_WideXoffset();	// [NQ 1.3.1 - Widescreen]: re-center in pillarbox zone
 	}
 }
 
