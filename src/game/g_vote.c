@@ -183,7 +183,8 @@ void G_voteCurrentSetting(gentity_t *ent, const char *cmd, const char *setting) 
 
 // Vote toggling
 int G_voteProcessOnOff(gentity_t *ent, char *arg, char *arg2, qboolean fRefereeCmd, int curr_setting, int vote_allow, int vote_type) {
-	if(!vote_allow && ent && !ent->client->sess.referee) {
+	// [NQ 1.3.1 - Bounds]: Defensive client pointer check before accessing sess.referee
+	if(!vote_allow && ent && (!ent->client || !ent->client->sess.referee)) {
 		G_voteDisableMessage(ent, aVoteInfo[vote_type].pszVoteName);
 		G_voteCurrentSetting(ent, aVoteInfo[vote_type].pszVoteName, ((curr_setting) ? ENABLED : DISABLED));
 		return(G_INVALID);
@@ -238,7 +239,7 @@ int G_Comp_v(gentity_t *ent, unsigned int dwVoteIndex, char *arg, char *arg2, qb
 			G_refPrintf(ent, "Usage: ^3%s %s%s\n", ((fRefereeCmd) ? "\\ref" : "\\callvote"), arg, aVoteInfo[dwVoteIndex].pszVoteHelp);
 			return(G_INVALID);
 		}
-		else if(vote_allow_comp.integer<=0 && ent && !ent->client->sess.referee) {
+		else if(vote_allow_comp.integer<=0 && ent && (!ent->client || !ent->client->sess.referee)) {
 			G_voteDisableMessage(ent, arg);
 			return(G_INVALID);
 		}
@@ -276,7 +277,7 @@ int G_Gametype_v(gentity_t *ent, unsigned int dwVoteIndex, char *arg, char *arg2
 	if(arg) {
 		int i = atoi(arg2);
 
-		if(!vote_allow_gametype.integer && ent && !ent->client->sess.referee) {
+		if(!vote_allow_gametype.integer && ent && (!ent->client || !ent->client->sess.referee)) {
 			G_voteDisableMessage(ent, arg);
 			G_GametypeList(ent);
 			G_voteCurrentSetting(ent, arg, va("%d (%s)", g_gametype.integer, gameNames[g_gametype.integer]));
@@ -319,7 +320,7 @@ int G_Kick_v( gentity_t *ent, unsigned int dwVoteIndex, char *arg, char *arg2, q
 	if( arg ) {
 		int pid;
 
-		if( !vote_allow_kick.integer && ent && !ent->client->sess.referee ) {
+		if( !vote_allow_kick.integer && ent && (!ent->client || !ent->client->sess.referee) ) {
 			G_voteDisableMessage(ent, arg);
 			return G_INVALID;
 		}
@@ -391,7 +392,7 @@ int G_Mute_v(gentity_t *ent, unsigned int dwVoteIndex, char *arg, char *arg2, qb
 	if(arg) {
 		int pid;
 
-		if(!vote_allow_muting.integer && ent && !ent->client->sess.referee) {
+		if(!vote_allow_muting.integer && ent && (!ent->client || !ent->client->sess.referee)) {
 			G_voteDisableMessage(ent, arg);
 			return(G_INVALID);
 		}
@@ -457,7 +458,7 @@ int G_UnMute_v(gentity_t *ent, unsigned int dwVoteIndex, char *arg, char *arg2, 
 	if(arg) {
 		int pid;
 
-		if(!vote_allow_muting.integer && ent && !ent->client->sess.referee) {
+		if(!vote_allow_muting.integer && ent && (!ent->client || !ent->client->sess.referee)) {
 			G_voteDisableMessage(ent, arg);
 			return(G_INVALID);
 		}
@@ -510,7 +511,7 @@ int G_Map_v(gentity_t *ent, unsigned int dwVoteIndex, char *arg, char *arg2, qbo
 		char serverinfo[MAX_INFO_STRING];
 		trap_GetServerinfo(serverinfo, sizeof(serverinfo));
 
-		if(!vote_allow_map.integer && ent && !ent->client->sess.referee) {
+		if(!vote_allow_map.integer && ent && (!ent->client || !ent->client->sess.referee)) {
 			G_voteDisableMessage(ent, arg);
 			G_voteCurrentSetting(ent, arg, Info_ValueForKey(serverinfo, "mapname"));
 			return(G_INVALID);
@@ -546,7 +547,7 @@ int G_Campaign_v(gentity_t *ent, unsigned int dwVoteIndex, char *arg, char *arg2
 		char serverinfo[MAX_INFO_STRING];
 		trap_GetServerinfo(serverinfo, sizeof(serverinfo));
 
-		if(!vote_allow_map.integer && ent && !ent->client->sess.referee) {
+		if(!vote_allow_map.integer && ent && (!ent->client || !ent->client->sess.referee)) {
 			G_voteDisableMessage(ent, arg);
 			if( g_gametype.integer == GT_WOLF_CAMPAIGN ) {
 				G_voteCurrentSetting(ent, arg, g_campaigns[level.currentCampaign].shortname );
@@ -578,7 +579,7 @@ int G_MapRestart_v(gentity_t *ent, unsigned int dwVoteIndex, char *arg, char *ar
 	// Vote request (vote is being initiated)
 	if(arg) {
 		if(!vote_allow_maprestart.integer
-			&& ent && !ent->client->sess.referee) {
+			&& ent && (!ent->client || !ent->client->sess.referee)) {
 
 			G_voteDisableMessage(ent, arg);
 			return(G_INVALID);
@@ -608,7 +609,7 @@ int G_MapRestart_v(gentity_t *ent, unsigned int dwVoteIndex, char *arg, char *ar
 int G_MatchReset_v(gentity_t *ent, unsigned int dwVoteIndex, char *arg, char *arg2, qboolean fRefereeCmd) {
 	// Vote request (vote is being initiated)
 	if(arg) {
-		if(!vote_allow_matchreset.integer && ent && !ent->client->sess.referee) {
+		if(!vote_allow_matchreset.integer && ent && (!ent->client || !ent->client->sess.referee)) {
 			G_voteDisableMessage(ent, arg);
 			return(G_INVALID);
 		}
@@ -657,7 +658,7 @@ int G_Nextmap_v(gentity_t *ent, unsigned int dwVoteIndex, char *arg, char *arg2,
 			G_refPrintf(ent, "Usage: ^3%s %s%s\n", ((fRefereeCmd) ? "\\ref" : "\\callvote"), arg, aVoteInfo[dwVoteIndex].pszVoteHelp);
 			return(G_INVALID);
 		}
-		else if(!vote_allow_nextmap.integer && ent && !ent->client->sess.referee) {
+		else if(!vote_allow_nextmap.integer && ent && (!ent->client || !ent->client->sess.referee)) {
 			G_voteDisableMessage(ent, arg);
 			return(G_INVALID);
 		}
@@ -734,7 +735,7 @@ int G_Pub_v(gentity_t *ent, unsigned int dwVoteIndex, char *arg, char *arg2, qbo
 			G_refPrintf(ent, "Usage: ^3%s %s%s\n", ((fRefereeCmd) ? "\\ref" : "\\callvote"), arg, aVoteInfo[dwVoteIndex].pszVoteHelp);
 			return(G_INVALID);
 		}
-		else if(vote_allow_pub.integer<=0 && ent && !ent->client->sess.referee) {
+		else if(vote_allow_pub.integer<=0 && ent && (!ent->client || !ent->client->sess.referee)) {
 			G_voteDisableMessage(ent, arg);
 			return(G_INVALID);
 		}
@@ -758,17 +759,17 @@ int G_Referee_v(gentity_t *ent, unsigned int dwVoteIndex, char *arg, char *arg2,
 	if(arg) {
 		int pid;
 
-		if(!vote_allow_referee.integer && ent && !ent->client->sess.referee) {
+		if(!vote_allow_referee.integer && ent && (!ent->client || !ent->client->sess.referee)) {
 			G_voteDisableMessage(ent, arg);
 			return(G_INVALID);
 		}
 
-		if(!ent->client->sess.referee && level.numPlayingClients < 3) {
+		if((!ent || !ent->client || !ent->client->sess.referee) && level.numPlayingClients < 3) {
 			G_refPrintf(ent, "Sorry, not enough clients in the game to vote for a referee!");
 			return(G_INVALID);
 		}
 
-		if(ent->client->sess.referee && trap_Argc() == 2) {
+		if(ent && ent->client && ent->client->sess.referee && trap_Argc() == 2) {
 			G_playersMessage(ent);
 			return(G_INVALID);
 		}
@@ -822,7 +823,7 @@ int G_ShuffleTeams_v(gentity_t *ent, unsigned int dwVoteIndex, char *arg, char *
 			G_refPrintf(ent, "Usage: ^3%s %s%s\n", ((fRefereeCmd) ? "\\ref" : "\\callvote"), arg, aVoteInfo[dwVoteIndex].pszVoteHelp);
 			return(G_INVALID);
 		}
-		else if(!vote_allow_shuffleteamsxp.integer && ent && !ent->client->sess.referee) {
+		else if(!vote_allow_shuffleteamsxp.integer && ent && (!ent->client || !ent->client->sess.referee)) {
 			G_voteDisableMessage(ent, arg);
 			return(G_INVALID);
 		}
@@ -845,7 +846,7 @@ int G_ShuffleTeams_NoRestart_v(gentity_t *ent, unsigned int dwVoteIndex, char *a
 			G_refPrintf(ent, "Usage: ^3%s %s%s\n", ((fRefereeCmd) ? "\\ref" : "\\callvote"), arg, aVoteInfo[dwVoteIndex].pszVoteHelp);
 			return(G_INVALID);
 		}
-		else if(!vote_allow_shuffleteamsxp_norestart.integer && ent && !ent->client->sess.referee) {
+		else if(!vote_allow_shuffleteamsxp_norestart.integer && ent && (!ent->client || !ent->client->sess.referee)) {
 			G_voteDisableMessage(ent, arg);
 			return(G_INVALID);
 		}
@@ -902,7 +903,7 @@ int G_SwapTeams_v(gentity_t *ent, unsigned int dwVoteIndex, char *arg, char *arg
 			G_refPrintf(ent, "Usage: ^3%s %s%s\n", ((fRefereeCmd) ? "\\ref" : "\\callvote"), arg, aVoteInfo[dwVoteIndex].pszVoteHelp);
 			return(G_INVALID);
 		}
-		else if(!vote_allow_swapteams.integer && ent && !ent->client->sess.referee) {
+		else if(!vote_allow_swapteams.integer && ent && (!ent->client || !ent->client->sess.referee)) {
 			G_voteDisableMessage(ent, arg);
 			return(G_INVALID);
 		}
@@ -975,6 +976,10 @@ int G_Surrender_v( gentity_t *ent, unsigned int dwVoteIndex, char *arg, char *ar
 		if(!vote_allow_surrender.integer)
 			return G_INVALID;
 		if(g_gamestate.integer != GS_PLAYING) {
+			return G_INVALID;
+		}
+		// [NQ 1.3.1 - Bounds]: Ensure valid entity, client, and team before checking surrender
+		if(!ent || !ent->client || (ent->client->sess.sessionTeam != TEAM_AXIS && ent->client->sess.sessionTeam != TEAM_ALLIES)) {
 			return G_INVALID;
 		}
 		Q_strncpyz(arg2,
@@ -1056,7 +1061,7 @@ int G_Poll_v( gentity_t *ent, unsigned int dwVoteIndex,	char *arg, char *arg2, q
 int G_Timelimit_v(gentity_t *ent, unsigned int dwVoteIndex, char *arg, char *arg2, qboolean fRefereeCmd) {
 	// Vote request (vote is being initiated)
 	if(arg) {
-		if(!vote_allow_timelimit.integer && ent && !ent->client->sess.referee) {
+		if(!vote_allow_timelimit.integer && ent && (!ent->client || !ent->client->sess.referee)) {
 			G_voteDisableMessage(ent, arg);
 			G_voteCurrentSetting(ent, arg, g_timelimit.string);
 			return(G_INVALID);
@@ -1099,7 +1104,7 @@ int G_Warmupfire_v(gentity_t *ent, unsigned int dwVoteIndex, char *arg, char *ar
 									(match_warmupDamage.integer > 2) ? 2 :
 																	   match_warmupDamage.integer;
 
-		if(!vote_allow_warmupdamage.integer && ent && !ent->client->sess.referee) {
+		if(!vote_allow_warmupdamage.integer && ent && (!ent->client || !ent->client->sess.referee)) {
 			G_voteDisableMessage(ent, arg);
 			G_WarmupDamageTypeList(ent);
 			G_voteCurrentSetting(ent, arg, va("%d (%s)", val, warmupType[val]));
@@ -1143,12 +1148,12 @@ int G_Unreferee_v(gentity_t *ent, unsigned int dwVoteIndex, char *arg, char *arg
 	if(arg) {
 		int pid;
 
-		if(!vote_allow_referee.integer && ent && !ent->client->sess.referee) {
+		if(!vote_allow_referee.integer && ent && (!ent->client || !ent->client->sess.referee)) {
 			G_voteDisableMessage(ent, arg);
 			return(G_INVALID);
 		}
 
-		if(ent->client->sess.referee && trap_Argc() == 2) {
+		if(ent && ent->client && ent->client->sess.referee && trap_Argc() == 2) {
 			G_playersMessage(ent);
 			return(G_INVALID);
 		}
@@ -1199,6 +1204,11 @@ int G_Unreferee_v(gentity_t *ent, unsigned int dwVoteIndex, char *arg, char *arg
 void G_IntermissionMapVote( gentity_t *ent ) {
 	char	arg[MAX_TOKEN_CHARS];
 	char	arg2[MAX_TOKEN_CHARS];
+
+	// [NQ 1.3.1 - Bounds]: Ensure valid entity and client pointer
+	if ( !ent || !ent->client ) {
+		return;
+	}
 
 	if ( g_gametype.integer != GT_WOLF_MAPVOTE ) {
 		CP(va("print \"^3Map voting not enabled!\n\""));
@@ -1265,7 +1275,8 @@ void G_IntermissionMapList( gentity_t *ent ) {
 	char	mapList[MAX_STRING_CHARS];
 	int		maxMaps;
 
-	if ( g_gametype.integer != GT_WOLF_MAPVOTE || !level.intermissiontime) {
+	// [NQ 1.3.1 - Bounds]: Ensure valid entity before building map list
+	if ( !ent || g_gametype.integer != GT_WOLF_MAPVOTE || !level.intermissiontime) {
 		return;
 	}
 
