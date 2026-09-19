@@ -1966,7 +1966,8 @@ qboolean G_shrubbot_banguid(gentity_t *ent, int skiparg) {
 qboolean G_shrubbot_banIP(gentity_t *ent, int skiparg) {
 	int pids[MAX_CLIENTS];
 	int seconds;
-	char name[MAX_NAME_LENGTH], secs[7], ip[MAX_IP_LENGTH];
+	// [NQ 1.3.1 - Bounds]: Use MAX_IP_LENGTH_V6 so admin-typed IPv6 addresses are not truncated
+	char name[MAX_NAME_LENGTH], secs[7], ip[MAX_IP_LENGTH_V6];
 	char *reason;
 	char guid[PB_GUID_LENGTH+1];
 	char *guidOnline = NULL;
