@@ -5524,8 +5524,16 @@ public:
 	int GetAutoNavFeatures(AutoNavFeature *_feature, int _max)
 	{
 		int iNumFeatures = 0;
+		// [NQ 1.3.1 - Bounds]: Guard against null buffer or non-positive max features
+		if(!_feature || _max <= 0)
+			return 0;
+
 		for (int i = MAX_CLIENTS; i < level.num_entities; ++i)
 		{
+			// [NQ 1.3.1 - Bounds]: Prevent buffer overflow beyond allocated _max features
+			if(iNumFeatures >= _max)
+				break;
+
 			gentity_t *e = &g_entities[i];
 
 			if (!e->inuse)
