@@ -180,6 +180,12 @@ void G_ref_cmd(gentity_t *ent, unsigned int dwCommand, qboolean fValue)
 {
 	char arg[MAX_TOKEN_CHARS];
 
+	// [NQ 1.3.1 - Bounds]: Guard against disconnecting entity with NULL client pointer.
+	// The check below only guards the top branch; fall-through to L209+ also derefs client.
+	if ( ent != NULL && ent->client == NULL ) {
+		return;
+	}
+
 	// Roll through ref commands if already a ref
 	// [NQ 1.3.1 - Bounds]: Guard ent->client before accessing sess.referee
 	if(ent == NULL || (ent->client && ent->client->sess.referee)) {

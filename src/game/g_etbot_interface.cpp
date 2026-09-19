@@ -2017,7 +2017,7 @@ public:
 		char* teamName;
 #endif
 		gentity_t* bot = &g_entities[_client];
-		if (!bot || !bot->client)
+		if (!bot->client)	// [NQ 1.3.1 - Bounds]: static array ref is never NULL; guard uninitialized client slot
 			return InvalidEntity;
 
 		// find a team if we didn't get one and we need one ;-)
@@ -2112,7 +2112,7 @@ public:
 			return InvalidEntity;
 
 		gentity_t* bot = &g_entities[_client];
-		if (!bot || !bot->client)
+		if (!bot->client)	// [NQ 1.3.1 - Bounds]: static array ref is never NULL; guard uninitialized client slot
 			return InvalidEntity;
 
 		// find playerclass if we didn't got one
@@ -2275,7 +2275,7 @@ public:
 			return;
 
 		gentity_t *bot = &g_entities[_client];
-		if (!bot || !bot->client)
+		if (!bot->client)	// [NQ 1.3.1 - Bounds]: static array ref is never NULL; guard uninitialized client slot
 			return;
 
 		// only causes problems

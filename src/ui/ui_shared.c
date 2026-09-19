@@ -745,6 +745,10 @@ void Item_UpdatePosition(itemDef_t *item) {
 }
 
 // menus
+// [NQ 1.3.1 - Widescreen]: Width used by all centered dialog popup menus (playonline, credits,
+//   mods, quit confirm, etc.). Used to classify menus for horizontal centering in Menu_UpdatePosition.
+#define CENTERED_MENU_WIDTH 608.0f
+
 // [NQ 1.3.1 - Widescreen]: Reposition menu elements and center subwindows for non-4:3 aspect ratios
 void Menu_UpdatePosition(menuDef_t *menu) {
 	int i;
@@ -771,7 +775,7 @@ void Menu_UpdatePosition(menuDef_t *menu) {
 
 	r = &menu->window.rectClient;
 	fullscreenMenu = (r->x == 0 && r->y == 0 && r->w == 640 && r->h == 480);
-	centered = (r->w == 608.0f);
+	centered = (r->w == CENTERED_MENU_WIDTH);	// [NQ 1.3.1 - Widescreen]: classify centered dialog popups
 	menuName = menu->window.name;
 
 	for (i = 0; i < menu->itemCount; ++i) {
