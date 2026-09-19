@@ -36,7 +36,8 @@ void G_smvAdd_cmd(gentity_t *ent)
 	// Clients will always send pIDs
 	trap_Argv(1, str, sizeof(str));
 	pID = atoi(str);
-	if(pID < 0 || pID > level.maxclients || g_entities[pID].client->pers.connected != CON_CONNECTED) {
+	// [NQ 1.3.1 - Bounds]: Fix off-by-one (>= instead of >) and guard against NULL client pointer
+	if(pID < 0 || pID >= level.maxclients || !g_entities[pID].client || g_entities[pID].client->pers.connected != CON_CONNECTED) {
 		CP(va("print \"[lof]** [lon]Client[lof] %d [lon]is not connected[lof]!\n\"", pID));
 		return;
 	}
@@ -268,7 +269,8 @@ qboolean G_smvRunCamera(gentity_t *ent)
 	}
 
 	// Also remove if the target player is no longer in the game playing
-	if(ent->target_ent->client->pers.connected != CON_CONNECTED ||
+	// [NQ 1.3.1 - Bounds]: Guard against NULL target_ent->client before deref
+	if(!ent->target_ent->client || ent->target_ent->client->pers.connected != CON_CONNECTED ||
 	  ent->target_ent->client->sess.sessionTeam == TEAM_SPECTATOR) {
 		G_smvLocateEntityInMVList(ent->tagParent, ent->target_ent - g_entities, qtrue);
 		return(qtrue);
