@@ -192,6 +192,9 @@ Adjusted for resolution and screen aspect ratio
 ================
 */
 // [NQ 1.3.1 - Widescreen]: Adjusted for resolution and screen aspect ratio
+// [NQ 1.3.1 - Widescreen]: Added Cui_WideXoffset() to re-center elements in the 4:3 pillarbox
+//   zone on widescreen displays. Without this, all UI primitive draw calls (DrawNamedPic,
+//   FillRect, DrawSides, DrawHandlePic, etc.) were shifted left instead of being centered.
 void UI_AdjustFrom640( float *x, float *y, float *w, float *h ) {
 	float aspectratio;
 
@@ -205,6 +208,7 @@ void UI_AdjustFrom640( float *x, float *y, float *w, float *h ) {
 	if ( aspectratio > RATIO43 ) {
 		*x *= RATIO43 / aspectratio;
 		*w *= RATIO43 / aspectratio;
+		*x += Cui_WideXoffset();	// [NQ 1.3.1 - Widescreen]: re-center in pillarbox zone
 	}
 }
 

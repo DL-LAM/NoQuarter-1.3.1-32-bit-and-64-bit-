@@ -55,6 +55,13 @@ static int G_RecordAuthFailure(gentity_t *ent)
 					authFailuresByIP[i].failures++;
 					authFailuresByIP[i].lastTime = level.time;
 					ipFailures = authFailuresByIP[i].failures;
+					// [NQ 1.3.1 - Security]: Sync per-session counter from IP table after reconnect.
+					// ClientConnect does memset(client,0) which zeroes pers.authFailures, so after
+					// a reconnect the IP table may be ahead. Bring pers in sync so the
+					// "X attempts remaining" message shown to the player stays accurate.
+					if(ent->client->pers.authFailures < ipFailures) {
+						ent->client->pers.authFailures = ipFailures;
+					}
 					break;
 				}
 				if(authFailuresByIP[i].lastTime < oldestTime) {
