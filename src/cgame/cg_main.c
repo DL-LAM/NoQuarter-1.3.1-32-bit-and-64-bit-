@@ -1059,10 +1059,18 @@ void CG_SetupDlightstyles(void) {
 
 		token = COM_Parse (&str);	// ent num
 		entnum = atoi(token);
+		// [NQ 1.3.1 - Security]: Guard entnum parsed from configstring — a malformed or crafted
+		// CS_DLIGHTS entry could supply an out-of-range entity number, producing an OOB access
+		// into cg_entities[]. Silently skip the entry rather than crashing the client.
+		if(entnum < 0 || entnum >= MAX_GENTITIES) {
+			continue;
+		}
 		cent = &cg_entities[entnum];
 
 		token = COM_Parse (&str);	// stylestring
-		Q_strncpyz(cent->dl_stylestring, token, strlen(token));
+		// [NQ 1.3.1 - Security]: Pass sizeof buffer (64), not strlen(token).  Using strlen(token)
+		// truncates the null terminator one byte early and silently overflows for tokens >= 64 chars.
+		Q_strncpyz(cent->dl_stylestring, token, sizeof(cent->dl_stylestring));
 
 		token = COM_Parse (&str);	// offset
 		cent->dl_frame		= atoi(token);

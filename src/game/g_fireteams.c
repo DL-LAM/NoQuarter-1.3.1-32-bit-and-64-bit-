@@ -550,6 +550,13 @@ void G_ApplyToFireTeam( int entityNum, int fireteamNum ) {
 		G_ClientPrintAndReturn(entityNum, "You are already on a fireteam");
 	}
 
+	// [NQ 1.3.1 - Security]: Clamp fireteamNum before array access — client can supply any
+	// integer via 'fireteam apply N'; an unclamped index into fireTeams[MAX_FIRETEAMS] reads
+	// adjacent struct memory and can crash the server in a bad memory region.
+	if(fireteamNum < 0 || fireteamNum >= MAX_FIRETEAMS) {
+		G_ClientPrintAndReturn(entityNum, "The fireteam you requested does not exist");
+	}
+
 	ft = &level.fireTeams[fireteamNum];
 	if(!ft->inuse) {
 		G_ClientPrintAndReturn(entityNum, "The fireteam you requested does not exist");
