@@ -269,8 +269,10 @@ qboolean G_smvRunCamera(gentity_t *ent)
 	}
 
 	// Also remove if the target player is no longer in the game playing
-	// [NQ 1.3.1 - Bounds]: Guard against NULL target_ent->client before deref
-	if(!ent->target_ent->client || ent->target_ent->client->pers.connected != CON_CONNECTED ||
+	// [NQ 1.3.1 - Bounds]: Guard target_ent itself before reaching ->client; the entity
+	// pointer is set by G_smvLocateEntityInMVList and should always be valid, but a
+	// defensive NULL check here prevents a crash if that ever changes.
+	if(!ent->target_ent || !ent->target_ent->client || ent->target_ent->client->pers.connected != CON_CONNECTED ||
 	  ent->target_ent->client->sess.sessionTeam == TEAM_SPECTATOR) {
 		G_smvLocateEntityInMVList(ent->tagParent, ent->target_ent - g_entities, qtrue);
 		return(qtrue);

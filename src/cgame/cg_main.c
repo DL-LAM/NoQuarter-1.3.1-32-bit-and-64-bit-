@@ -1054,8 +1054,10 @@ void CG_SetupDlightstyles(void) {
 
 	for (i=1; i<MAX_DLIGHT_CONFIGSTRINGS; ++i) {
 		str = (char *) CG_ConfigString (CS_DLIGHTS + i);
+		// [NQ 1.3.1 - Bounds]: Use continue instead of break so sparse slot assignments
+		// (e.g. slots 1, 2, 4 with 3 empty) don't silently drop the remaining entries.
 		if(!strlen(str))
-			break;
+			continue;
 
 		token = COM_Parse (&str);	// ent num
 		entnum = atoi(token);

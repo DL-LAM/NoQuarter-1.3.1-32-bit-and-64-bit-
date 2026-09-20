@@ -542,8 +542,11 @@ void G_ApplyToFireTeam( int entityNum, int fireteamNum ) {
 	gentity_t *leader;
 	fireteamData_t* ft;
 
+	// [NQ 1.3.1 - Security]: Downgraded from G_Error (hard server crash) to a logged warning
+	// and early return. A bad entityNum here should never crash the server; log it and bail.
 	if((entityNum < 0 || entityNum >= g_maxclients.integer) || !g_entities[entityNum].client) {
-		G_Error("G_AddClientToFireteam: invalid client");
+		G_Printf("^3[NQ Warning]: G_ApplyToFireTeam called with invalid entityNum %d\n", entityNum);
+		return;
 	}
 
 	if(G_IsOnFireteam(entityNum, NULL)) {
