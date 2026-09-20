@@ -38,3 +38,6 @@ pk3_staging/
 scratch/
 *.tmp
 *.log
+
+# SVN metadata (legacy — this repo was originally converted from SVN)
+.svn/
