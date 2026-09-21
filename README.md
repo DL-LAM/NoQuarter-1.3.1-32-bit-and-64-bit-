@@ -1,75 +1,90 @@
-# NoQuarter Modernized (`v1.3.1`)
+# NoQuarter 1.3.1 (32-bit & 64-bit)
 
-**NoQuarter Modernized** is an updated, 64-bit and 32-bit compatible fork of the classic **NoQuarter** mod for *Wolfenstein: Enemy Territory* and *ET:Legacy*. 
+Maintained and updated by **Hawkeye** (`nqv1.3.1help@gmail.com`)
 
-This release modernizes the user interface, introduces quality-of-life gameplay enhancements, integrates ET:Legacy visual improvements, and provides full cross-platform compilation pipelines for both Windows and Linux on 32-bit and 64-bit architectures.
+Welcome to NoQuarter 1.3.1! This update modernizes the classic Wolfenstein: Enemy Territory mod so it runs great on modern systems, high-res widescreen/ultrawide monitors, and modern engines (ET:Legacy as well as classic ET 2.60b). 
 
----
+We've got full native 64-bit and 32-bit support across both Windows and Linux, cleaner menus, tons of crash-proofing, quality-of-life gameplay tweaks, and unified packaging so players and server admins don't get hit with annoying pure-server PK3 mismatch errors.
 
-## 🌟 What's New & Key Features
-
-### 1. 🗳️ ET:Legacy-Style Intermission & Map Vote Overhaul
-* **Modernized Navigation Panels (`PANELS`)**:
-  * Replaced static debriefing buttons with interactive `panel_button_t` elements on the bottom right:
-    * **SCOREBOARD** (`cgs.dbMode = 1`) — Live player score list.
-    * **AWARDS** (`cgs.dbMode = 2`) — End-game medals, awards, and Roll of Honor.
-    * **STATS** (`cgs.dbMode = 3`) — Detailed player weapon and class statistics.
-    * **VOTE NOW / MAP VOTE** (`cgs.dbMode = 0`) — Map voting screen with an animated pulsating indicator when votes have not yet been cast.
-    * **NEXT** — Smoothly advances to the next available debriefing tab.
-  * Features active tab highlighting (gold accent), cursor hover response, and native audio click effects.
-* **Side-by-Side Horizontal Chat Panel**:
-  * Sits flush to the left of the button panel without overlap (`492x112`).
-  * Aligned quick-action buttons: `SAY:` / `TEAM:`, chat edit input, `READY`, and `QUICK CHAT`.
-* **Redesigned Map Voting Interface**:
-  * **Map List**: Checkbox indicators, aligned multi-column headers (`Name`, `Votes`, `Popularity`), and centered horizontal action buttons (`VOTE #1`, `VOTE #2`, `VOTE #3` / `SEND VOTE`).
-  * **Map Statistics Box**: Displays Map Display Name, File, Last Played, Total Votes, and Current Votes.
-  * **4:3 Levelshot Preview**: Renders map preview images with multi-format shader support (`.tga`, `.jpg`, unextended shaders), smooth fade-in, dynamic centering, and fallback placeholders.
-  * **Widescreen & Ultrawide Support**: All debriefing components are fully calibrated with widescreen offset math (`wideXoffset`), guaranteeing pixel-perfect alignment across 4:3, 16:9, 16:10, and 21:9 displays.
+Stuff was fixed, enjoy! If you run into any issues, have questions, or need help getting things dialed in, feel free to reach out!
 
 ---
 
-### 2. ⚔️ Gameplay & Weaponry Enhancements
-* **Soldier Secondary Shotgun**:
-  * Soldiers who reach **Heavy Weapons Level 4** can equip the Winchester M97 Shotgun as a secondary weapon option in the Limbo Menu.
-  * Configurable via the new server cvar `g_soldierShotgun`.
-* **Auto-Select Best Secondary Weapon in Limbo**:
-  * When opening the Limbo Menu or switching classes, the menu automatically selects the **best available secondary weapon** for that class and skill level:
-    * **Soldier (Heavy Weapons $\ge 4$)**: Automatically pre-selects the SMG (Thompson / MP40).
-    * **Any Class (Light Weapons $\ge 4$)**: Automatically pre-selects Akimbo pistols (or Akimbo Silenced for Covert Ops).
-    * **Default / Lower Skill Levels**: Standard single pistol.
-  * Manual selections in Limbo are remembered.
-  * **Spawn State**: When spawning into the game, the player's active held weapon remains their selected **Primary Weapon**, with the secondary weapon holstered and ready for quick-draw.
-* **Weapon Icon HUD Glow**:
-  * Dynamic weapon icon state glows on the HUD inspired by ET:Legacy.
+## 🎮 What's New & Highlight Features
+
+### 1. Intermission & Map Voting Overhaul (ET:Legacy Style)
+* **Real Debriefing Navigation Tabs**:
+  * Ditched the clunky old static debriefing buttons for interactive tabs docked on the bottom right:
+    * **SCOREBOARD** — Live player scoreboard and match outcome.
+    * **AWARDS** — End-of-game medals, badges, and Roll of Honor.
+    * **STATS** — In-depth weapon accuracy and class stats.
+    * **VOTE NOW / MAP VOTE** — Map voting screen. Features a pulsing visual indicator if you haven't cast your vote yet so you don't forget.
+    * **NEXT** — Quickly flips to the next screen.
+  * Active tabs highlight in gold with sound feedback on click.
+* **Side-by-Side Horizontal Chat**:
+  * Positioned neatly right next to the button panel without any awkward overlapping.
+  * Easy-access buttons for `SAY:`, `TEAM:`, chat input, `READY`, and `QUICK CHAT` so you can chat or ready up while checking scores.
+* **Redesigned Map Voting Screen**:
+  * Clean multi-column map list with checkbox indicators (`Name`, `Votes`, `Popularity`).
+  * Easy voting buttons (`VOTE #1`, `VOTE #2`, `VOTE #3` / `SEND VOTE`).
+  * Map info box displaying display name, bsp filename, last time played, and vote counts.
+  * Proper 4:3 levelshot previews supporting `.tga`, `.jpg`, and shader scripts with fallback placeholders if a custom map is missing a preview.
+* **Widescreen & Ultrawide Native Fit**:
+  * All menus, HUD elements, and debriefing screens use proper widescreen offset math (`wideXoffset`). Whether you play on 4:3, 16:9, 16:10, or 21:9 ultrawide, nothing stretches, clips, or overlaps.
 
 ---
 
-### 3. ⚙️ New Server Cvars
+### 2. Gameplay & Weapon Tweaks
+* **Soldier Secondary Shotgun (`g_soldierShotgun 1`)**:
+  * Soldiers who earn **Heavy Weapons Level 4** can now equip the Winchester M97 Shotgun right in their secondary slot from the Limbo menu. Server admins can toggle this on or off.
+* **Automatic Best Secondary in Limbo**:
+  * No more clicking back and forth in the limbo menu every time you gain a skill rank. The menu automatically equips the best secondary you've unlocked:
+    * **Soldier (Heavy Weapons $\ge 4$)**: Pre-selects an SMG (Thompson / MP40).
+    * **Any Class (Light Weapons $\ge 4$)**: Pre-selects Akimbo pistols (or silenced akimbos for Covert Ops).
+    * **Lower Skill Levels**: Standard single pistol.
+  * Your manual limbo choices are always remembered.
+  * When you spawn into the battlefield, you'll still spawn holding your **Primary Weapon** ready to shoot, with your upgraded secondary holstered and ready for quick swaps.
+* **Infinite Cabinets Toggle (`g_infiniteCabinets 1`)**:
+  * Server admins can toggle unlimited supply cabinets with `g_infiniteCabinets 1`. Health and ammo stands won't deplete or make players wait on long cooldowns.
+* **Upside-Down Revive Icon Fixed**:
+  * Finally fixed that long-standing bug where the Caduceus medic revival / Battlefield Resuscitation icon showed up flipped upside-down when aiming at downed teammates!
+* **Weapon HUD Glow**:
+  * Dynamic weapon state glow on the HUD inspired by ET:Legacy.
+* **Engine & Server Crash Hardening**:
+  * Added rock-solid guards across referee commands, voting handlers, fireteam logic, bot memory bounds, and server tickrate divisions. Tested through 30 consecutive stress boundary checks with zero crashes.
+
+---
+
+### 3. Server CVARs
 
 | Cvar | Default | Description | Flags |
 | :--- | :---: | :--- | :--- |
-| `g_soldierShotgun` | `1` | `1` = Soldier with Heavy Weapons Level 4 can equip the Shotgun as a secondary weapon.<br>`0` = Disables Soldier secondary shotgun (Limbo menu dynamically updates). | `SERVERINFO`<br>`ARCHIVE` |
-| `g_infiniteCabinets` | `0` | `1` = Health and ammo cabinets/stands provide unlimited resources without depleting.<br>`0` = Standard cabinet resource depletion and cooldown. | `SERVERINFO`<br>`ARCHIVE` |
+| `g_soldierShotgun` | `1` | `1` = Soldier with Heavy Weapons Level 4 can equip the Shotgun as a secondary weapon.<br>`0` = Disables Soldier secondary shotgun (Limbo menu updates dynamically). | `SERVERINFO`<br>`ARCHIVE` |
+| `g_infiniteCabinets` | `0` | `1` = Health and ammo supply cabinets provide unlimited resources without running empty.<br>`0` = Standard cabinet supply depletion and cooldown timer. | `SERVERINFO`<br>`ARCHIVE` |
 
 ---
 
-### 4. 💻 Architecture, 64-Bit Support & PK3 System (`v1.3.1b6`)
-* **Unified Multi-Architecture PK3 Packaging**:
-  * Updated version string to `1.3.1`.
-  * Enhanced `sv_pakNames` verification to support the unified multi-architecture binary package (`nq_b_v1.3.1b6.pk3`) and asset package (`nq_v1.3.1b6.pk3`).
-  * Enables 64-bit and 32-bit clients and servers across Windows and Linux to connect seamlessly without pure-server checksum or PK3 mismatch errors.
-* **Cross-Platform Cross-Compilation**:
-  * Native Windows MSVC builds for x64 and x86.
-  * Linux cross-compilation pipeline using the Zig compiler to produce `x86_64` and `i386` shared objects (`.so`) with Lua 5.1 and SQLite3.
+### 4. PK3 Packaging & Architecture (`v1.3.1b6`)
+
+To keep things dead simple and prevent pure-server checksum mismatches, this release uses a **unified PK3 architecture**:
+
+* **`nq_b_v1.3.1b6.pk3` (Unified Binaries)**:
+  * Contains the client binaries for **both** 64-bit and 32-bit on Windows and Linux (`cgame` and `ui` DLLs and `.so` files).
+  * **Why unified?** In the past, separating 32-bit and 64-bit binary PK3s caused headaches: players on 32-bit clients couldn't join 64-bit servers, server admins would misconfigure the pk3 files, and players would get hit with pure-server checksum errors. Having all client binaries bundled in `nq_b_v1.3.1b6.pk3` means it just works out of the box regardless of what system people are running.
+  * If a server admin really wants stripped-down, arch-specific packages for a dedicated box, they can repackage it, but the unified PK3 is standard to protect players from mismatch errors.
+* **`nq_v1.3.1b6.pk3` (Core Assets)**:
+  * Contains updated assets, menus, textures, and shader fixes (including the right-side-up Caduceus fix in `meyer.shader`).
 
 ---
 
-## 📦 File Layout & Binary Identification
+## 📦 Directory Structure
+
+On your server or game client installation, your `nq/` folder should look like this:
 
 ```text
 nq/
-├── nq_v1.3.1b6.pk3            # Core Assets (textures, models, sounds, scripts, meyer.shader)
-├── nq_b_v1.3.1b6.pk3          # Unified Multi-Arch Binaries (32-bit & 64-bit Windows DLLs and Linux .so)
+├── nq_v1.3.1b6.pk3            # Core assets, menus, shaders, textures
+├── nq_b_v1.3.1b6.pk3          # Unified client binaries (32-bit & 64-bit Win DLLs and Linux .so)
 ├── qagame.mp.x86_64.dll / .so # 64-Bit Server Game Module
 ├── qagame_mp_x86.dll / .so    # 32-Bit Server Game Module
 └── sqlite3.dll / .so          # SQLite3 database engine
@@ -79,38 +94,38 @@ nq/
 
 ## 🛠️ Building from Source
 
-### Prerequisites
-* **Windows**: Visual Studio 2022 / Build Tools with C/C++ support and CMake $\ge 3.20$.
+### Requirements
+* **Windows**: Visual Studio 2022 (Community / Professional / Build Tools with C/C++) and CMake $\ge 3.20$.
 * **Linux / Cross-Compilation**: GCC/Clang or [Zig Compiler](https://ziglang.org/) ($\ge 0.13.0$).
-* **Python 3**: For automated packaging and cross-compilation scripts.
+* **Python 3**: For build and packaging scripts.
 
 ---
 
-### Windows Build (MSVC)
+### Building on Windows (MSVC)
 
-#### 1. Generate Build Solutions:
+#### 1. Generate CMake Solutions:
 ```powershell
-# 64-bit Build Solution
+# 64-bit solution
 cmake -B build64 -S . -A x64
 
-# 32-bit Build Solution
+# 32-bit solution
 cmake -B build32 -S . -A Win32
 ```
 
-#### 2. Compile Release Binaries:
+#### 2. Compile Binaries:
 ```powershell
-# Compile 64-bit
+# Build 64-bit Release
 msbuild build64/NoQuarter.slnx /p:Configuration=Release /m
 
-# Compile 32-bit
+# Build 32-bit Release
 msbuild build32/NoQuarter.slnx /p:Configuration=Release /m
 ```
 
 ---
 
-### Linux Cross-Compilation (via Zig)
+### Building for Linux (via Zig Cross-Compilation)
 
-A Python cross-compilation script is provided to compile Linux `.so` shared libraries directly on Windows or Linux:
+A Python cross-compilation script is included so you can compile Linux `.so` shared libraries directly from Windows or Linux using Zig:
 
 ```bash
 python scratch/build_linux.py
@@ -122,22 +137,23 @@ This compiles:
 
 ---
 
-### Packaging PK3 Files
- 
-To package your binaries into PK3 archives, create zip files (without root directory prefixes) containing the respective DLL and `.so` files:
+### Packaging PK3s
 
-* `nq_b_v1.3.1b6.pk3`: Unified binary package containing 64-bit and 32-bit client binaries (`cgame.mp.x86_64.dll`, `ui.mp.x86_64.dll`, `cgame.mp.x86_64.so`, `ui.mp.x86_64.so`, `cgame_mp_x86.dll`, `ui_mp_x86.dll`, `cgame.mp.i386.so`, `ui.mp.i386.so`).
-* `nq_v1.3.1b6.pk3`: Asset package containing updated scripts (`meyer.shader`), textures, and UI menudefs.
+Create standard zip files (without any leading folder paths) containing the binaries and assets, then rename the extension to `.pk3`:
+
+* `nq_b_v1.3.1b6.pk3`: Pack the client files (`cgame.mp.x86_64.dll`, `ui.mp.x86_64.dll`, `cgame.mp.x86_64.so`, `ui.mp.x86_64.so`, `cgame_mp_x86.dll`, `ui_mp_x86.dll`, `cgame.mp.i386.so`, `ui.mp.i386.so`).
+* `nq_v1.3.1b6.pk3`: Pack your assets (`assets/` contents: scripts, shaders, textures, and UI menudefs).
 
 ---
 
-## 📜 Credits & Acknowledgments
+## 📜 Credits & Big Thanks
 
-* **NoQuarter Development Team**: IRATA, jaquboss, Meyer, ReyalP, Lucifer, and contributors.
-* **ET:Legacy Development Team**: For modern UI designs, weapon HUD concepts, and 64-bit architecture references.
-* **Splash Damage & id Software**: Original creators of *Wolfenstein: Enemy Territory*.
-* **Omni-Bot Team**: Bot support and interface integration.
-* **Community**: All players and server administrators keeping *Enemy Territory* alive!
+* **Hawkeye** (`nqv1.3.1help@gmail.com`) — Modernization, 64-bit / 32-bit cross-compile pipeline, UI overhaul, bugfixes, and maintenance.
+* **NoQuarter Team**: IRATA, jaquboss, Meyer, ReyalP, Lucifer, and all past contributors who made NQ great.
+* **ET:Legacy Team**: For awesome modern UI concepts, weapon HUD references, and 64-bit id Tech 3 insights.
+* **Splash Damage & id Software**: For creating *Wolfenstein: Enemy Territory*.
+* **Omni-Bot Team**: For bot navigation and AI support.
+* **The Community**: Everyone still fragging, running servers, and keeping Enemy Territory alive after all these years!
 
 ---
 
