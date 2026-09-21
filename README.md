@@ -53,11 +53,11 @@ This release modernizes the user interface, introduces quality-of-life gameplay 
 
 ---
 
-### 4. 💻 Architecture, 64-Bit Support & PK3 System (`v1.3.1`)
-* **Dual-Architecture PK3 Packaging**:
+### 4. 💻 Architecture, 64-Bit Support & PK3 System (`v1.3.1b6`)
+* **Unified Multi-Architecture PK3 Packaging**:
   * Updated version string to `1.3.1`.
-  * Enhanced `sv_pakNames` verification to support architecture-tagged binary packages (`nq_b_v1.3.1_64.pk3` and `nq_b_v1.3.1_32.pk3`) alongside unified binary packages (`nq_b_v1.3.1.pk3`, `nq_b_v1.3.0_b.pk3`) and asset packs (`nq_v1.3.1.pk3`, `nq_v1.3.0_b.pk3`).
-  * Enables 64-bit and 32-bit clients and servers to connect without PK3 mismatch warnings or missing file errors.
+  * Enhanced `sv_pakNames` verification to support the unified multi-architecture binary package (`nq_b_v1.3.1b6.pk3`) and asset package (`nq_v1.3.1b6.pk3`).
+  * Enables 64-bit and 32-bit clients and servers across Windows and Linux to connect seamlessly without pure-server checksum or PK3 mismatch errors.
 * **Cross-Platform Cross-Compilation**:
   * Native Windows MSVC builds for x64 and x86.
   * Linux cross-compilation pipeline using the Zig compiler to produce `x86_64` and `i386` shared objects (`.so`) with Lua 5.1 and SQLite3.
@@ -68,9 +68,8 @@ This release modernizes the user interface, introduces quality-of-life gameplay 
 
 ```text
 nq/
-├── nq_v1.3.1.pk3              # Core Assets (textures, models, sounds, scripts)
-├── nq_b_v1.3.1_64.pk3         # 64-Bit Binaries (cgame.mp.x86_64, qagame.mp.x86_64, ui.mp.x86_64)
-├── nq_b_v1.3.1_32.pk3         # 32-Bit Binaries (cgame_mp_x86, qagame_mp_x86, ui_mp_x86)
+├── nq_v1.3.1b6.pk3            # Core Assets (textures, models, sounds, scripts, meyer.shader)
+├── nq_b_v1.3.1b6.pk3          # Unified Multi-Arch Binaries (32-bit & 64-bit Windows DLLs and Linux .so)
 ├── qagame.mp.x86_64.dll / .so # 64-Bit Server Game Module
 ├── qagame_mp_x86.dll / .so    # 32-Bit Server Game Module
 └── sqlite3.dll / .so          # SQLite3 database engine
@@ -124,11 +123,11 @@ This compiles:
 ---
 
 ### Packaging PK3 Files
-
+ 
 To package your binaries into PK3 archives, create zip files (without root directory prefixes) containing the respective DLL and `.so` files:
 
-* `nq_b_v1.3.1_64.pk3`: Contains 64-bit `cgame.mp.x86_64.dll`, `ui.mp.x86_64.dll`, `cgame.mp.x86_64.so`, `ui.mp.x86_64.so`.
-* `nq_b_v1.3.1_32.pk3`: Contains 32-bit `cgame_mp_x86.dll`, `ui_mp_x86.dll`, `cgame.mp.i386.so`, `ui.mp.i386.so`.
+* `nq_b_v1.3.1b6.pk3`: Unified binary package containing 64-bit and 32-bit client binaries (`cgame.mp.x86_64.dll`, `ui.mp.x86_64.dll`, `cgame.mp.x86_64.so`, `ui.mp.x86_64.so`, `cgame_mp_x86.dll`, `ui_mp_x86.dll`, `cgame.mp.i386.so`, `ui.mp.i386.so`).
+* `nq_v1.3.1b6.pk3`: Asset package containing updated scripts (`meyer.shader`), textures, and UI menudefs.
 
 ---
 

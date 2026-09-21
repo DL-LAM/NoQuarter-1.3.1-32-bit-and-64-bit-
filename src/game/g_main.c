@@ -2938,25 +2938,35 @@ static void ServerCheck( void ) {
 	// until the player joins a server or hosts a game
 	if (pakNames[0]) {
 
-		// 1.3.1 / 1.3.0 asset pk3 check
-		if (!strstr(pakNames, "nq_v1.3.1") && !strstr(pakNames, "nq_v1.3.0_b")) {
-			G_Printf("^1Error: No nq_v1.3.1.pk3 (or nq_v1.3.0_b.pk3) found on server! Missing essential files!\n" );
+		// [NQ 1.3.1 - Packaging]: Asset pk3 check (prioritizes nq_v1.3.1b6)
+		if (!strstr(pakNames, "nq_v1.3.1b6") && !strstr(pakNames, "nq_v1.3.1") && !strstr(pakNames, "nq_v1.3.0_b")) {
+			G_Printf("^1Error: No nq_v1.3.1b6.pk3 (or nq_v1.3.1.pk3) found on server! Missing essential files!\n" );
 			msgWhine = qtrue;
 			// shutdown = qtrue; // activate this on release as some 2.55 admins/hacker have to rename the files
 		}
 
-		// Architecture specific binary pk3 check (64-bit vs 32-bit or unified)
+		// [NQ 1.3.1 - Packaging]: Unified binary pk3 check (nq_b_v1.3.1b6.pk3 works for both 64-bit and 32-bit clients)
 #if defined(__x86_64__) || defined(_M_X64)
-		if (!strstr(pakNames, "nq_b_v1.3.1_64") && !strstr(pakNames, "nq_b_v1.3.1") && !strstr(pakNames, "nq_b_v1.3.0_b")) {
-			G_Printf("^1Error: No nq_b_v1.3.1_64.pk3 (or nq_b_v1.3.1.pk3) found on server! Missing 64-bit binary files!\n" );
+		if (!strstr(pakNames, "nq_b_v1.3.1b6") && !strstr(pakNames, "nq_b_v1.3.1_64") && !strstr(pakNames, "nq_b_v1.3.1") && !strstr(pakNames, "nq_b_v1.3.0_b")) {
+			G_Printf("^1Error: No nq_b_v1.3.1b6.pk3 (or nq_b_v1.3.1_64.pk3) found on server! Missing 64-bit binary files!\n" );
 			msgWhine = qtrue;
 		}
 #else
-		if (!strstr(pakNames, "nq_b_v1.3.1_32") && !strstr(pakNames, "nq_b_v1.3.1") && !strstr(pakNames, "nq_b_v1.3.0_b")) {
-			G_Printf("^1Error: No nq_b_v1.3.1_32.pk3 (or nq_b_v1.3.1.pk3) found on server! Missing 32-bit binary files!\n" );
+		if (!strstr(pakNames, "nq_b_v1.3.1b6") && !strstr(pakNames, "nq_b_v1.3.1_32") && !strstr(pakNames, "nq_b_v1.3.1") && !strstr(pakNames, "nq_b_v1.3.0_b")) {
+			G_Printf("^1Error: No nq_b_v1.3.1b6.pk3 (or nq_b_v1.3.1_32.pk3) found on server! Missing 32-bit binary files!\n" );
 			msgWhine = qtrue;
 		}
 #endif
+
+		// [NQ 1.3.1 - Packaging]: Warn about outdated early-test binary/asset packages to prevent client pure checksum mismatches
+		if (strstr(pakNames, "nq_b_v1.3.1_64")) {
+			G_Printf("^1Warning: Legacy nq_b_v1.3.1_64.pk3 found on server! Replace with unified nq_b_v1.3.1b6.pk3.\n" );
+			msgWhine = qtrue;
+		}
+		if (strstr(pakNames, "nq_b_v1.3.1_32")) {
+			G_Printf("^1Warning: Legacy nq_b_v1.3.1_32.pk3 found on server! Replace with unified nq_b_v1.3.1b6.pk3.\n" );
+			msgWhine = qtrue;
+		}
 
 		// We don't need
 		// 1.2.9 b6 bins
