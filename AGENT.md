@@ -27,26 +27,28 @@ Welcome to the **NoQuarter 1.3.1 Modernized** repository. This document serves a
 
 5. **Universal Unified PK3 Multi-Architecture Layout**:
    - All client binaries are bundled into a single unified binary package so 32-bit and 64-bit clients on Windows and Linux connect without pure-server checksum or PK3 mismatch errors:
-     - `nq_b_v1.3.1b6.pk3`: Contains all client binaries (`cgame.mp.x86_64.dll`, `ui.mp.x86_64.dll`, `cgame.mp.x86_64.so`, `ui.mp.x86_64.so`, `cgame_mp_x86.dll`, `ui_mp_x86.dll`, `cgame.mp.i386.so`, `ui.mp.i386.so`).
-     - `nq_v1.3.1b6.pk3`: Core game assets (models, sounds, textures, animations).
+     - `nq_b_v1.3.1b7.pk3`: Contains all client binaries (`cgame.mp.x86_64.dll`, `ui.mp.x86_64.dll`, `cgame.mp.x86_64.so`, `ui.mp.x86_64.so`, `cgame_mp_x86.dll`, `ui_mp_x86.dll`, `cgame.mp.i386.so`, `ui.mp.i386.so`).
+     - `nq_v1.3.1b7.pk3`: Core game assets (models, sounds, textures, animations).
 
 ---
 
 ## 🏛️ Codebase Anatomy
 
-The codebase is split into three primary DLL modules plus scripting libraries:
+The codebase is organized into modules, support libraries, and packaging tooling:
 
-```
-NoQuarter-v1.3.1-Source/
+```text
+NoQuarter-v1.3.1-Source/    # Git Repository Root
 ├── src/
-│   ├── game/               # Server-Side Game Module (qagame_mp_x86 / qagame.mp.x86_64)
-│   │   ├── g_main.c        # Server lifecycle, CVAR initialization, client connection
+│   ├── game/               # Server Game Module (qagame_mp_x86 / qagame.mp.x86_64)
+│   │   ├── g_main.c        # Lifecycle, CVAR initialization, client connection, PK3 check
 │   │   ├── g_weapon.c      # Weapon mechanics, firing logic, airstrikes, artillery
 │   │   ├── g_combat.c      # Damage calculations, hit detection, death events, obituaries
-│   │   ├── g_client.c      # Player spawning, inventory setup, class selection
-│   │   ├── g_svcmds.c      # Server console commands and PK3 validation
-│   │   └── bg_*.c          # Both-games shared logic (classes, weapon definitions, physics)
-│   ├── cgame/              # Client-Side Game Module (cgame_mp_x86 / cgame.mp.x86_64)
+│   │   ├── g_client.c      # Player spawning, inventory, class selection, IP handling
+│   │   ├── g_referee.c     # Referee commands, authentication lockout tracking
+│   │   ├── g_shrubbot.c    # Shrubbot admin system, permission levels, IP bans
+│   │   ├── g_svcmds.c      # Server console commands
+│   │   └── bg_*.c          # Shared logic (classes, weapon definitions, physics)
+│   ├── cgame/              # Client Game Module (cgame_mp_x86 / cgame.mp.x86_64)
 │   │   ├── cg_main.c       # Client lifecycle, media registration, event dispatch
 │   │   ├── cg_draw.c       # HUD drawing, center print, obituary popups, vote overlays
 │   │   ├── cg_ents.c       # Entity interpolation and rendering (airstrike planes, projectiles)
@@ -56,11 +58,19 @@ NoQuarter-v1.3.1-Source/
 │       ├── ui_main.c       # UI manager, menu loading, font registration
 │       ├── ui_gameinfo.c   # Map and campaign metadata parsing
 │       └── ui_shared.c     # Menu parsing, panel buttons, slider controls
+├── Omnibot/                # Omni-Bot 0.8+ C++ headers & interface definitions
+├── etmain/                 # Base engine UI definitions & headers (menudef.h, menudef2.h)
+├── mapscripts/             # Custom map script fixes
 ├── Lua-libs/               # Embedded Lua 5.1 and SQLite3 native dependencies
 ├── Lua-scripts/            # Server administration and gameplay Lua scripts
 ├── config/                 # Reference server configuration files (noquarter3.0.cfg)
-├── docs/                   # Documentation, Lua API manual (nqluadocu.htm), and CVAR guides
-└── scripts/                # Packaging, texture processing, and Linux cross-compilation tools
+├── docs/                   # Documentation, knowledge base, Lua API manual, CVAR guides
+└── scripts/                # Build and packaging automation
+    ├── build_linux.py      # Cross-compiles 32-bit & 64-bit Linux .so binaries using Zig cc
+    └── package_release.py  # Builds unified PK3s (nq_b_v1.3.1b7.pk3 & nq_v1.3.1b7.pk3) and deploys
+
+Parent Trunk Directory Structure (Outside Git Repo):
+../assets/                  # SVN base asset repository (unpacked models, textures, sounds, scripts)
 ```
 
 ---
@@ -72,12 +82,12 @@ When working on this repository, keep these past issues and solutions in mind:
 ### 1. Airstrike Flyover Bomber Planes
 - **Problem**: Calling an airstrike played audio, but bombers were invisible.
 - **Root Cause**: `cg_main.c` attempted to register `models/mapobjects/planes/ju87.md3` and `spitfire.md3`, which did not exist in modern asset packages. Furthermore, `NUM_FRAME_PROPELLER` was set to `4` while the models had 10 animation frames (`DAnimFrames00`–`DAnimFrames09`).
-- **Fix**: Registered `models/mapobjects/etl_plane/junker88.md3` (Axis) and `models/mapobjects/etl_plane/b-25.md3` (Allied). Updated propeller animation cycle to 10 frames in `cg_ents.c` and delayed second plane drawing until `cent->currentState.pos.trTime`. Legacy 2.60b fallbacks were removed to prevent duplicate asset registration.
+- **Fix**: Registered `models/mapobjects/etl_plane/junker88.md3` (Axis) and `models/mapobjects/etl_plane/b-25.md3` (Allied). Updated propeller animation cycle to 10 frames in `cg_ents.c` and delayed second plane drawing until `cent->currentState.pos.trTime`. Legacy 2.60b fallbacks and obsolete `models/mapobjects/planes/` clones were removed.
 
 ### 2. CMYK JPEG Crash on 32-bit Clients
 - **Problem**: 32-bit ET:Legacy client crashed when loading maps like `ctf_pool_v2` with `WARNING: (libjpeg) Unsupported color conversion request`.
 - **Root Cause**: The 32-bit `libjpeg` does not support CMYK 4-channel JPEGs. The 64-bit client had a newer `libjpeg-turbo` that converted them automatically.
-- **Fix**: Re-encoded all custom map textures to baseline 24-bit sRGB and packaged fallback TGA textures directly in `nq_v1.3.1b6.pk3`.
+- **Fix**: Re-encoded all custom map textures to baseline 24-bit sRGB and packaged fallback TGA textures directly in `nq_v1.3.1b7.pk3`.
 
 ### 3. Kill Print vs. Obituary Feed Collision
 - **Problem**: Long player names in center kill notifications clipped across the screen into the left-hand obituary feed.
@@ -87,6 +97,22 @@ When working on this repository, keep these past issues and solutions in mind:
 ### 4. Soldier Shotgun & Secondary Weapon Auto-Selection
 - **Mechanic**: Added `g_soldierShotgun` CVAR. When enabled, Soldiers with Heavy Weapons $\ge 4$ can select the Winchester M97 Shotgun as their secondary weapon in the Limbo Menu.
 - **Auto-Selection**: When changing classes or skills, the Limbo Menu automatically assigns the best unlocked secondary (SMG for Level 4 Soldier, Akimbo for Level 4 Light Weapons) without forcing the player to hold it upon spawning—the primary weapon stays holstered and active.
+
+### 5. NQKey Buffer Overflow & 31-Char Truncation
+- **Problem**: In `g_main.c`, `NQKey` generation used a `char key[32]` buffer with `Q_strncpyz(..., 32)`. A 32-byte key was truncated to 31 bytes plus a NUL terminator, causing potential stack buffer overflows on oversized keys.
+- **Fix**: Widened `key` to `char key[64]` and bound copying to `sizeof(key)`.
+
+### 6. IPv6 Truncation and Buffer Widening
+- **Problem**: Legacy 16-byte `char ip[16]` buffers truncated standard IPv6 addresses (up to 45 chars) and caused crashes or invalid ban comparisons.
+- **Fix**: Defined `MAX_IP_LENGTH_V6 64` in `g_local.h`. Widened `clientPersistant_t.client_ip` and `g_shrubbot_ban_t.ip` to 64 bytes. Replaced unsafe in-place mutation of `client_ip` in `!finger` with a dedicated, buffer-safe `G_StripPort()`.
+
+### 7. ConfigString Index Overflow Safety
+- **Problem**: When configstrings filled up, `G_FindConfigstringIndex` returned `0`. Index 0 is a valid configstring (`CS_SERVERINFO`), leading to silent string overwriting and data corruption.
+- **Fix**: On overflow, `G_FindConfigstringIndex` immediately calls `G_Error()`, halting before memory or asset state can be corrupted.
+
+### 8. Configurable Referee Authentication Lockout
+- **Problem**: Failed referee logins used a hardcoded 900-second lockout and used `level.time`, which is subject to integer rollover and map restarts.
+- **Fix**: Added `g_authFailExpireTime` CVAR (default 900 seconds) in `g_referee.c`. Replaced `level.time` with `time(NULL)` (epoch seconds) and implemented Y2038-safe eviction logic.
 
 ---
 

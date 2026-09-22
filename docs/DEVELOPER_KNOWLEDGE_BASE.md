@@ -102,8 +102,8 @@ When clients connect to a pure server (`sv_pure 1`), the engine verifies that th
 NoQuarter 1.3.1 solves this cleanly with a **Unified Client Binary Package**:
 ```text
 nq/
-├── nq_v1.3.1b6.pk3            # Unified game assets (textures, sounds, models, menus, shaders)
-└── nq_b_v1.3.1b6.pk3          # Unified client binaries (all architectures):
+├── nq_v1.3.1b7.pk3            # Unified game assets (textures, sounds, models, menus, shaders)
+└── nq_b_v1.3.1b7.pk3          # Unified client binaries (all architectures):
     ├── cgame.mp.x86_64.dll    # Windows x64 Client Game
     ├── ui.mp.x86_64.dll       # Windows x64 UI
     ├── cgame.mp.x86_64.so     # Linux x64 Client Game
@@ -116,7 +116,7 @@ nq/
 
 The server binary (`qagame.mp.x86_64.dll`, `qagame_mp_x86.dll`, `qagame.mp.x86_64.so`, or `qagame.mp.i386.so`) is **never** placed inside a PK3; it resides directly on the server's filesystem in the `fs_game` folder (`nq/`).
 
-Because all client binaries across all architectures reside inside `nq_b_v1.3.1b6.pk3`, every client computes the exact same PK3 checksum regardless of OS or bitness, eliminating pure-server mismatch errors permanently.
+Because all client binaries across all architectures reside inside `nq_b_v1.3.1b7.pk3`, every client computes the exact same PK3 checksum regardless of OS or bitness, eliminating pure-server mismatch errors permanently.
 
 ---
 
@@ -284,7 +284,7 @@ python scripts/package_release.py
 | **Airstrike called, sound plays, but planes do not appear** | Invalid model paths in `cg_main.c` (`planes/ju87.md3` instead of `etl_plane/junker88.md3`). | Update registration to `etl_plane/junker88.md3` and `etl_plane/b-25.md3`. |
 | **Airstrike propeller jumps or stutters** | Propeller animation frames defined as 4 instead of 10. | Set `NUM_FRAME_PROPELLER 10` in `cg_ents.c`. |
 | **Kill announcement text overlaps left-hand obituary feed** | Center print rendered at `Y=360` with wide `limboFont1`. | Switch font to `&cgs.media.limboFont2` (scale `0.22f`) and clamp `baseY >= 384`. |
-| **`pure server` rejection when joining server** | Client has outdated binary PK3 or mismatched build. | Ensure both server and client use unified `nq_b_v1.3.1b6.pk3`. |
+| **`pure server` rejection when joining server** | Client has outdated binary PK3 or mismatched build. | Ensure both server and client use unified `nq_b_v1.3.1b7.pk3`. |
 | **Crashing on 64-bit when casting pointers** | Casting `void*` directly to `int` (truncating 64-bit pointer to 32 bits). | Use `intptr_t` or `uintptr_t`. |
 | **Shotgun not appearing in Limbo for Heavy Weapons Soldier** | `g_soldierShotgun` is set to 0 or skill check in `ui_shared.c` failed. | Ensure `g_soldierShotgun 1` and player has Heavy Weapons level 4. |
 | **Server cabinets depleted and not recharging** | Standard cabinet gameplay cooldown. | Enable `g_infiniteCabinets 1` in `noquarter.cfg`. |

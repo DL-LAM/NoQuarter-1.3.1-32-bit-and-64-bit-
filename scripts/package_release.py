@@ -84,15 +84,17 @@ def build_universal_binary_pk3(pk3_path):
             z.write(ui32_so, "ui_mp_x86.so")
     print(f"Built {pk3_path} successfully.")
 
-# 2. Build Unified nq_b_v1.3.1b6.pk3
-pk3_unified_path = os.path.join(RELEASE_DIR, "nq_b_v1.3.1b6.pk3")
+# 2. Build Unified nq_b_v1.3.1b7.pk3
+pk3_unified_path = os.path.join(RELEASE_DIR, "nq_b_v1.3.1b7.pk3")
 build_universal_binary_pk3(pk3_unified_path)
 
-# 3. Update menudef files, menus, meyer.shader, and texture fixes into nq_v1.3.1b6.pk3
-src_base_asset_pk3 = os.path.join(RELEASE_DIR, "nq_v1.3.1_b.pk3")
+# 3. Update menudef files, menus, meyer.shader, and texture fixes into nq_v1.3.1b7.pk3
+src_base_asset_pk3 = os.path.join(RELEASE_DIR, "nq_v1.3.1b7.pk3")
 if not os.path.exists(src_base_asset_pk3):
     src_base_asset_pk3 = os.path.join(RELEASE_DIR, "nq_v1.3.1b6.pk3")
-nq_v131b6 = os.path.join(RELEASE_DIR, "nq_v1.3.1b6.pk3")
+if not os.path.exists(src_base_asset_pk3):
+    src_base_asset_pk3 = os.path.join(RELEASE_DIR, "nq_v1.3.1_b.pk3")
+nq_v131b7 = os.path.join(RELEASE_DIR, "nq_v1.3.1b7.pk3")
 
 menudef_h = os.path.join(TRUNK_DIR, "etmain", "ui", "menudef.h")
 menudef2_h = os.path.join(TRUNK_DIR, "etmain", "ui", "menudef2.h")
@@ -117,8 +119,8 @@ for sub_dir in ["ctf_pool", "pool"]:
                 overrides[arcname] = fpath
 
 
-print(f"\nBuilding {nq_v131b6} with menudef headers, menus, caduceus fix, and texture fixes ({len(overrides)} overrides)...")
-temp_asset_pk3 = nq_v131b6 + ".tmp"
+print(f"\nBuilding {nq_v131b7} with menudef headers, menus, caduceus fix, and texture fixes ({len(overrides)} overrides)...")
+temp_asset_pk3 = nq_v131b7 + ".tmp"
 written_arcnames = set()
 with zipfile.ZipFile(src_base_asset_pk3, 'r') as zin, zipfile.ZipFile(temp_asset_pk3, 'w', compression=zipfile.ZIP_DEFLATED) as zout:
     for item in zin.infolist():
@@ -137,11 +139,11 @@ with zipfile.ZipFile(src_base_asset_pk3, 'r') as zin, zipfile.ZipFile(temp_asset
             written_arcnames.add(arcname)
             print(f"  Added new asset to pk3: {arcname}")
 
-os.replace(temp_asset_pk3, nq_v131b6)
-print(f"Built {nq_v131b6} successfully.")
+os.replace(temp_asset_pk3, nq_v131b7)
+print(f"Built {nq_v131b7} successfully.")
 
 # 4. Clean up obsolete/legacy pk3s from RELEASE_DIR
-for old_file in ["nq_b_v1.3.1_64.pk3", "nq_b_v1.3.1_32.pk3"]:
+for old_file in ["nq_b_v1.3.1_64.pk3", "nq_b_v1.3.1_32.pk3", "nq_b_v1.3.1b6.pk3"]:
     old_p = os.path.join(RELEASE_DIR, old_file)
     if os.path.exists(old_p):
         os.remove(old_p)
@@ -155,26 +157,26 @@ lin32_dir = os.path.join(RELEASE_DIR, "DLL's", "Linux", "32 Bit")
 
 shutil.copy2(qagame64, os.path.join(RELEASE_DIR, "qagame_mp_x64.dll"))
 shutil.copy2(qagame64, os.path.join(win64_dir, "qagame_mp_x64.dll"))
-shutil.copy2(pk3_unified_path, os.path.join(win64_dir, "nq_b_v1.3.1b6.pk3"))
+shutil.copy2(pk3_unified_path, os.path.join(win64_dir, "nq_b_v1.3.1b7.pk3"))
 
 shutil.copy2(qagame32, os.path.join(win32_dir, "qagame_mp_x86.dll"))
-shutil.copy2(pk3_unified_path, os.path.join(win32_dir, "nq_b_v1.3.1b6.pk3"))
+shutil.copy2(pk3_unified_path, os.path.join(win32_dir, "nq_b_v1.3.1b7.pk3"))
 
 if os.path.exists(os.path.join(LINUX64_DIR, "qagame.mp.x86_64.so")):
     shutil.copy2(os.path.join(LINUX64_DIR, "qagame.mp.x86_64.so"), os.path.join(lin64_dir, "qagame_mp_x64.so"))
     shutil.copy2(os.path.join(LINUX64_DIR, "qagame.mp.x86_64.so"), os.path.join(RELEASE_DIR, "qagame.mp.x86_64.so"))
     shutil.copy2(os.path.join(LINUX64_DIR, "qagame.mp.x86_64.so"), os.path.join(RELEASE_DIR, "qagame_mp_x64.so"))
-shutil.copy2(pk3_unified_path, os.path.join(lin64_dir, "nq_b_v1.3.1b6.pk3"))
+shutil.copy2(pk3_unified_path, os.path.join(lin64_dir, "nq_b_v1.3.1b7.pk3"))
 
 if os.path.exists(os.path.join(LINUX32_DIR, "qagame.mp.i386.so")):
     shutil.copy2(os.path.join(LINUX32_DIR, "qagame.mp.i386.so"), os.path.join(lin32_dir, "qagame_mp_x86.so"))
     shutil.copy2(os.path.join(LINUX32_DIR, "qagame.mp.i386.so"), os.path.join(RELEASE_DIR, "qagame.mp.i386.so"))
     shutil.copy2(os.path.join(LINUX32_DIR, "qagame.mp.i386.so"), os.path.join(RELEASE_DIR, "qagame_mp_x86.so"))
-shutil.copy2(pk3_unified_path, os.path.join(lin32_dir, "nq_b_v1.3.1b6.pk3"))
+shutil.copy2(pk3_unified_path, os.path.join(lin32_dir, "nq_b_v1.3.1b7.pk3"))
 
 # Clean old pk3s in DLL's subfolders
 for d in [win64_dir, win32_dir, lin64_dir, lin32_dir]:
-    for old_name in ["nq_b_v1.3.1_64.pk3", "nq_b_v1.3.1_32.pk3"]:
+    for old_name in ["nq_b_v1.3.1_64.pk3", "nq_b_v1.3.1_32.pk3", "nq_b_v1.3.1b6.pk3"]:
         op = os.path.join(d, old_name)
         if os.path.exists(op):
             os.remove(op)
@@ -192,10 +194,10 @@ def safe_copy(src, dst):
 for target_dir in [ET64_NQ_DIR, CLIENT_NQ_DIR, ET32_NQ_DIR]:
     if os.path.exists(target_dir):
         print(f"\nUpdating {target_dir}...")
-        safe_copy(pk3_unified_path, os.path.join(target_dir, "nq_b_v1.3.1b6.pk3"))
-        safe_copy(nq_v131b6, os.path.join(target_dir, "nq_v1.3.1b6.pk3"))
+        safe_copy(pk3_unified_path, os.path.join(target_dir, "nq_b_v1.3.1b7.pk3"))
+        safe_copy(nq_v131b7, os.path.join(target_dir, "nq_v1.3.1b7.pk3"))
         # Clean obsolete early test pk3s
-        for legacy in ["nq_b_v1.3.1_64.pk3", "nq_b_v1.3.1_32.pk3"]:
+        for legacy in ["nq_b_v1.3.1_64.pk3", "nq_b_v1.3.1_32.pk3", "nq_b_v1.3.1b6.pk3", "nq_v1.3.1b6.pk3"]:
             lp = os.path.join(target_dir, legacy)
             if os.path.exists(lp):
                 try:

@@ -64,15 +64,15 @@ Stuff was fixed, enjoy! If you run into any issues, have questions, or need help
 
 ---
 
-### 4. PK3 Packaging & Architecture (`v1.3.1b6`)
+### 4. PK3 Packaging & Architecture (`v1.3.1b7`)
 
 To keep things dead simple and prevent pure-server checksum mismatches, this release uses a **unified PK3 architecture**:
 
-* **`nq_b_v1.3.1b6.pk3` (Unified Binaries)**:
+* **`nq_b_v1.3.1b7.pk3` (Unified Binaries)**:
   * Contains the client binaries for **both** 64-bit and 32-bit on Windows and Linux (`cgame` and `ui` DLLs and `.so` files).
-  * **Why unified?** In the past, separating 32-bit and 64-bit binary PK3s caused headaches: players on 32-bit clients couldn't join 64-bit servers, server admins would misconfigure the pk3 files, and players would get hit with pure-server checksum errors. Having all client binaries bundled in `nq_b_v1.3.1b6.pk3` means it just works out of the box regardless of what system people are running.
+  * **Why unified?** In the past, separating 32-bit and 64-bit binary PK3s caused headaches: players on 32-bit clients couldn't join 64-bit servers, server admins would misconfigure the pk3 files, and players would get hit with pure-server checksum errors. Having all client binaries bundled in `nq_b_v1.3.1b7.pk3` means it just works out of the box regardless of what system people are running.
   * If a server admin really wants stripped-down, arch-specific packages for a dedicated box, they can repackage it, but the unified PK3 is standard to protect players from mismatch errors.
-* **`nq_v1.3.1b6.pk3` (Core Assets)**:
+* **`nq_v1.3.1b7.pk3` (Core Assets)**:
   * Contains updated assets, menus, textures, and shader fixes (including the right-side-up Caduceus fix in `meyer.shader`).
 
 ---
@@ -83,8 +83,8 @@ On your server or game client installation, your `nq/` folder should look like t
 
 ```text
 nq/
-├── nq_v1.3.1b6.pk3            # Core assets, menus, shaders, textures
-├── nq_b_v1.3.1b6.pk3          # Unified client binaries (32-bit & 64-bit Win DLLs and Linux .so)
+├── nq_v1.3.1b7.pk3            # Core assets, menus, shaders, textures
+├── nq_b_v1.3.1b7.pk3          # Unified client binaries (32-bit & 64-bit Win DLLs and Linux .so)
 ├── qagame.mp.x86_64.dll / .so # 64-Bit Server Game Module
 ├── qagame_mp_x86.dll / .so    # 32-Bit Server Game Module
 └── sqlite3.dll / .so          # SQLite3 database engine
@@ -141,8 +141,8 @@ This compiles:
 
 Create standard zip files (without any leading folder paths) containing the binaries and assets, then rename the extension to `.pk3` (or run `python scripts/package_release.py`):
 
-* `nq_b_v1.3.1b6.pk3`: Pack the client files (`cgame.mp.x86_64.dll`, `ui.mp.x86_64.dll`, `cgame.mp.x86_64.so`, `ui.mp.x86_64.so`, `cgame_mp_x86.dll`, `ui_mp_x86.dll`, `cgame.mp.i386.so`, `ui.mp.i386.so`).
-* `nq_v1.3.1b6.pk3`: Pack your assets (scripts, shaders, textures, and UI menudefs).
+* `nq_b_v1.3.1b7.pk3`: Pack the client files (`cgame.mp.x86_64.dll`, `ui.mp.x86_64.dll`, `cgame.mp.x86_64.so`, `ui.mp.x86_64.so`, `cgame_mp_x86.dll`, `ui_mp_x86.dll`, `cgame.mp.i386.so`, `ui.mp.i386.so`).
+* `nq_v1.3.1b7.pk3`: Pack your assets (scripts, shaders, textures, and UI menudefs).
 
 ---
 

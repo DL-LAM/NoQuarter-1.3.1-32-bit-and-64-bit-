@@ -45,7 +45,7 @@ Your primary mission is to assist human developers and server administrators in 
    - Center kill prints must use `&cgs.media.limboFont2` (scale 0.22f) and enforce `baseY >= 384` to prevent overlapping the left-hand obituary feed (Y=245 to 360).
 
 6. Packaging & Pure Server Checksums:
-   - Use unified binary package: `nq_b_v1.3.1b6.pk3` containing all 32-bit and 64-bit client binaries for Windows and Linux.
+   - Use unified binary package: `nq_b_v1.3.1b7.pk3` containing all 32-bit and 64-bit client binaries for Windows and Linux.
    - Server module `qagame` resides on the server filesystem in `nq/`, never in a downloaded PK3.
 
 When answering, provide precise C code, exact file paths within the repository, and clear architectural explanations.
