@@ -72,12 +72,12 @@ When working on this repository, keep these past issues and solutions in mind:
 ### 1. Airstrike Flyover Bomber Planes
 - **Problem**: Calling an airstrike played audio, but bombers were invisible.
 - **Root Cause**: `cg_main.c` attempted to register `models/mapobjects/planes/ju87.md3` and `spitfire.md3`, which did not exist in modern asset packages. Furthermore, `NUM_FRAME_PROPELLER` was set to `4` while the models had 10 animation frames (`DAnimFrames00`–`DAnimFrames09`).
-- **Fix**: Registered `models/mapobjects/etl_plane/junker88.md3` (Axis) and `models/mapobjects/etl_plane/b-25.md3` (Allied) with fallback paths. Updated propeller animation cycle to 10 frames in `cg_ents.c` and delayed second plane drawing until `cent->currentState.pos.trTime`.
+- **Fix**: Registered `models/mapobjects/etl_plane/junker88.md3` (Axis) and `models/mapobjects/etl_plane/b-25.md3` (Allied). Updated propeller animation cycle to 10 frames in `cg_ents.c` and delayed second plane drawing until `cent->currentState.pos.trTime`. Legacy 2.60b fallbacks were removed to prevent duplicate asset registration.
 
 ### 2. CMYK JPEG Crash on 32-bit Clients
 - **Problem**: 32-bit ET:Legacy client crashed when loading maps like `ctf_pool_v2` with `WARNING: (libjpeg) Unsupported color conversion request`.
 - **Root Cause**: The 32-bit `libjpeg` does not support CMYK 4-channel JPEGs. The 64-bit client had a newer `libjpeg-turbo` that converted them automatically.
-- **Fix**: Re-encoded all custom map textures to baseline 24-bit sRGB and packaged fallback TGA textures directly in `nq_v1.3.1_b.pk3`.
+- **Fix**: Re-encoded all custom map textures to baseline 24-bit sRGB and packaged fallback TGA textures directly in `nq_v1.3.1b6.pk3`.
 
 ### 3. Kill Print vs. Obituary Feed Collision
 - **Problem**: Long player names in center kill notifications clipped across the screen into the left-hand obituary feed.
@@ -120,8 +120,8 @@ cmake -B build64 -S . -A x64
 cmake -B build32 -S . -A Win32
 
 # Compile Release binaries
-msbuild build64/NoQuarter.slnx /p:Configuration=Release /m
-msbuild build32/NoQuarter.slnx /p:Configuration=Release /m
+msbuild build64/NoQuarterWrapper.slnx /p:Configuration=Release /m
+msbuild build32/NoQuarterWrapper.slnx /p:Configuration=Release /m
 ```
 
 ### Packaging PK3 Files

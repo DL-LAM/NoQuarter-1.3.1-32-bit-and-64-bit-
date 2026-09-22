@@ -75,7 +75,8 @@ typedef struct g_shrubbot_ban {
 #ifdef HW_BAN
 	char hwguid[33];
 #endif // HW_BAN
-	char ip[18];
+	// [NQ 1.3.1 - Security]: Use MAX_IP_LENGTH_V6 (64) so stored IPv6 addresses are not truncated
+	char ip[MAX_IP_LENGTH_V6];
 	char reason[MAX_STRING_CHARS];
 	char made[50]; // big enough for strftime() %c
 	int expires;

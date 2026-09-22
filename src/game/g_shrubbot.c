@@ -25,6 +25,42 @@ int lol_flood_control = 0;
 
 char *G_Shortcuts(gentity_t *ent, char *text);
 
+// [NQ 1.3.1 - Security]: Strip port from IPv4 or IPv6 (bracketed or unbracketed) address cleanly
+void G_StripPort(const char *ip, char *out, int outsize) {
+	if (!ip || !out || outsize <= 0) return;
+	out[0] = '\0';
+
+	if (*ip == '[') {
+		// Bracketed IPv6: [xxxx:xxxx::1]:port or [xxxx:xxxx::1]
+		const char *close_bracket = strchr(ip, ']');
+		if (close_bracket) {
+			int len = (int)(close_bracket - ip - 1);
+			if (len >= outsize) len = outsize - 1;
+			if (len > 0) {
+				Q_strncpyz(out, ip + 1, len + 1);
+				return;
+			}
+		}
+	}
+
+	// Unbracketed IPv6 without port: contains multiple colons
+	const char *first_colon = strchr(ip, ':');
+	if (first_colon && strchr(first_colon + 1, ':')) {
+		Q_strncpyz(out, ip, outsize);
+		return;
+	}
+
+	// Standard IPv4 or hostname with port (e.g. 192.168.1.1:27960)
+	{
+		int i = 0;
+		while (*ip && i < outsize - 1) {
+			if (*ip == ':') break;
+			out[i++] = *ip++;
+		}
+		out[i] = '\0';
+	}
+}
+
 extern char bigTextBuffer[100000];
 
 // Note flag 'J' is free now - !ammopack & !medpack IS removed
@@ -1495,7 +1531,6 @@ qboolean G_shrubbot_tempban(int clientnum, char *reason, int length) {
 #ifdef HW_BAN
 	char *hwguid;
 #endif // HW_BAN
-	char tmp[MAX_NAME_LENGTH];
 	int i;
 	g_shrubbot_ban_t *b = NULL;
 	time_t t;
@@ -1529,13 +1564,8 @@ qboolean G_shrubbot_tempban(int clientnum, char *reason, int length) {
 #ifdef HW_BAN
 	Q_strncpyz(b->hwguid, hwguid, sizeof(b->hwguid));
 #endif // HW_BAN
-	// strip port off of ip
-	for(i=0; *ip; *ip++) {
-		if(i >= sizeof(tmp) || *ip == ':') break;
-		tmp[i++] = *ip;
-	}
-	tmp[i] = '\0';
-	Q_strncpyz(b->ip, tmp, sizeof(b->ip));
+	// [NQ 1.3.1 - Security]: Strip port cleanly without corrupting IPv6 addresses
+	G_StripPort(ip, b->ip, sizeof(b->ip));
 
 	lt = localtime(&t);
 	strftime(b->made, sizeof(b->made), "%m/%d/%y %H:%M:%S", lt);
@@ -1571,7 +1601,6 @@ qboolean G_shrubbot_ban(gentity_t *ent, int skiparg) {
 #ifdef HW_BAN
 	char *hwguid;
 #endif // HW_BAN
-	char tmp[MAX_NAME_LENGTH];
 	int i;
 	g_shrubbot_ban_t *b = NULL;
 	time_t t;
@@ -1690,13 +1719,8 @@ qboolean G_shrubbot_ban(gentity_t *ent, int skiparg) {
 	Q_strncpyz(b->hwguid, hwguid, sizeof(b->hwguid));
 #endif // HW_BAN
 
-	// strip port off of ip
-	for(i=0; *ip; *ip++) {
-		if(i >= sizeof(tmp) || *ip == ':') break;
-		tmp[i++] = *ip;
-	}
-	tmp[i] = '\0';
-	Q_strncpyz(b->ip, tmp, sizeof(b->ip));
+	// [NQ 1.3.1 - Security]: Strip port cleanly without corrupting IPv6 addresses
+	G_StripPort(ip, b->ip, sizeof(b->ip));
 
 	lt = localtime(&t);
 	strftime(b->made, sizeof(b->made), "%m/%d/%y %H:%M:%S", lt);
@@ -1764,7 +1788,6 @@ qboolean G_shrubbot_banguid(gentity_t *ent, int skiparg) {
 	char guid[PB_GUID_LENGTH+1];
 	char *guidOnline = NULL;
 	char *ip = NULL;
-	char tmp[MAX_NAME_LENGTH];
 	int i;
 	g_shrubbot_ban_t *b = NULL;
 	time_t t;
@@ -1893,13 +1916,8 @@ qboolean G_shrubbot_banguid(gentity_t *ent, int skiparg) {
 		Q_strncpyz(b->name, vic->client->pers.netname, sizeof(b->name));
 		Q_strncpyz(b->guid, guidOnline, sizeof(b->guid));
 
-		// strip port off of ip
-		for(i=0; *ip; *ip++) {
-			if(i >= sizeof(tmp) || *ip == ':') break;
-			tmp[i++] = *ip;
-		}
-		tmp[i] = '\0';
-		Q_strncpyz(b->ip, tmp, sizeof(b->ip));
+		// [NQ 1.3.1 - Security]: Strip port cleanly without corrupting IPv6 addresses
+		G_StripPort(ip, b->ip, sizeof(b->ip));
 	}
 	else {
 		Q_strncpyz(b->name, "unknown", sizeof(b->name));
@@ -1972,7 +1990,6 @@ qboolean G_shrubbot_banIP(gentity_t *ent, int skiparg) {
 	char guid[PB_GUID_LENGTH+1];
 	char *guidOnline = NULL;
 	char *ipOnline = NULL;
-	char tmp[MAX_NAME_LENGTH];
 	int i;
 	g_shrubbot_ban_t *b = NULL;
 	time_t t;
@@ -2049,7 +2066,12 @@ qboolean G_shrubbot_banIP(gentity_t *ent, int skiparg) {
 		if(p->pers.connected != CON_CONNECTED && p->pers.connected != CON_CONNECTING) {
 			continue;
 		}
-		if ( !Q_strncmp( p->pers.client_ip, ip, MAX_IP_LENGTH ) ) {
+		char clean_client_ip[MAX_IP_LENGTH_V6];
+		char clean_target_ip[MAX_IP_LENGTH_V6];
+		G_StripPort( p->pers.client_ip, clean_client_ip, sizeof(clean_client_ip) );
+		G_StripPort( ip, clean_target_ip, sizeof(clean_target_ip) );
+		// [NQ 1.3.1 - Bounds]: Compare full stripped IP (IPv4 or IPv6) rather than truncating at MAX_IP_LENGTH
+		if ( !Q_stricmp( clean_client_ip, clean_target_ip ) ) {
 			// player is online..
 			isOnline = qtrue;
 			pids[0] = i;
@@ -2091,18 +2113,14 @@ qboolean G_shrubbot_banIP(gentity_t *ent, int skiparg) {
 		Q_strncpyz(b->name, vic->client->pers.netname, sizeof(b->name));
 		Q_strncpyz(b->guid, guidOnline, sizeof(b->guid));
 
-		// strip port off of ip
-		for(i=0; *ipOnline; *ipOnline++) {
-			if(i >= sizeof(tmp) || *ipOnline == ':') break;
-			tmp[i++] = *ipOnline;
-		}
-		tmp[i] = '\0';
-		Q_strncpyz(b->ip, tmp, sizeof(b->ip));
+		// [NQ 1.3.1 - Security]: Strip port cleanly without corrupting IPv6 addresses
+		G_StripPort(ipOnline, b->ip, sizeof(b->ip));
 	}
 	else {
 		Q_strncpyz(b->name, "unknown", sizeof(b->name));
 		Q_strncpyz(b->guid, "offline", sizeof(b->guid));
-		Q_strncpyz(b->ip, ip, sizeof(b->ip));
+		// [NQ 1.3.1 - Security]: Cleanly strip port from admin-typed IP if provided
+		G_StripPort(ip, b->ip, sizeof(b->ip));
 	}
 
 	lt = localtime(&t);
@@ -2189,7 +2207,6 @@ qboolean G_shrubbot_mute(gentity_t *ent, int skiparg) {
 	char name[MAX_NAME_LENGTH], secs[7];
 	char *reason, err[MAX_STRING_CHARS];
 	char *guid, *ip;
-	char tmp[MAX_NAME_LENGTH];
 	int i;
 	g_shrubbot_ban_t *m = NULL;
 	time_t t;
@@ -2292,13 +2309,8 @@ qboolean G_shrubbot_mute(gentity_t *ent, int skiparg) {
 	Q_strncpyz(m->name, vic->client->pers.netname, sizeof(m->name));
 	Q_strncpyz(m->guid, guid, sizeof(m->guid));
 
-	// strip port off of ip
-	for(i=0; *ip; *ip++) {
-		if(i >= sizeof(tmp) || *ip == ':') break;
-		tmp[i++] = *ip;
-	}
-	tmp[i] = '\0';
-	Q_strncpyz(m->ip, tmp, sizeof(m->ip));
+	// [NQ 1.3.1 - Security]: Strip port cleanly without corrupting IPv6 addresses
+	G_StripPort(ip, m->ip, sizeof(m->ip));
 
 	lt = localtime(&t);
 	strftime(m->made, sizeof(m->made), "%m/%d/%y %H:%M:%S", lt);
@@ -5203,7 +5215,8 @@ Jaybird
 qboolean G_shrubbot_finger( gentity_t *ent, int skiparg ) {
 	int pids[MAX_CLIENTS];
 	char name[MAX_NAME_LENGTH], err[MAX_STRING_CHARS];
-	char *guid, *ip, *tmp;
+	char *guid;
+	char clean_ip[MAX_IP_LENGTH_V6];
 	gentity_t *vic;
 
 	if( Q_SayArgc() != 2 + skiparg ) {
@@ -5221,17 +5234,9 @@ qboolean G_shrubbot_finger( gentity_t *ent, int skiparg ) {
 
 	vic 	= &g_entities[pids[0]];
 	guid 	= vic->client->pers.cl_guid;
-	ip 		= vic->client->pers.client_ip;
 
-	// Strip port off of ip.
-	tmp = ip;
-	while( *tmp ) {
-		if( *tmp == ':' ) {
-			*tmp = 0;
-			break;
-		}
-		tmp++;
-	}
+	// [NQ 1.3.1 - Security]: Strip port into local buffer to avoid mutating pers.client_ip in-place or corrupting IPv6
+	G_StripPort( vic->client->pers.client_ip, clean_ip, sizeof(clean_ip) );
 
 	SP( va( "^dInformation about ^7%s^d:\n", vic->client->pers.netname ));
 	SP( va( "^dSlot:    ^2%i\n", vic->client->ps.clientNum ));
@@ -5251,7 +5256,7 @@ qboolean G_shrubbot_finger( gentity_t *ent, int skiparg ) {
 		SP( va( "^dHWGUID:  ^2%s\n", vic->client->pers.cg_hwguid ));
 #endif // HW_BAN
 
-	SP( va( "^dIP:      ^2%s\n", ip ));
+	SP( va( "^dIP:      ^2%s\n", clean_ip ));
 
 	return qtrue;
 }

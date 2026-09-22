@@ -116,14 +116,6 @@ for sub_dir in ["ctf_pool", "pool"]:
                 arcname = f"textures/{sub_dir}/{fname}".replace("\\", "/")
                 overrides[arcname] = fpath
 
-# Add plane model fallbacks (ju87.md3, spitfire.md3)
-planes_dir = os.path.join(TRUNK_DIR, "assets", "models", "mapobjects", "planes")
-if os.path.exists(planes_dir):
-    for fname in os.listdir(planes_dir):
-        fpath = os.path.join(planes_dir, fname)
-        if os.path.isfile(fpath):
-            arcname = f"models/mapobjects/planes/{fname}".replace("\\", "/")
-            overrides[arcname] = fpath
 
 print(f"\nBuilding {nq_v131b6} with menudef headers, menus, caduceus fix, and texture fixes ({len(overrides)} overrides)...")
 temp_asset_pk3 = nq_v131b6 + ".tmp"

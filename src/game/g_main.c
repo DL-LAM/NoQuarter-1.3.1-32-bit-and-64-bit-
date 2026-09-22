@@ -189,6 +189,7 @@ vmCvar_t		refereePassword;
 // [NQ 1.3.1 - Security]: Configurable RCON/Referee brute-force lockout
 vmCvar_t		g_authFailures;
 vmCvar_t		g_authFailBanTime;
+vmCvar_t		g_authFailExpireTime;
 vmCvar_t		g_debugConstruct;
 // vmCvar_t		g_landminetimeout; // IRATA: see g_weapons 32
 
@@ -634,6 +635,7 @@ cvarTable_t		gameCvarTable[] =
 	// [NQ 1.3.1 - Security]: Configurable RCON/Referee brute-force lockout
 	{ &g_authFailures,						"g_authFailures",						"3",									CVAR_ARCHIVE,												0,		qfalse },
 	{ &g_authFailBanTime,					"g_authFailBanTime",					"300",									CVAR_ARCHIVE,												0,		qfalse },
+	{ &g_authFailExpireTime,				"g_authFailExpireTime",					"900",									CVAR_ARCHIVE,												0,		qfalse },
 
 	{ &g_censor,							"g_censor",								"",										0 },
 	{ &g_censorNames,						"g_censorNames",						"",										0 },
@@ -6921,17 +6923,15 @@ void processClientNQKey(int clientNum, unsigned char* buffer, int buflen, int co
 		trap_DropClient(clientNum, va("^1%s", "Bad packet size.\n"), 9999);
 	}
 	else {
-		char NQKey[PB_GUID_LENGTH]; // calculated
-
-		// TODO
-		// check for "1111111111111111111111111111" // case key is not saved
+		// [NQ 1.3.1 - Buffer]: Sized to PB_GUID_LENGTH + 1 for null terminator to prevent stack buffer overflow
+		char NQKey[PB_GUID_LENGTH + 1]; // calculated
 
 		memcpy(NQKey, buffer + PACKET_OFFSET, PB_GUID_LENGTH);
 		NQKey[PB_GUID_LENGTH] = 0; // terminate
 
 		if (isKey(NQKey)) {
-			// ensures trailing 0
-			Q_strncpyz(level.clients[clientNum].sess.nqKeyInfo.nquid, NQKey, PB_GUID_LENGTH);
+			// [NQ 1.3.1 - Bounds]: Use sizeof(nquid) to ensure full 32-character GUID is preserved with null terminator
+			Q_strncpyz(level.clients[clientNum].sess.nqKeyInfo.nquid, NQKey, sizeof(level.clients[clientNum].sess.nqKeyInfo.nquid));
 		}
 		else {
 			trap_DropClient(clientNum, va("^1%s", "Invalid NQ key.\n"), 9999);

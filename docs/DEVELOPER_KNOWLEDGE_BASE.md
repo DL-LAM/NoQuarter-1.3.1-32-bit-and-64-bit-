@@ -134,7 +134,7 @@ Because all client binaries across all architectures reside inside `nq_b_v1.3.1b
 
 ### 2. MD3 Models & The Airstrike Flyover Restoration
 * **Bomber Models**: Axis uses `junker88.md3`; Allies uses `b-25.md3`.
-* **Registration**: Must point to `models/mapobjects/etl_plane/junker88.md3` with fallback support for `planes/ju87.md3`.
+* **Registration**: Points to `models/mapobjects/etl_plane/junker88.md3` and `b-25.md3`. (Legacy 2.60b plane fallbacks were removed to avoid duplicate asset registration).
 * **Propeller Animations**: Both the Junkers Ju-88 and B-25 Mitchell models contain **10 animation frames** (`DAnimFrames00` through `DAnimFrames09`).
   * In `src/cgame/cg_ents.c`:
     ```c
@@ -255,8 +255,8 @@ cmake -B build64 -S . -A x64
 cmake -B build32 -S . -A Win32
 
 # 2. Build Release DLLs
-msbuild build64/NoQuarter.slnx /p:Configuration=Release /m
-msbuild build32/NoQuarter.slnx /p:Configuration=Release /m
+msbuild build64/NoQuarterWrapper.slnx /p:Configuration=Release /m
+msbuild build32/NoQuarterWrapper.slnx /p:Configuration=Release /m
 ```
 
 ### 2. Linux Cross-Compilation via Zig

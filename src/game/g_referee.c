@@ -35,10 +35,13 @@ Returns the total consecutive failure count (client or IP, whichever is higher).
 static int G_RecordAuthFailure(gentity_t *ent)
 {
 	int i, oldestIdx = 0, emptyIdx = -1;
-	time_t oldestTime = 0x7FFFFFFF;
+	time_t oldestTime = 0;
+	qboolean foundOldest = qfalse;
 	time_t now;
 	char *client_ip;
 	int ipFailures = 0;
+	// [NQ 1.3.1 - Security]: Configurable auth failure tracking expiration window (cvar g_authFailExpireTime)
+	int expireTime = (g_authFailExpireTime.integer > 0) ? g_authFailExpireTime.integer : AUTH_TRACK_EXPIRE_SECONDS;
 
 	if(!ent || !ent->client) {
 		return 0;
@@ -53,9 +56,10 @@ static int G_RecordAuthFailure(gentity_t *ent)
 		for(i = 0; i < MAX_AUTH_TRACK_IPS; i++) {
 			if(authFailuresByIP[i].ip[0]) {
 				if(!Q_strncmp(authFailuresByIP[i].ip, client_ip, MAX_IP_LENGTH_V6)) {
-					// Expire entry if older than 15 minutes (epoch seconds survive level.time map changes)
-					if(now - authFailuresByIP[i].lastTime > AUTH_TRACK_EXPIRE_SECONDS) {
+					// Expire entry if older than configured timeout (epoch seconds survive level.time map changes)
+					if(now - authFailuresByIP[i].lastTime > expireTime) {
 						authFailuresByIP[i].failures = 0;
+						ent->client->pers.authFailures = 1;
 					}
 					authFailuresByIP[i].failures++;
 					authFailuresByIP[i].lastTime = now;
@@ -69,9 +73,11 @@ static int G_RecordAuthFailure(gentity_t *ent)
 					}
 					break;
 				}
-				if(authFailuresByIP[i].lastTime < oldestTime) {
+				// [NQ 1.3.1 - Security]: Track oldest entry without 32-bit INT_MAX overflow sentinel
+				if(!foundOldest || authFailuresByIP[i].lastTime < oldestTime) {
 					oldestTime = authFailuresByIP[i].lastTime;
 					oldestIdx = i;
+					foundOldest = qtrue;
 				}
 			}
 			else if(emptyIdx == -1) {

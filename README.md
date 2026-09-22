@@ -115,10 +115,10 @@ cmake -B build32 -S . -A Win32
 #### 2. Compile Binaries:
 ```powershell
 # Build 64-bit Release
-msbuild build64/NoQuarter.slnx /p:Configuration=Release /m
+msbuild build64/NoQuarterWrapper.slnx /p:Configuration=Release /m
 
 # Build 32-bit Release
-msbuild build32/NoQuarter.slnx /p:Configuration=Release /m
+msbuild build32/NoQuarterWrapper.slnx /p:Configuration=Release /m
 ```
 
 ---
@@ -128,7 +128,7 @@ msbuild build32/NoQuarter.slnx /p:Configuration=Release /m
 A Python cross-compilation script is included so you can compile Linux `.so` shared libraries directly from Windows or Linux using Zig:
 
 ```bash
-python scratch/build_linux.py
+python scripts/build_linux.py
 ```
 
 This compiles:
@@ -139,10 +139,10 @@ This compiles:
 
 ### Packaging PK3s
 
-Create standard zip files (without any leading folder paths) containing the binaries and assets, then rename the extension to `.pk3`:
+Create standard zip files (without any leading folder paths) containing the binaries and assets, then rename the extension to `.pk3` (or run `python scripts/package_release.py`):
 
 * `nq_b_v1.3.1b6.pk3`: Pack the client files (`cgame.mp.x86_64.dll`, `ui.mp.x86_64.dll`, `cgame.mp.x86_64.so`, `ui.mp.x86_64.so`, `cgame_mp_x86.dll`, `ui_mp_x86.dll`, `cgame.mp.i386.so`, `ui.mp.i386.so`).
-* `nq_v1.3.1b6.pk3`: Pack your assets (`assets/` contents: scripts, shaders, textures, and UI menudefs).
+* `nq_v1.3.1b6.pk3`: Pack your assets (scripts, shaders, textures, and UI menudefs).
 
 ---
 
