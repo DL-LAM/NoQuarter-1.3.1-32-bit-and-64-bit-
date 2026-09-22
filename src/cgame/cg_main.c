@@ -1926,7 +1926,7 @@ static void CG_RegisterGraphics( void ) {
 	cgs.media.hMountedFPMG42 =		trap_R_RegisterModel( "models/multiplayer/mg42/v_mg42.md3" );
 	cgs.media.hMountedFPBrowning =	trap_R_RegisterModel( "models/multiplayer/browning/tankmounted.md3" );
 
-	// [NQ 1.3.1 - Airstrike]: Direct registration of ET:Legacy bomber models (junker88.md3 / b-25.md3)
+	// stop adding the goddamn fallback to 2.60b assets we dont need it. "Holy shit! Wheres the fucking tylenol." (Clark Griswold - Christmas Vacation)
 	cgs.media.airstrikePlane[0] =	trap_R_RegisterModel( "models/mapobjects/etl_plane/junker88.md3" );
 	cgs.media.airstrikePlane[1] =	trap_R_RegisterModel( "models/mapobjects/etl_plane/b-25.md3" );
 

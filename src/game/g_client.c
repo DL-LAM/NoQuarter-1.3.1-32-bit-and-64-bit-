@@ -1799,7 +1799,8 @@ void ClientUserinfoChanged( int clientNum ) {
 						trap_DropClient(clientNum, "Bad userinfo.", 0);
 						break;
 					}
-					Q_strncpyz(client->pers.client_ip, cs_value, MAX_IP_LENGTH);
+					// [NQ 1.3.1 - Security]: Use full sizeof(client->pers.client_ip) to prevent IPv6 truncation
+					Q_strncpyz(client->pers.client_ip, cs_value, sizeof(client->pers.client_ip));
 					break;
 				}
 			case TOK_cg_uinfo:
@@ -2094,10 +2095,26 @@ void ClientUserinfoChanged( int clientNum ) {
 // This defines the default value and also the minimum value we will allow the client to set...
 #define DEF_IP_MAX_CLIENTS	3
 
-// Return the length of the IP address if it has a port, or INT_MAX otherwise
+// [NQ 1.3.1 - Security]: Return the length of the IP address without port (IPv4 or IPv6), or INT_MAX otherwise
 int GetIPLength(char const* ip) {
-	char* 	start	= strchr(ip, ':');
-	return (start == NULL ? INT_MAX : start - ip);
+	char* 	start;
+	if ( !ip ) {
+		return INT_MAX;
+	}
+	// Bracketed IPv6 address [xxxx:xxxx...]:port
+	if ( *ip == '[' ) {
+		char* close_bracket = strchr(ip, ']');
+		if ( close_bracket ) {
+			start = strchr(close_bracket, ':');
+			return (start == NULL ? INT_MAX : (int)(start - ip));
+		}
+	}
+	// If there are multiple colons without brackets, it is an unbracketed IPv6 address without port
+	start = strchr(ip, ':');
+	if ( start && strchr(start + 1, ':') ) {
+		return INT_MAX;
+	}
+	return (start == NULL ? INT_MAX : (int)(start - ip));
 }
 
 qboolean CompareIPNoPort(char const* ip1, char const* ip2) {
@@ -2415,8 +2432,8 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 	client->pers.connected = CON_CONNECTING;
 	client->pers.connectTime = level.time;			// DHM - Nerve
 
-	// Set the client ip and guid
-	Q_strncpyz(client->pers.client_ip, cs_ip, MAX_IP_LENGTH);
+	// [NQ 1.3.1 - Security]: Use full sizeof(client->pers.client_ip) to prevent IPv6 truncation
+	Q_strncpyz(client->pers.client_ip, cs_ip, sizeof(client->pers.client_ip));
 	Q_strncpyz(client->pers.cl_guid, cs_guid, PB_GUID_LENGTH+1);
 
 #ifdef HW_BAN

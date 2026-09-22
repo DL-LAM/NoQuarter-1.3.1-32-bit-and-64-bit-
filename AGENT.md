@@ -25,11 +25,10 @@ Welcome to the **NoQuarter 1.3.1 Modernized** repository. This document serves a
    - Never hardcode screen-width assumptions.
    - Kill popups and center prints have strict vertical layout constraints: Center announcements must start at or below `Y = 384` (`SCREEN_HEIGHT - (SCREEN_HEIGHT * 0.20f)`) using `&cgs.media.limboFont2` (scale `0.22f`) to prevent collision with the left-hand obituary feed.
 
-5. **Universal PK3 Multi-Architecture Layout**:
-   - Client and server binaries are separated into architecture-specific PK3 packages so 32-bit and 64-bit clients can connect to the same server without `pure` checksum or PK3 mismatch errors:
-     - `nq_b_v1.3.1_64.pk3`: Contains 64-bit binaries (`cgame.mp.x86_64.dll`, `ui.mp.x86_64.dll`, `*.so`).
-     - `nq_b_v1.3.1_32.pk3`: Contains 32-bit binaries (`cgame_mp_x86.dll`, `ui_mp_x86.dll`, `*.so`).
-     - `nq_v1.3.1_a.pk3` & `nq_v1.3.1_b.pk3`: Core game assets (models, sounds, textures, animations).
+5. **Universal Unified PK3 Multi-Architecture Layout**:
+   - All client binaries are bundled into a single unified binary package so 32-bit and 64-bit clients on Windows and Linux connect without pure-server checksum or PK3 mismatch errors:
+     - `nq_b_v1.3.1b6.pk3`: Contains all client binaries (`cgame.mp.x86_64.dll`, `ui.mp.x86_64.dll`, `cgame.mp.x86_64.so`, `ui.mp.x86_64.so`, `cgame_mp_x86.dll`, `ui_mp_x86.dll`, `cgame.mp.i386.so`, `ui.mp.i386.so`).
+     - `nq_v1.3.1b6.pk3`: Core game assets (models, sounds, textures, animations).
 
 ---
 

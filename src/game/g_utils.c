@@ -103,10 +103,8 @@ int G_FindConfigstringIndex( const char *name, int start, int max, qboolean crea
 		return 0;
 	}
 
-	// [NQ 1.3.1 - Stability]: Softened configstring overflow to warning rather than fatal G_Error server crash
 	if ( i == max ) {
-		G_Printf( "^1WARNING: G_FindConfigstringIndex overflow (start %i, max %i) for '%s'\n", start, max, name );
-		return 0;
+		G_Error( va("G_FindConfigstringIndex: overflow (%i %i) for '%s'", start, start+i, name) );
 	}
 
 	trap_SetConfigstring( start + i, name );
@@ -170,8 +168,7 @@ int G_FindNewConfigstringIndex( const char *name, int start, int max, qboolean c
 	}
 
 	if ( i == max ) {
-		G_Printf( "^1WARNING: G_FindNewConfigstringIndex overflow (start %i, max %i) for '%s'\n", start, max, name );
-		return 0;
+		G_Error( va("G_FindNewConfigstringIndex: overflow (%i %i) for '%s'", start, start+i, name) );
 	}
 
 	if ( isModels ) {

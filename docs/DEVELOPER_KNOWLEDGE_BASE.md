@@ -97,28 +97,26 @@ A major hurdle in Wolfenstein: Enemy Territory was that early engines ran mod mo
 > Do not pass structs containing raw pointers across network RPCs or in snapshot buffers (`entityState_t`). Use entity numbers (`int number`) or indices.
 
 ### 2. Universal PK3 Multi-Architecture Layout
-When a client connects to a pure server, the engine verifies that the client's PK3 checksums match the server's PK3 checksums. If a 64-bit binary was packaged into the same PK3 as a 32-bit binary, clients of differing architectures would encounter `pure server` rejections.
+When clients connect to a pure server (`sv_pure 1`), the engine verifies that the client's PK3 checksums match the server's PK3 checksums. In legacy setups, splitting 32-bit and 64-bit binaries into separate PK3 files caused pure-server rejections when mixed clients joined.
 
-NoQuarter 1.3.1 solves this via **Architecture-Specific Binary Packages**:
+NoQuarter 1.3.1 solves this cleanly with a **Unified Client Binary Package**:
 ```text
 nq/
-├── nq_v1.3.1_a.pk3            # Shared asset package (textures, sounds, models)
-├── nq_v1.3.1_b.pk3            # Shared asset package (menus, shaders, scripts)
-├── nq_b_v1.3.1_64.pk3         # 64-Bit binaries:
-│   ├── cgame.mp.x86_64.dll    # Windows x64 Client Game
-│   ├── ui.mp.x86_64.dll       # Windows x64 UI
-│   ├── cgame.mp.x86_64.so     # Linux x64 Client Game
-│   └── ui.mp.x86_64.so        # Linux x64 UI
-└── nq_b_v1.3.1_32.pk3         # 32-Bit binaries:
+├── nq_v1.3.1b6.pk3            # Unified game assets (textures, sounds, models, menus, shaders)
+└── nq_b_v1.3.1b6.pk3          # Unified client binaries (all architectures):
+    ├── cgame.mp.x86_64.dll    # Windows x64 Client Game
+    ├── ui.mp.x86_64.dll       # Windows x64 UI
+    ├── cgame.mp.x86_64.so     # Linux x64 Client Game
+    ├── ui.mp.x86_64.so        # Linux x64 UI
     ├── cgame_mp_x86.dll       # Windows x86 Client Game
     ├── ui_mp_x86.dll          # Windows x86 UI
     ├── cgame.mp.i386.so       # Linux x86 Client Game
     └── ui.mp.i386.so          # Linux x86 UI
 ```
 
-The server binary (`qagame.mp.x86_64.dll` or `qagame_mp_x86.dll`) is **never** placed inside a PK3; it resides directly on the server's filesystem in the `fs_game` folder (`nq/`).
+The server binary (`qagame.mp.x86_64.dll`, `qagame_mp_x86.dll`, `qagame.mp.x86_64.so`, or `qagame.mp.i386.so`) is **never** placed inside a PK3; it resides directly on the server's filesystem in the `fs_game` folder (`nq/`).
 
-In `src/game/g_svcmds.c` and `g_main.c`, the server's `sv_pakNames` parser recognizes architecture tags so that both 32-bit and 64-bit clients can download only their matching binary PK3 while staying in full checksum agreement.
+Because all client binaries across all architectures reside inside `nq_b_v1.3.1b6.pk3`, every client computes the exact same PK3 checksum regardless of OS or bitness, eliminating pure-server mismatch errors permanently.
 
 ---
 
@@ -239,7 +237,7 @@ NoQuarter includes an embedded Lua 5.1 runtime allowing server administrators to
 * `et_UpgradeSkill(clientNum, skill)`: Triggered when a player earns a skill level.
 
 ### 2. Entity & Client Field Accessors
-The full list of addressable entity and client memory fields is documented in [nqluadocu.htm](file:///C:/Users/Dylan/Documents/ETFiles/WET-NoQuarter-master/NQV1.3.0dev/trunk/NoQuarter-v1.3.1-Source/docs/nqluadocu.htm).
+The full list of addressable entity and client memory fields is documented in [nqluadocu.htm](nqluadocu.htm).
 * `et.gentity_get(entNum, fieldName, [arrayIndex])`
 * `et.gentity_set(entNum, fieldName, [arrayIndex], value)`
 * `et.gclient_get(clientNum, fieldName, [arrayIndex])`
@@ -286,7 +284,7 @@ python scripts/package_release.py
 | **Airstrike called, sound plays, but planes do not appear** | Invalid model paths in `cg_main.c` (`planes/ju87.md3` instead of `etl_plane/junker88.md3`). | Update registration to `etl_plane/junker88.md3` and `etl_plane/b-25.md3`. |
 | **Airstrike propeller jumps or stutters** | Propeller animation frames defined as 4 instead of 10. | Set `NUM_FRAME_PROPELLER 10` in `cg_ents.c`. |
 | **Kill announcement text overlaps left-hand obituary feed** | Center print rendered at `Y=360` with wide `limboFont1`. | Switch font to `&cgs.media.limboFont2` (scale `0.22f`) and clamp `baseY >= 384`. |
-| **`pure server` rejection when joining 64-bit server from 32-bit client** | Binaries were bundled into a single PK3 with mismatched checksums. | Use dual PK3s: `nq_b_v1.3.1_64.pk3` and `nq_b_v1.3.1_32.pk3`. |
+| **`pure server` rejection when joining server** | Client has outdated binary PK3 or mismatched build. | Ensure both server and client use unified `nq_b_v1.3.1b6.pk3`. |
 | **Crashing on 64-bit when casting pointers** | Casting `void*` directly to `int` (truncating 64-bit pointer to 32 bits). | Use `intptr_t` or `uintptr_t`. |
 | **Shotgun not appearing in Limbo for Heavy Weapons Soldier** | `g_soldierShotgun` is set to 0 or skill check in `ui_shared.c` failed. | Ensure `g_soldierShotgun 1` and player has Heavy Weapons level 4. |
 | **Server cabinets depleted and not recharging** | Standard cabinet gameplay cooldown. | Enable `g_infiniteCabinets 1` in `noquarter.cfg`. |

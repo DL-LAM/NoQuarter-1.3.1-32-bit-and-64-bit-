@@ -862,7 +862,8 @@ typedef struct
 	char				cg_hwguid[PB_GUID_LENGTH+1];
 #endif // HW_BAN
 
-	char				client_ip[MAX_IP_LENGTH];	// Cache their ip too - it won't change
+	// [NQ 1.3.1 - Security]: IPv6 capable buffer (48) preventing upstream address truncation
+	char				client_ip[MAX_IP_LENGTH_V6];	// Cache their ip too - it won't change
 	int					autoActivate;			// based on cg_autoactivate userinfo		(uses the PICKUP_ values above)
 
 	int					maxHealth;				// for handicapping
@@ -2091,6 +2092,10 @@ extern vmCvar_t		g_antilag;
 
 // ET: Legacy OS support bitmask (CVAR_SERVERINFO)
 extern vmCvar_t		g_oss;
+
+// [NQ 1.3.1 - Security]: Configurable RCON/Referee brute-force lockout
+extern vmCvar_t		g_authFailures;
+extern vmCvar_t		g_authFailBanTime;
 
 // OSP
 extern vmCvar_t		refereePassword;

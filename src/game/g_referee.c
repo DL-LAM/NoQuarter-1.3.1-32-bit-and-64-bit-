@@ -7,21 +7,20 @@
  * NQQS:
  *
  */
+#include <time.h>
 #include "g_local.h"
 #include "../../etmain/ui/menudef.h"
 
 // [NQ 1.3.1 - Security]: RCON & Referee authentication brute-force protection
-#define MAX_AUTH_FAILURES		3
-#define AUTH_FAIL_BAN_SECONDS	300		// 5 minute temporary IP ban on 3 strikes
 #define MAX_AUTH_TRACK_IPS		64
-#define AUTH_TRACK_EXPIRE_TIME	900000	// 15 minutes (in level.time milliseconds)
+#define AUTH_TRACK_EXPIRE_SECONDS	900		// 15 minutes (epoch time seconds)
 
 typedef struct {
 	// [NQ 1.3.1 - Security]: Use MAX_IP_LENGTH_V6 (48) to support IPv6 addresses.
-	// pers.client_ip remains MAX_IP_LENGTH (16) to avoid engine ABI changes.
+	// pers.client_ip is MAX_IP_LENGTH_V6 (48) in clientPersistant_t.
 	char		ip[MAX_IP_LENGTH_V6];
 	int			failures;
-	int			lastTime;
+	time_t		lastTime;
 } authFailTrack_t;
 
 static authFailTrack_t authFailuresByIP[MAX_AUTH_TRACK_IPS];
@@ -35,13 +34,17 @@ Returns the total consecutive failure count (client or IP, whichever is higher).
 */
 static int G_RecordAuthFailure(gentity_t *ent)
 {
-	int i, oldestIdx = 0, oldestTime = 0x7FFFFFFF, emptyIdx = -1;
+	int i, oldestIdx = 0, emptyIdx = -1;
+	time_t oldestTime = 0x7FFFFFFF;
+	time_t now;
 	char *client_ip;
 	int ipFailures = 0;
 
 	if(!ent || !ent->client) {
 		return 0;
 	}
+
+	time(&now);
 
 	ent->client->pers.authFailures++;
 	client_ip = ent->client->pers.client_ip;
@@ -50,12 +53,12 @@ static int G_RecordAuthFailure(gentity_t *ent)
 		for(i = 0; i < MAX_AUTH_TRACK_IPS; i++) {
 			if(authFailuresByIP[i].ip[0]) {
 				if(!Q_strncmp(authFailuresByIP[i].ip, client_ip, MAX_IP_LENGTH_V6)) {
-					// Expire entry if older than 15 minutes
-					if(level.time - authFailuresByIP[i].lastTime > AUTH_TRACK_EXPIRE_TIME) {
+					// Expire entry if older than 15 minutes (epoch seconds survive level.time map changes)
+					if(now - authFailuresByIP[i].lastTime > AUTH_TRACK_EXPIRE_SECONDS) {
 						authFailuresByIP[i].failures = 0;
 					}
 					authFailuresByIP[i].failures++;
-					authFailuresByIP[i].lastTime = level.time;
+					authFailuresByIP[i].lastTime = now;
 					ipFailures = authFailuresByIP[i].failures;
 					// [NQ 1.3.1 - Security]: Sync per-session counter from IP table after reconnect.
 					// ClientConnect does memset(client,0) which zeroes pers.authFailures, so after
@@ -80,7 +83,7 @@ static int G_RecordAuthFailure(gentity_t *ent)
 			int slot = (emptyIdx != -1) ? emptyIdx : oldestIdx;
 			Q_strncpyz(authFailuresByIP[slot].ip, client_ip, sizeof(authFailuresByIP[slot].ip));
 			authFailuresByIP[slot].failures = 1;
-			authFailuresByIP[slot].lastTime = level.time;
+			authFailuresByIP[slot].lastTime = now;
 			ipFailures = 1;
 		}
 	}
@@ -231,19 +234,28 @@ void G_ref_cmd(gentity_t *ent, unsigned int dwCommand, qboolean fValue)
 
 		if(Q_stricmp(arg, refereePassword.string)) {
 			// [NQ 1.3.1 - Security]: Failed referee auth tracking, lockout temp-ban & security audit logging
+			int maxFailures = g_authFailures.integer;
+			int banTime = g_authFailBanTime.integer;
 			int failures = G_RecordAuthFailure(ent);
 
-			G_LogPrintf("SECURITY: Failed referee auth attempt (%d/%d) from client %i (%s, IP: %s)\n",
-				failures, MAX_AUTH_FAILURES, clientNum, ent->client->pers.netname, ent->client->pers.client_ip);
+			if(maxFailures > 0) {
+				G_LogPrintf("SECURITY: Failed referee auth attempt (%d/%d) from client %i (%s, IP: %s)\n",
+					failures, maxFailures, clientNum, ent->client->pers.netname, ent->client->pers.client_ip);
 
-			if(failures >= MAX_AUTH_FAILURES) {
-				G_LogPrintf("SECURITY: Client %i (%s, IP: %s) kicked and temp-banned (%ds) for excessive failed referee auth attempts\n",
-					clientNum, ent->client->pers.netname, ent->client->pers.client_ip, AUTH_FAIL_BAN_SECONDS);
-				trap_DropClient(clientNum, "Excessive failed authentication attempts", AUTH_FAIL_BAN_SECONDS);
+				if(failures >= maxFailures) {
+					G_LogPrintf("SECURITY: Client %i (%s, IP: %s) kicked and temp-banned (%ds) for excessive failed referee auth attempts\n",
+						clientNum, ent->client->pers.netname, ent->client->pers.client_ip, banTime);
+					trap_DropClient(clientNum, "Excessive failed authentication attempts", banTime);
+				}
+				else {
+					CP(va("print \"^1Invalid referee password! (%d of %d attempts remaining)\n\"",
+						maxFailures - failures, maxFailures));
+				}
 			}
 			else {
-				CP(va("print \"^1Invalid referee password! (%d of %d attempts remaining)\n\"",
-					MAX_AUTH_FAILURES - failures, MAX_AUTH_FAILURES));
+				G_LogPrintf("SECURITY: Failed referee auth attempt (%d) from client %i (%s, IP: %s)\n",
+					failures, clientNum, ent->client->pers.netname, ent->client->pers.client_ip);
+				CP("print \"^1Invalid referee password!\n\"");
 			}
 			return;
 		}
@@ -568,19 +580,28 @@ void Cmd_AuthRcon_f(gentity_t *ent)
 	}
 	else {
 		// [NQ 1.3.1 - Security]: Failed RCON auth tracking, lockout temp-ban & security audit logging
+		int maxFailures = g_authFailures.integer;
+		int banTime = g_authFailBanTime.integer;
 		int failures = G_RecordAuthFailure(ent);
 
-		G_LogPrintf("SECURITY: Failed rconAuth attempt (%d/%d) from client %i (%s, IP: %s)\n",
-			failures, MAX_AUTH_FAILURES, clientNum, ent->client->pers.netname, ent->client->pers.client_ip);
+		if(maxFailures > 0) {
+			G_LogPrintf("SECURITY: Failed rconAuth attempt (%d/%d) from client %i (%s, IP: %s)\n",
+				failures, maxFailures, clientNum, ent->client->pers.netname, ent->client->pers.client_ip);
 
-		if(failures >= MAX_AUTH_FAILURES) {
-			G_LogPrintf("SECURITY: Client %i (%s, IP: %s) kicked and temp-banned (%ds) for excessive failed rconAuth attempts\n",
-				clientNum, ent->client->pers.netname, ent->client->pers.client_ip, AUTH_FAIL_BAN_SECONDS);
-			trap_DropClient(clientNum, "Excessive failed authentication attempts", AUTH_FAIL_BAN_SECONDS);
+			if(failures >= maxFailures) {
+				G_LogPrintf("SECURITY: Client %i (%s, IP: %s) kicked and temp-banned (%ds) for excessive failed rconAuth attempts\n",
+					clientNum, ent->client->pers.netname, ent->client->pers.client_ip, banTime);
+				trap_DropClient(clientNum, "Excessive failed authentication attempts", banTime);
+			}
+			else {
+				CP(va("print \"^1Invalid RCON password! (%d of %d attempts remaining)\n\"",
+					maxFailures - failures, maxFailures));
+			}
 		}
 		else {
-			CP(va("print \"^1Invalid RCON password! (%d of %d attempts remaining)\n\"",
-				MAX_AUTH_FAILURES - failures, MAX_AUTH_FAILURES));
+			G_LogPrintf("SECURITY: Failed rconAuth attempt (%d) from client %i (%s, IP: %s)\n",
+				failures, clientNum, ent->client->pers.netname, ent->client->pers.client_ip);
+			CP("print \"^1Invalid RCON password!\n\"");
 		}
 	}
 }

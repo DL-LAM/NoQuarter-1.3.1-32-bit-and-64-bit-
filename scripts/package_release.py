@@ -19,17 +19,19 @@ def check_dll_exports(dll_path, expected_exports):
         return False
 
 # Paths
-TRUNK_DIR = r"C:\Users\Dylan\Documents\ETFiles\WET-NoQuarter-master\NQV1.3.0dev\trunk"
-SOURCE_DIR = os.path.join(TRUNK_DIR, "NoQuarter-v1.3.1-Source")
+SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
+SOURCE_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, ".."))
+TRUNK_DIR = os.path.abspath(os.path.join(SOURCE_DIR, ".."))
 BUILD64_DIR = os.path.join(SOURCE_DIR, "build64", "src", "Release")
 BUILD32_DIR = os.path.join(SOURCE_DIR, "build32", "src", "Release")
 LINUX64_DIR = os.path.join(SOURCE_DIR, "build64", "Release", "linux")
 LINUX32_DIR = os.path.join(SOURCE_DIR, "build32", "Release", "linux")
 
-RELEASE_DIR = r"C:\Users\Dylan\Documents\NQ_1.3.1_Mod"
-ET64_NQ_DIR = r"C:\ETLegacy64\nq"
-CLIENT_NQ_DIR = r"C:\Users\Dylan\Documents\ETLegacy\nq"
-ET32_NQ_DIR = r"C:\Enemy Territory - Legacy\nq"
+user_docs = os.path.join(os.path.expanduser("~"), "Documents")
+RELEASE_DIR = os.environ.get("NQ_RELEASE_DIR", os.path.join(user_docs, "NQ_1.3.1_Mod"))
+ET64_NQ_DIR = os.environ.get("ET64_DIR", r"C:\ETLegacy64\nq")
+CLIENT_NQ_DIR = os.path.join(user_docs, "ETLegacy", "nq")
+ET32_NQ_DIR = os.environ.get("ET32_DIR", r"C:\Enemy Territory - Legacy\nq")
 
 # 1. Verify 64-bit and 32-bit DLL exports
 cgame64 = os.path.join(BUILD64_DIR, "cgame_mp_x64.dll")
@@ -168,10 +170,14 @@ shutil.copy2(pk3_unified_path, os.path.join(win32_dir, "nq_b_v1.3.1b6.pk3"))
 
 if os.path.exists(os.path.join(LINUX64_DIR, "qagame.mp.x86_64.so")):
     shutil.copy2(os.path.join(LINUX64_DIR, "qagame.mp.x86_64.so"), os.path.join(lin64_dir, "qagame_mp_x64.so"))
+    shutil.copy2(os.path.join(LINUX64_DIR, "qagame.mp.x86_64.so"), os.path.join(RELEASE_DIR, "qagame.mp.x86_64.so"))
+    shutil.copy2(os.path.join(LINUX64_DIR, "qagame.mp.x86_64.so"), os.path.join(RELEASE_DIR, "qagame_mp_x64.so"))
 shutil.copy2(pk3_unified_path, os.path.join(lin64_dir, "nq_b_v1.3.1b6.pk3"))
 
 if os.path.exists(os.path.join(LINUX32_DIR, "qagame.mp.i386.so")):
     shutil.copy2(os.path.join(LINUX32_DIR, "qagame.mp.i386.so"), os.path.join(lin32_dir, "qagame_mp_x86.so"))
+    shutil.copy2(os.path.join(LINUX32_DIR, "qagame.mp.i386.so"), os.path.join(RELEASE_DIR, "qagame.mp.i386.so"))
+    shutil.copy2(os.path.join(LINUX32_DIR, "qagame.mp.i386.so"), os.path.join(RELEASE_DIR, "qagame_mp_x86.so"))
 shutil.copy2(pk3_unified_path, os.path.join(lin32_dir, "nq_b_v1.3.1b6.pk3"))
 
 # Clean old pk3s in DLL's subfolders

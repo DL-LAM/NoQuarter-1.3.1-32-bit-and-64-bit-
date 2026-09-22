@@ -82,7 +82,7 @@ The repository provides a pre-configured `Modelfile` inside `docs/ai/` that bund
 
 ### Step 1: Open PowerShell and navigate to the repository
 ```powershell
-cd "C:\Users\Dylan\Documents\ETFiles\WET-NoQuarter-master\NQV1.3.0dev\trunk\NoQuarter-v1.3.1-Source\docs\ai"
+cd path\to\NoQuarter-v1.3.1-Source\docs\ai
 ```
 
 ### Step 2: Build the model

@@ -5764,24 +5764,7 @@ void Bot_Interface_ConsoleCommand()
 }
 
 extern "C" void script_mover_spawn(gentity_t *ent);
-#if defined(_WIN32)
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-static void SafeBotUpdate()
-{
-	__try {
-		g_BotFunctions.pfnUpdate();
-	}
-	__except(EXCEPTION_EXECUTE_HANDLER) {
-		G_Printf("^1[Omni-bot Warning]: Exception caught and prevented in bot update loop.\n");
-	}
-}
-#else
-static void SafeBotUpdate()
-{
-	g_BotFunctions.pfnUpdate();
-}
-#endif
+
 
 void Bot_Interface_Update()
 {
@@ -5898,8 +5881,7 @@ void Bot_Interface_Update()
 		}
 		SendDeferredGoals();
 		//////////////////////////////////////////////////////////////////////////
-		// Call the libraries update.
-		SafeBotUpdate();
+		g_BotFunctions.pfnUpdate();
 		//////////////////////////////////////////////////////////////////////////
 	}
 }

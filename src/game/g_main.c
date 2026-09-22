@@ -186,6 +186,9 @@ vmCvar_t		z_serverflags;
 vmCvar_t		g_asblock;
 vmCvar_t		g_covertopsChargeTime;
 vmCvar_t		refereePassword;
+// [NQ 1.3.1 - Security]: Configurable RCON/Referee brute-force lockout
+vmCvar_t		g_authFailures;
+vmCvar_t		g_authFailBanTime;
 vmCvar_t		g_debugConstruct;
 // vmCvar_t		g_landminetimeout; // IRATA: see g_weapons 32
 
@@ -628,6 +631,9 @@ cvarTable_t		gameCvarTable[] =
 	{ &sv_privatepassword,					"sv_privatepassword",					"", 									CVAR_TEMP,													0,		qfalse },
 	// [NQ 1.3.1 - Security]: Referee authentication password (server-side only, non-broadcast)
 	{ &refereePassword,						"refereePassword",						"none",									0,															0,		qfalse },
+	// [NQ 1.3.1 - Security]: Configurable RCON/Referee brute-force lockout
+	{ &g_authFailures,						"g_authFailures",						"3",									CVAR_ARCHIVE,												0,		qfalse },
+	{ &g_authFailBanTime,					"g_authFailBanTime",					"300",									CVAR_ARCHIVE,												0,		qfalse },
 
 	{ &g_censor,							"g_censor",								"",										0 },
 	{ &g_censorNames,						"g_censorNames",						"",										0 },

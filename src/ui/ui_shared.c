@@ -745,11 +745,7 @@ void Item_UpdatePosition(itemDef_t *item) {
 }
 
 // menus
-// [NQ 1.3.1 - Widescreen]: Width used by all centered dialog popup menus (playonline, credits,
-//   mods, quit confirm, etc.). Used to classify menus for horizontal centering in Menu_UpdatePosition.
-#define CENTERED_MENU_WIDTH 608.0f
-
-// [NQ 1.3.1 - Widescreen]: Reposition menu elements and center subwindows for non-4:3 aspect ratios
+// [NQ 1.3.1 - Widescreen]: Reposition menu elements and layout for non-4:3 aspect ratios
 void Menu_UpdatePosition(menuDef_t *menu) {
 	int i;
 	float x, y;
@@ -757,7 +753,6 @@ void Menu_UpdatePosition(menuDef_t *menu) {
 	Rectangle *r;
 	qboolean fullscreenItem = qfalse;
 	qboolean fullscreenMenu = qfalse;
-	qboolean centered = qfalse;
 	const char *menuName = NULL;
 	const char *itemName = NULL;
 
@@ -775,7 +770,6 @@ void Menu_UpdatePosition(menuDef_t *menu) {
 
 	r = &menu->window.rectClient;
 	fullscreenMenu = (r->x == 0 && r->y == 0 && r->w == 640 && r->h == 480);
-	centered = (r->w == CENTERED_MENU_WIDTH);	// [NQ 1.3.1 - Widescreen]: classify centered dialog popups
 	menuName = menu->window.name;
 
 	for (i = 0; i < menu->itemCount; ++i) {
@@ -803,24 +797,17 @@ void Menu_UpdatePosition(menuDef_t *menu) {
 				Item_SetScreenCoords(menu->items[i], x, y);
 			}
 		}
-		else if ((fullscreenMenu && !fullscreenItem) || centered) {
-			// Centered subwindows (e.g. 608-width dialogs) and dialog overlays
+		else if (fullscreenMenu && !fullscreenItem) {
+			// Subwindows and dialog overlays inside fullscreen menus
 			Item_SetScreenCoords(menu->items[i], x + xoffset, y);
 		}
 		else {
-			// Sidebar and docked menus (ingame_main, ingame_vote*, options, etc.):
-			// Left-aligned to prevent floating out into widescreen void
+			// Standard menus maintain their positioned coordinates
 			Item_SetScreenCoords(menu->items[i], x, y);
 		}
 	}
 
-	// Keep menu window rect in sync with centered subwindows
-	if (centered) {
-		menu->window.rect.x = x + xoffset;
-		menu->window.rect.y = y;
-		menu->window.rect.w = menu->window.rectClient.w;
-		menu->window.rect.h = menu->window.rectClient.h;
-	} else if (fullscreenMenu) {
+	if (fullscreenMenu) {
 		menu->window.rect.x = 0;
 		menu->window.rect.y = 0;
 		menu->window.rect.w = Cui_WideX(640.0f);
@@ -4728,10 +4715,7 @@ qboolean Item_Bind_HandleKey(itemDef_t *item, int key, qboolean down)
 }
 
 
-// [NQ 1.3.1 - Widescreen]: Adjust virtual 640x480 coordinates to screen resolution and aspect ratio
-// [NQ 1.3.1 - Widescreen]: Added Cui_WideXoffset() to re-center elements in the 4:3 pillarbox
-//   zone on widescreen displays. Fullscreen spanning elements (x == 0 && w >= vidWidth)
-//   are preserved at x = 0 to cover 100% of the widescreen viewport without edge gaps.
+// [NQ 1.3.1 - Widescreen]: Adjust virtual 640x480 coordinates to screen resolution and aspect ratio without extra pixel offset
 void AdjustFrom640(float *x, float *y, float *w, float *h)
 {
 	float aspectratio;
@@ -4745,9 +4729,6 @@ void AdjustFrom640(float *x, float *y, float *w, float *h)
 	if ( aspectratio > RATIO43 ) {
 		*x *= RATIO43 / aspectratio;
 		*w *= RATIO43 / aspectratio;
-		if ( !(*x == 0.0f && *w >= (float)DC->glconfig.vidWidth - 1.0f) ) {
-			*x += Cui_WideXoffset();	// [NQ 1.3.1 - Widescreen]: re-center in pillarbox zone
-		}
 	}
 }
 
@@ -7477,6 +7458,9 @@ qboolean Display_MouseMove(void *p, int x, int y) {
 		}
 	}
 	else {
+		// [NQ 1.3.1 - UI]: Update both rectClient and rect so menu dragging updates the position read by draw and update routines
+		menu->window.rectClient.x += x;
+		menu->window.rectClient.y += y;
 		menu->window.rect.x += x;
 		menu->window.rect.y += y;
 		Menu_UpdatePosition(menu);

@@ -4,26 +4,33 @@ import glob
 import subprocess
 import shutil
 
-ROOT_DIR = sys.argv[1] if len(sys.argv) > 1 else r"C:\Users\Dylan\Documents\ETFiles\WET-NoQuarter-master\NQV1.3.0dev\trunk\NoQuarter-v1.3.1-Source"
+ROOT_DIR = sys.argv[1] if len(sys.argv) > 1 else os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 SRC_DIR = os.path.join(ROOT_DIR, "src")
 ZIG_EXE = None
 
-for candidate in [
-    r"C:\Users\Dylan\zig\zig-windows-x86_64-0.13.0\zig.exe",
-    r"C:\Users\Dylan\zig\zig.exe",
-    shutil.which("zig")
-]:
+user_home = os.path.expanduser("~")
+candidates = [
+    os.environ.get("ZIG_EXE"),
+    shutil.which("zig"),
+    shutil.which("zig.exe"),
+    os.path.join(ROOT_DIR, "tools", "zig", "zig.exe"),
+    os.path.join(ROOT_DIR, "..", "tools", "zig", "zig.exe"),
+    os.path.join(user_home, "zig", "zig-windows-x86_64-0.13.0", "zig.exe"),
+    os.path.join(user_home, "zig", "zig.exe"),
+]
+
+for candidate in candidates:
     if candidate and os.path.isfile(candidate):
         ZIG_EXE = candidate
         break
 
 if not ZIG_EXE:
-    matches = glob.glob(r"C:\Users\Dylan\zig\**\zig.exe", recursive=True)
-    if matches:
-        ZIG_EXE = matches[0]
+    home_matches = glob.glob(os.path.join(user_home, "zig", "**", "zig.exe"), recursive=True)
+    if home_matches:
+        ZIG_EXE = home_matches[0]
 
 if not ZIG_EXE:
-    print("ERROR: zig.exe not found!")
+    print("ERROR: zig executable not found in PATH, ZIG_EXE, or ~/zig/")
     sys.exit(1)
 
 print(f"Using Zig compiler: {ZIG_EXE}")
@@ -233,6 +240,8 @@ def build_target(arch, target_triple, out_dir):
         "-Wno-incompatible-pointer-types",
         "-Wno-format-security",
         "-Wno-macro-redefined",
+        "-Wno-date-time",
+        "-Wno-error",
         "-fvisibility=hidden",
         "-D_GNU_SOURCE",
     ]
