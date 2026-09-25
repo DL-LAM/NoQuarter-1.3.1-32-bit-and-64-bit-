@@ -579,7 +579,22 @@ void G_Script_ScriptParse( gentity_t *ent )
 			Q_strlwr( token );
 			eventNum = G_Script_EventForString( token );
 			if (eventNum < 0) {
-				G_Error(S_COLOR_RED "G_Script_ScriptParse(): (line %d): unknown event: %s.\n", COM_GetCurrentParseLine(), token );
+				// [NQ 1.3.1 - MapScript]: an unknown event name used to call G_Error(), which ET: Legacy
+				// turns into a full server shutdown ("Server crashed") - every player is dropped and clients
+				// can hang on the intermission screen. Maps made for other mods (e.g. True Combat: Elite)
+				// use events and actions NQ doesn't have. Skip the whole event block instead: warn, skip any
+				// event parameters up to its '{', then skip to the matching '}'. A truncated script (end of
+				// file before the '{') is still a fatal error, as before.
+				G_Printf(S_COLOR_YELLOW "WARNING: G_Script_ScriptParse(): (line %d): unknown event '%s' in script for '%s' - event skipped.\n",
+					COM_GetCurrentParseLine(), token, ent->scriptName );
+				while( (token = COM_Parse( &pScript )) != NULL && token[0] && !(token[0] == '{' && !token[1]) ) {
+					;
+				}
+				if( !token || !token[0] ) {
+					G_Error(S_COLOR_RED "G_Script_ScriptParse(): (line %d): '}' expected, end of script found.\n", COM_GetCurrentParseLine() );
+				}
+				SkipBracedSection_Depth( &pScript, 1 );	// we are inside the '{' already
+				continue;
 			}
 
 			if( numEventItems >= G_MAX_SCRIPT_STACK_ITEMS ) {
@@ -618,7 +633,28 @@ void G_Script_ScriptParse( gentity_t *ent )
 
 				action = G_Script_ActionForString( token );
 				if( !action ) {
-					G_Error(S_COLOR_RED "G_Script_ScriptParse(): (line %d): unknown action: %s.\n", COM_GetCurrentParseLine(), token );
+					// [NQ 1.3.1 - MapScript]: an unknown action (e.g. "wm_camo 2" from True Combat: Elite maps)
+					// used to call G_Error(), shutting the whole server down (see the unknown-event note above).
+					// Now the action is skipped with a warning:
+					//  1. skip its parameters - the rest of the current line;
+					//  2. peek at the next token: if it is a lone '{' the command had a { } block of its own,
+					//     so skip that block too; otherwise put the token back (COM_RestoreParseSession
+					//     undoes the last COM_Parse) so the next action is parsed normally.
+					// Nothing is added to the event's stack, so the event runs without the unknown line.
+					G_Printf(S_COLOR_YELLOW "WARNING: G_Script_ScriptParse(): (line %d): unknown action '%s' in script for '%s' - line skipped.\n",
+						COM_GetCurrentParseLine(), token, ent->scriptName );
+					while( (token = COM_ParseExt( &pScript, qfalse )) != NULL && token[0] ) {
+						;
+					}
+					if( pScript ) {
+						token = COM_Parse( &pScript );
+						if( token[0] == '{' && !token[1] ) {
+							SkipBracedSection_Depth( &pScript, 1 );
+						} else {
+							COM_RestoreParseSession( &pScript );
+						}
+					}
+					continue;
 				}
 
 				curEvent->stack.items[curEvent->stack.numItems].action = action;
