@@ -543,7 +543,7 @@ qboolean G_CallSpawn( gentity_t *ent )
 {
 	spawn_t	*s;
 	gitem_t	*item;
-	long	hash;
+	int		hash;
 
 	if ( !ent->classname ) {
 		G_Printf ("G_CallSpawn: NULL classname\n");

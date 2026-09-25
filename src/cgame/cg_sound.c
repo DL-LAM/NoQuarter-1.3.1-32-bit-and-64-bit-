@@ -27,16 +27,17 @@ int	numSoundScriptSounds=0;
 return a hash value for the filename
 ================
 */
-static long generateHashValue( const char *fname ) {
+// [NQ 1.3.1 - Math]: Use int instead of long to prevent 8-byte hash on 64-bit Linux (LP64)
+static int generateHashValue( const char *fname ) {
 	int		i = 0;
-	long	hash = 0;
+	int		hash = 0;
 	char	letter;
 
 	while (fname[i] != '\0') {
 		letter = tolower(fname[i]);
 		if (letter =='.') break;				// don't include extension
 		if (letter =='\\') letter = '/';		// damn path names
-		hash+=(long)(letter)*(i+119);
+		hash+=(int)(letter)*(i+119);
 		i++;
 	}
 	hash &= (FILE_HASH_SIZE-1);
@@ -52,7 +53,7 @@ CG_SoundScriptPrecache
 */
 int CG_SoundScriptPrecache( const char *name ) {
 	soundScriptSound_t *scriptSound;
-	long hash;
+	int hash;
 	char *s;
 	soundScript_t	*sound;
 	int i;
@@ -166,7 +167,7 @@ CG_SoundPlaySoundScript
 ==============
 */
 int CG_SoundPlaySoundScript( const char *name, vec3_t org, int entnum, qboolean buffer ) {
-	long hash;
+	int hash;
 	char *s;
 	soundScript_t	*sound;
 
@@ -224,7 +225,7 @@ CG_SoundParseSounds
 */
 static void CG_SoundParseSounds ( char *filename, char *buffer ) {
 	char *token, **text = &buffer;
-	long	hash;
+	int		hash;
 	soundScript_t		sound;			// the current sound being read
 	soundScriptSound_t	*scriptSound = NULL;
 	qboolean	inSound = qfalse, wantSoundName = qtrue;
@@ -396,7 +397,9 @@ static void CG_SoundLoadSoundFiles( void ) {
 		CG_Printf( S_COLOR_RED "WARNING: no sound files found (filelist.txt not found in sound/scripts)\n" );
 		return;
 	}
-	if ( len > sizeof(bigTextBuffer) ) {
+	// [NQ 1.3.1 - Audit L7]: ">=" - a file of exactly sizeof(bigTextBuffer) bytes wrote the
+	// terminating 0 one byte past the buffer (bigTextBuffer[len] = 0 below)
+	if ( len >= sizeof(bigTextBuffer) ) {
 		CG_Error( S_COLOR_RED "%s is too big, make it smaller (max = %i bytes)\n", filename, (int)sizeof(bigTextBuffer) );
 	}
 	// load the file into memory

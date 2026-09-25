@@ -648,6 +648,13 @@ int ClientNumbersFromString( char *s, int *plist) {
 		SanitizeString(p->pers.netname, n2, qtrue);
 		m = strstr(n2, s2);
 		if(m != NULL) {
+			// [NQ 1.3.1 - Audit L1]: Every caller passes int pids[MAX_CLIENTS].
+			// With 64 matches plus the -1 terminator we wrote 65 ints (one past the
+			// array) on a full 64-slot server. Stop at MAX_CLIENTS-1 matches so the
+			// terminator always fits, like MuteNumbersFromString() already does.
+			if ( found >= MAX_CLIENTS - 1 ) {
+				break;
+			}
 			*plist++ = i;
 			found++;
 		}
@@ -2617,7 +2624,9 @@ void G_SayTo( gentity_t *ent, gentity_t *other, int mode, int color, const char 
 		else if(mode == SAY_TEAM || mode == SAY_BUDDY) {
 			Q_strncpyz(cmd, "tchat", sizeof(cmd));
 
-#if defined(__x86_64__)
+			// [NQ 1.3.1 - Audit L6]: one code path for all builds - the (int) casts are correct on
+			// 32 and 64-bit. The old "#if defined(__x86_64__)" never matched MSVC x64 builds, which
+			// then passed a 64-bit value (pointer difference / strlen) to a %i/%d format.
 			trap_SendServerCommand( (int)(other-g_entities),
 				va("%s \"%c%c%s%s\" %i %i %i %i %i",
 				cmd,
@@ -2627,37 +2636,20 @@ void G_SayTo( gentity_t *ent, gentity_t *other, int mode, int color, const char 
 				(int)ent->s.pos.trBase[0],
 				(int)ent->s.pos.trBase[1],
 				(int)ent->s.pos.trBase[2] ));
-#else
-			trap_SendServerCommand( other-g_entities,
-				va("%s \"%c%c%s%s\" %i %i %i %i %i",
-				cmd,
-				 Q_COLOR_ESCAPE, color, message,
-				(!Q_stricmp(cmd, "print")) ? "\n" : "",
-				ent-g_entities, localize,
-				(int)ent->s.pos.trBase[0],
-				(int)ent->s.pos.trBase[1],
-				(int)ent->s.pos.trBase[2] ));
-#endif
 
 		}
 		else {
 			Q_strncpyz(cmd, "chat", sizeof(cmd));
 
-#if defined(__x86_64__)
+			// [NQ 1.3.1 - Audit L6]: one code path for all builds - the (int) casts are correct on
+			// 32 and 64-bit. The old "#if defined(__x86_64__)" never matched MSVC x64 builds, which
+			// then passed a 64-bit value (pointer difference / strlen) to a %i/%d format.
 			trap_SendServerCommand((int)(other-g_entities),
 				va("%s \"%s%c%c%s%s\" %i %i",
 				cmd, name, Q_COLOR_ESCAPE, color,
 				message,
 				(!Q_stricmp(cmd, "print")) ? "\n" : "",
 				(int)(ent-g_entities), localize));
-#else
-			trap_SendServerCommand(other-g_entities,
-				va("%s \"%s%c%c%s%s\" %i %i",
-				cmd, name, Q_COLOR_ESCAPE, color,
-				message,
-				(!Q_stricmp(cmd, "print")) ? "\n" : "",
-				ent-g_entities, localize));
-#endif
 
 		}
 #ifdef OMNIBOTS
@@ -2862,21 +2854,15 @@ void G_VoiceTo( gentity_t *ent, gentity_t *other, int mode, const char *id, qboo
 		voiceonly = qfalse;
 	}
 
-#if defined(__x86_64__)
+	// [NQ 1.3.1 - Audit L6]: one code path for all builds - the (int) casts are correct on
+	// 32 and 64-bit. The old "#if defined(__x86_64__)" never matched MSVC x64 builds, which
+	// then passed a 64-bit value (pointer difference / strlen) to a %i/%d format.
 	if ( mode == SAY_TEAM || mode == SAY_BUDDY ) {
 		CPx( (int)(other-g_entities), va("%s %d %d %d %s %i %i %i %f %i", cmd, voiceonly, (int)(ent - g_entities), color, id, (int)ent->s.pos.trBase[0], (int)ent->s.pos.trBase[1], (int)ent->s.pos.trBase[2], randomNum, disguise ));
 	}
 	else {
 		CPx( (int)(other-g_entities), va("%s %d %d %d %s %f", cmd, voiceonly, (int)(ent - g_entities), color, id, randomNum ));
 	}
-#else
-	if ( mode == SAY_TEAM || mode == SAY_BUDDY ) {
-		CPx( other-g_entities, va("%s %d %d %d %s %i %i %i %f %i", cmd, voiceonly, ent - g_entities, color, id, (int)ent->s.pos.trBase[0], (int)ent->s.pos.trBase[1], (int)ent->s.pos.trBase[2], randomNum, disguise ));
-	}
-	else {
-		CPx( other-g_entities, va("%s %d %d %d %s %f", cmd, voiceonly, ent - g_entities, color, id, randomNum ));
-	}
-#endif
 
 }
 
@@ -3199,11 +3185,10 @@ qboolean Cmd_CallVote_f( gentity_t *ent, unsigned int dwCommand, qboolean fRefCo
 			level.voteInfo.voteYes = 0;
 		}
 		AP(va("print \"[lof]%s^7 [lon]called a vote.[lof]  Voting for: %s\n\"", ent->client->pers.netname, level.voteInfo.voteString));
-#if defined(__x86_64__)
+		// [NQ 1.3.1 - Audit L6]: one code path for all builds - the (int) casts are correct on
+		// 32 and 64-bit. The old "#if defined(__x86_64__)" never matched MSVC x64 builds, which
+		// then passed a 64-bit value (pointer difference / strlen) to a %i/%d format.
 		G_LogPrintf("callvote: %i %s\n", (int)(ent-g_entities), level.voteInfo.voteString);
-#else
-		G_LogPrintf("callvote: %i %s\n", ent-g_entities, level.voteInfo.voteString);
-#endif
 		level.voteInfo.voteCaller = ent->s.number;
 		level.voteInfo.voteTeam = ent->client->sess.sessionTeam;
 		AP(va("cp \"[lof]%s\n^7[lon]called a vote.\n\"", ent->client->pers.netname));
@@ -5821,11 +5806,19 @@ void C_csmBufferPush( gentity_t *ent, int index, int timetosend ) {
 	int clientNum = ent - g_entities;
 	int nr = csmBuffer[clientNum].push;
 
+	// [NQ 1.3.1 - Audit L2]: Never queue more entries than the ring holds.
+	// Repeated "getgs" requests kept pushing (~600 entries each) while count grew
+	// without limit and old, unsent entries were overwritten. When the ring is
+	// full the request is simply dropped - everything already queued still goes out.
+	if ( csmBuffer[clientNum].count >= CSM_BUFFER_SIZE ) {
+		return;
+	}
+
 	csmBuffer[clientNum].entry[nr].index = index;
 	csmBuffer[clientNum].entry[nr].time = timetosend;
 
 	++nr;
-	csmBuffer[clientNum].push = (nr < 625)? nr : 0;
+	csmBuffer[clientNum].push = (nr < CSM_BUFFER_SIZE)? nr : 0;
 	++csmBuffer[clientNum].count;
 }
 
@@ -5861,6 +5854,9 @@ void C_csmBuffersCheck( void ) {
 
 			// time to send?..
 			if ( level.time >= time ) {
+				// [NQ 1.3.1 - Audit L2]: up to MAX_SENDSTRINGS (15) entries of " <index> <path up to 63
+				// chars>" can exceed 1024 bytes; the entries below now use the bounded Q_strcat
+				// (was strcat) so an over-long batch is truncated instead of overflowing the stack.
 				char	str[MAX_INFO_STRING];
 
 
@@ -5886,28 +5882,28 @@ void C_csmBuffersCheck( void ) {
 
 						// prepare the servercommand string..
 						if ( isModels ) {
-							strcat( str, va(" %i %s", index, gs_models[index-CS_MODELS]) );
+							Q_strcat( str, sizeof(str), va(" %i %s", index, gs_models[index-CS_MODELS]) );
 						}
 						else if ( isShaders ) {
-							strcat( str, va(" %i %s", index, gs_shaders[index-CS_SHADERS]) );
+							Q_strcat( str, sizeof(str), va(" %i %s", index, gs_shaders[index-CS_SHADERS]) );
 						}
 						else if ( isSkins ) {
-							strcat( str, va(" %i %s", index, gs_skins[index-CS_SKINS]) );
+							Q_strcat( str, sizeof(str), va(" %i %s", index, gs_skins[index-CS_SKINS]) );
 						}
 						else if ( isCharacters ) {
-							strcat( str, va(" %i %s", index, gs_characters[index-CS_CHARACTERS]) );
+							Q_strcat( str, sizeof(str), va(" %i %s", index, gs_characters[index-CS_CHARACTERS]) );
 						}
 						else if ( isSounds ) {
-							strcat( str, va(" %i %s", index, gs_sounds[index-CS_SOUNDS]) );
+							Q_strcat( str, sizeof(str), va(" %i %s", index, gs_sounds[index-CS_SOUNDS]) );
 						}
 						else if ( isShaderstate ) {
-							strcat( str, va(" %i 1", index) );
+							Q_strcat( str, sizeof(str), va(" %i 1", index) );
 						}
 
 						// pop the entry from the buffer..
 						csmBuffer[clientNum].entry[nr].time = -1;
 						++csmBuffer[clientNum].pop;
-						if ( csmBuffer[clientNum].pop >= 625 ) csmBuffer[clientNum].pop = 0;
+						if ( csmBuffer[clientNum].pop >= CSM_BUFFER_SIZE ) csmBuffer[clientNum].pop = 0;
 						--csmBuffer[clientNum].count;
 					}
 				}
@@ -5932,9 +5928,14 @@ core:
 ==================
 */
 char *C_CSMETHODINFO( void ) {
+	// [NQ 1.3.1 - Audit M9]: This used strcat() onto the pointer returned by va().
+	// va() hands out slices of a shared ring buffer, so the appended text overwrote
+	// the NEXT va() slice (and could run past the end of the ring when it wrapped).
+	// Collect the five counts first and format them once into our own buffer.
+	static char	result[64];
 	int		i;
 	int		count;
-	char	*result = NULL;
+	int		numModels, numShaders, numSkins, numCharacters;
 
 	if ( csMethod.integer == 0 ) {
 		// the new configstring handling method is not in use..
@@ -5947,7 +5948,7 @@ char *C_CSMETHODINFO( void ) {
 		if ( !gs_models[i][0] ) break;
 		count++;
 	}
-	result = va("%i", count);
+	numModels = count;
 
 	// shaders
 	count = 0;
@@ -5955,7 +5956,7 @@ char *C_CSMETHODINFO( void ) {
 		if ( !gs_shaders[i][0] ) break;
 		count++;
 	}
-	result = strcat( result, va(" %i", count) );
+	numShaders = count;
 
 	// skins
 	count = 0;
@@ -5963,7 +5964,7 @@ char *C_CSMETHODINFO( void ) {
 		if ( !gs_skins[i][0] ) break;
 		count++;
 	}
-	result = strcat( result, va(" %i", count) );
+	numSkins = count;
 
 	// characters
 	count = 0;
@@ -5971,7 +5972,7 @@ char *C_CSMETHODINFO( void ) {
 		if ( !gs_characters[i][0] ) break;
 		count++;
 	}
-	result = strcat( result, va(" %i", count) );
+	numCharacters = count;
 
 	// sounds
 	count = 0;
@@ -5979,7 +5980,8 @@ char *C_CSMETHODINFO( void ) {
 		if ( !gs_sounds[i][0] ) break;
 		count++;
 	}
-	result = strcat( result, va(" %i", count) );
+	// same format as before: "<models> <shaders> <skins> <characters> <sounds>"
+	Com_sprintf( result, sizeof(result), "%i %i %i %i %i", numModels, numShaders, numSkins, numCharacters, count );
 
 	return result;
 }

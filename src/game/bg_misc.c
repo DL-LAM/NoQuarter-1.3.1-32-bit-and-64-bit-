@@ -48,10 +48,11 @@ extern	vmCvar_t		ui_gameType;
 return a hash value for the given string
 ================
 */
-long BG_StringHashValue( const char *fname ) {
+// [NQ 1.3.1 - Math]: Use int instead of long to prevent 8-byte hash on 64-bit Linux (LP64)
+int BG_StringHashValue( const char *fname ) {
 	const int hi2lo = 'a' - 'A';
 	int		i119 = 119;
-	long	hash = 0;
+	int		hash = 0;
 
 	if( !fname ) {
 		return -1;
@@ -59,10 +60,10 @@ long BG_StringHashValue( const char *fname ) {
 
 	while (*fname != '\0') {
 		if( *fname >= 'A' && *fname <= 'Z' ) {
-			hash += (long)(*fname + hi2lo)*i119;
+			hash += (int)(*fname + hi2lo)*i119;
 		}
 		else {
-			hash += (long)(*fname)*i119;
+			hash += (int)(*fname)*i119;
 		}
 		++fname;
 		++i119;
@@ -80,12 +81,12 @@ long BG_StringHashValue( const char *fname ) {
 return a hash value for the given string (make sure the strings and lowered first)
 ================
 */
-long BG_StringHashValue_Lwr( const char *fname ) {
+int BG_StringHashValue_Lwr( const char *fname ) {
 	int		i = 0;
-	long	hash = 0;
+	int		hash = 0;
 
 	while (fname[i] != '\0') {
-		hash+=(long)(fname[i])*(i+119);
+		hash+=(int)(fname[i])*(i+119);
 		i++;
 	}
 	if (hash == -1) {
@@ -2494,7 +2495,8 @@ gitem_t	*BG_FindItem( const char *pickupName ) {
 	return NULL;
 }
 
-gitem_t	*BG_FindItemForClassName( const char *className, long hash ) {
+// [NQ 1.3.1 - Math]: Use int instead of long to prevent 8-byte hash on 64-bit Linux (LP64)
+gitem_t	*BG_FindItemForClassName( const char *className, int hash ) {
 	gitem_t	*it;
 	int		startIndex = INDEX_IT_POWERUP;
 	hash = hash > 0 ? hash : BG_StringHashValue(className);

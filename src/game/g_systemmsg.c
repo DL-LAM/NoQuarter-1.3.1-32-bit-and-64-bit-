@@ -65,11 +65,10 @@ qboolean G_SendSystemMessage( sysMsg_t message, int team ) {
 
 		if(other->client->sess.sessionTeam != team)
 			continue;
-#if defined(__x86_64__)
+		// [NQ 1.3.1 - Audit L6]: one code path for all builds - the (int) casts are correct on
+		// 32 and 64-bit. The old "#if defined(__x86_64__)" never matched MSVC x64 builds, which
+		// then passed a 64-bit value (pointer difference / strlen) to a %i/%d format.
 		trap_SendServerCommand( (int)(other-g_entities), va("vschat %i %i", (int)(other-g_entities), message));
-#else
-		trap_SendServerCommand( other-g_entities, va("vschat %i %i", other-g_entities, message));
-#endif
 		//trap_SendServerCommand( other-g_entities, va("vschat 0 %d 3 %s 0 0 0", other-g_entities, systemMessages[message]));
 	}
 	return qtrue;

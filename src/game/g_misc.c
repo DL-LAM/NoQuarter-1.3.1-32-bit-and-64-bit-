@@ -1507,11 +1507,10 @@ void SP_misc_constructiblemarker( gentity_t *ent ) {
 		char cs[MAX_INFO_STRING];
 
 		trap_GetConfigstring( CS_CONSTRUCTION_NAMES, cs, sizeof(cs) );
-#if defined(__x86_64__)
+		// [NQ 1.3.1 - Audit L6]: one code path for all builds - the (int) casts are correct on
+		// 32 and 64-bit. The old "#if defined(__x86_64__)" never matched MSVC x64 builds, which
+		// then passed a 64-bit value (pointer difference / strlen) to a %i/%d format.
 		Info_SetValueForKey( cs, va("%i",(int)(ent-g_entities)), s );
-#else
-		Info_SetValueForKey( cs, va("%i",ent-g_entities), s );
-#endif
 		trap_SetConfigstring( CS_CONSTRUCTION_NAMES, cs );
 	}
 

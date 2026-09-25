@@ -1335,11 +1335,10 @@ void SP_script_mover(gentity_t *ent)
 
 		if( G_SpawnString( "description", "", &s ) ) {
 			trap_GetConfigstring( CS_SCRIPT_MOVER_NAMES, cs, sizeof(cs) );
-#if defined(__x86_64__)
+			// [NQ 1.3.1 - Audit L6]: one code path for all builds - the (int) casts are correct on
+			// 32 and 64-bit. The old "#if defined(__x86_64__)" never matched MSVC x64 builds, which
+			// then passed a 64-bit value (pointer difference / strlen) to a %i/%d format.
 			Info_SetValueForKey( cs, va("%i",(int)(ent-g_entities)), s );
-#else
-			Info_SetValueForKey( cs, va("%i",ent-g_entities), s );
-#endif
 			trap_SetConfigstring( CS_SCRIPT_MOVER_NAMES, cs );
 		}
 	}

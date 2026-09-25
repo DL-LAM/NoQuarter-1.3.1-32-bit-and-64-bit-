@@ -72,11 +72,10 @@ void G_WriteClientSessionData( gclient_t *client, qboolean restart ) {
 #endif
 		);
 
-#if defined(__x86_64__)
+	// [NQ 1.3.1 - Audit L6]: one code path for all builds - the (int) casts are correct on
+	// 32 and 64-bit. The old "#if defined(__x86_64__)" never matched MSVC x64 builds, which
+	// then passed a 64-bit value (pointer difference / strlen) to a %i/%d format.
 	trap_Cvar_Set( va( "session%i", (int)(client - level.clients) ), s );
-#else
-	trap_Cvar_Set( va( "session%i", client - level.clients ), s );
-#endif
 	// Arnout: store the clients stats (7) and medals (7)
 	// addition: but only if it isn't a forced map_restart (done by someone on the console)
 	// tjw: go ahead and write them if the server has g_XPSave with the 2 flag
@@ -99,11 +98,10 @@ void G_WriteClientSessionData( gclient_t *client, qboolean restart ) {
 				client->sess.medals[6]
 				);
 
-#if defined(__x86_64__)
+			// [NQ 1.3.1 - Audit L6]: one code path for all builds - the (int) casts are correct on
+			// 32 and 64-bit. The old "#if defined(__x86_64__)" never matched MSVC x64 builds, which
+			// then passed a 64-bit value (pointer difference / strlen) to a %i/%d format.
 			trap_Cvar_Set( va( "sessionstats%i", (int)(client - level.clients) ), s );
-#else
-			trap_Cvar_Set( va( "sessionstats%i", client - level.clients ), s );
-#endif
 		}
 	}
 }
@@ -185,11 +183,10 @@ void G_ReadSessionData( gclient_t *client )
 	qboolean test;
 	qboolean load = qfalse;
 
-#if defined(__x86_64__)
+	// [NQ 1.3.1 - Audit L6]: one code path for all builds - the (int) casts are correct on
+	// 32 and 64-bit. The old "#if defined(__x86_64__)" never matched MSVC x64 builds, which
+	// then passed a 64-bit value (pointer difference / strlen) to a %i/%d format.
 	trap_Cvar_VariableStringBuffer( va( "session%i", (int)(client - level.clients) ), s, sizeof(s) );
-#else
-	trap_Cvar_VariableStringBuffer( va( "session%i", client - level.clients ), s, sizeof(s) );
-#endif
 
 	// jet Pilot - added killingSpree
 	// Jaybird - fixed to match with writesessiondata
@@ -269,11 +266,10 @@ void G_ReadSessionData( gclient_t *client )
 	}
 
 	if(load) {
-#if defined(__x86_64__)
+		// [NQ 1.3.1 - Audit L6]: one code path for all builds - the (int) casts are correct on
+		// 32 and 64-bit. The old "#if defined(__x86_64__)" never matched MSVC x64 builds, which
+		// then passed a 64-bit value (pointer difference / strlen) to a %i/%d format.
 		trap_Cvar_VariableStringBuffer( va( "sessionstats%i", (int)(client - level.clients) ), s, sizeof(s) );
-#else
-		trap_Cvar_VariableStringBuffer( va( "sessionstats%i", client - level.clients ), s, sizeof(s) );
-#endif
 
 		// Arnout: read the clients stats (7) and medals (7)
 		sscanf( s, "%f %f %f %f %f %f %f %i %i %i %i %i %i %i",

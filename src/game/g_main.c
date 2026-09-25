@@ -3288,6 +3288,15 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 
 	G_RegisterCvars();
 
+	// [NQ 1.3.1 - Audit L8]: NoQuarter's game code assumes 50 ms server frames
+	// (SERVER_FRAMETIME = 1000/20, used in ~230 places). ET: Legacy lets admins
+	// raise sv_fps, which would silently change NQ's timing (weapons, spawns,
+	// timers...). Warn loudly so admins know to keep sv_fps at 20.
+	if ( sv_fps.integer != 20 ) {
+		G_Printf( S_COLOR_YELLOW "WARNING: sv_fps is %i. NoQuarter is designed for sv_fps 20 - gameplay timing will be wrong. Set sv_fps 20.\n", sv_fps.integer );
+		G_LogPrintf( "WARNING: sv_fps is %i (NoQuarter expects 20)\n", sv_fps.integer );
+	}
+
 	// core: loading weapons restrictions from file..
 	// note: this must be done after registering the cvars.
 	G_ReadWeaponRestrictions();

@@ -46,6 +46,8 @@ extern char* G_BuildFilePath(char const* path, char const* file, char const* ext
 extern void G_IterateDirectory(char const* path, Fn_IterateDirectory handler);
 extern int G_WriteDataToFile(char const* path, char const* buf, int sz);
 extern int G_ReadDataFromFile(char const* path, char* buf, int sz);
+// [NQ 1.3.1 - Audit M5]: reads up to maxsz bytes, returns the number of bytes read or -1
+extern int G_ReadDataFromFileMax(char const* path, char* buf, int maxsz);
 extern qboolean G_IsFile(char const* path);
 extern qboolean G_IsDirectory(char const* path);
 extern qboolean G_DeleteFile(char const* path);

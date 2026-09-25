@@ -125,7 +125,9 @@ qboolean COM_BitCheck( const int array[], int bitNum ) {
 	int i = bitNum >> 5;
 	bitNum &= 31;
 
-	if(i >= sizeof(array)) return qfalse;
+	// [NQ 1.3.1 - Portability]: sizeof(array) on a parameter is the pointer size (4 on x86, 8 on x64),
+	// so the old bound allowed out-of-bounds access on both. All callers pass int[2] (64 bits).
+	if(bitNum < 0 || i >= 2) return qfalse;
 	return ((array[i] & (1 << bitNum) ) != 0);	// (SA) heh, whoops. :)
 }
 
@@ -143,7 +145,8 @@ void COM_BitSet( int array[], int bitNum ) {
 	//      "Fixed the Com_BitSet() with ridiculous bit number in the
 	//       anim  condition code."
 	//       Is this what causes the glider/transmitter crashes?
-	if(i >= sizeof(array)) return;
+	// [NQ 1.3.1 - Portability]: see COM_BitCheck - explicit 64-bit bound, reject negative bit numbers
+	if(bitNum < 0 || i >= 2) return;
 	array[i] |= (1 << bitNum);
 }
 
@@ -157,7 +160,8 @@ COM_BitClear
 void COM_BitClear( int array[], int bitNum ) {
 	int i = bitNum >> 5;
 	bitNum &= 31;
-	if(i >= sizeof(array)) return;
+	// [NQ 1.3.1 - Portability]: see COM_BitCheck - explicit 64-bit bound, reject negative bit numbers
+	if(bitNum < 0 || i >= 2) return;
 	array[i] &= ~(1 << bitNum);
 }
 //============================================================================
@@ -1022,11 +1026,15 @@ char *QDECL va( const char *format, ... ) {
 	int len;
 
 
+	// [NQ 1.3.1 - Audit M9]: vsprintf() had no size limit - an over-long result
+	// overflowed temp_buffer BEFORE the length check below could catch it.
+	// Q_vsnprintf() never writes past the buffer and returns -1 when the
+	// result would not fit, so the overrun is now detected instead of happening.
 	va_start (argptr, format);
-	vsprintf (temp_buffer, format,argptr);
+	len = Q_vsnprintf (temp_buffer, sizeof(temp_buffer), format, argptr);
 	va_end (argptr);
 
-	if ((len = strlen(temp_buffer)) >= MAX_VA_STRING) {
+	if ( len < 0 || len >= MAX_VA_STRING ) {
 		Com_Error( ERR_DROP, "Attempted to overrun string in call to va()\n" );
 	}
 
@@ -1297,7 +1305,11 @@ void Info_RemoveKey_Big( char *s, const char *key ) {
 		*o = 0;
 
 		if (!Q_stricmp (key, pkey) ) {
-			strcpy (start, s);	// remove this part
+			// [NQ 1.3.1 - Audit M10]: start and s point into the same string, and
+			// strcpy() on overlapping memory is undefined behaviour (optimised libc
+			// copies can corrupt the info string). Same fix Info_RemoveKey() and
+			// ET: Legacy already use.
+			memmove(start, s, strlen(s) + 1); // remove this part
 			return;
 		}
 
@@ -1360,7 +1372,9 @@ void Info_SetValueForKey( char *s, const char *key, const char *value ) {
 
 	Com_sprintf (newi, sizeof(newi), "\\%s\\%s", key, value);
 
-	if (strlen(newi) + strlen(s) > MAX_INFO_STRING) {
+	// [NQ 1.3.1 - Audit M10]: must be ">=" - with ">" a combined length of exactly
+	// MAX_INFO_STRING put the terminating NUL one byte past the buffer (ETL uses >=).
+	if (strlen(newi) + strlen(s) >= MAX_INFO_STRING) {
 		Com_Printf ("Info string length exceeded\n");
 		return;
 	}
@@ -1403,7 +1417,8 @@ void Info_SetValueForKey_Big( char *s, const char *key, const char *value ) {
 
 	Com_sprintf (newi, sizeof(newi), "\\%s\\%s", key, value);
 
-	if (strlen(newi) + strlen(s) > BIG_INFO_STRING) {
+	// [NQ 1.3.1 - Audit M10]: ">=" for the same one-byte-overflow reason as above.
+	if (strlen(newi) + strlen(s) >= BIG_INFO_STRING) {
 		Com_Printf ("BIG Info string length exceeded\n");
 		return;
 	}

@@ -763,11 +763,10 @@ qboolean Weapon_Syringe(gentity_t *ent) {
 
 		if ( !(ent->r.svFlags & SVF_BOT) || ((ent->r.svFlags & SVF_BOT) && (g_logOptions.integer & LOGOPTS_BOTS)) ) {
 			if(ent && ent->client) {
-#if defined(__x86_64__)
+				// [NQ 1.3.1 - Audit L6]: one code path for all builds - the (int) casts are correct on
+				// 32 and 64-bit. The old "#if defined(__x86_64__)" never matched MSVC x64 builds, which
+				// then passed a 64-bit value (pointer difference / strlen) to a %i/%d format.
 				G_LogPrintf("Medic_Revive: %d %d\n", (int)(ent - g_entities), (int)(traceEnt - g_entities));
-#else
-				G_LogPrintf("Medic_Revive: %d %d\n", ent - g_entities, traceEnt - g_entities);
-#endif
 			}
 		}
 
@@ -1818,11 +1817,10 @@ qboolean Engineer_MG42( gentity_t *ent, gentity_t *traceEnt ) {
 		}
 
 		if ( !(ent->r.svFlags & SVF_BOT) || ((ent->r.svFlags & SVF_BOT) && (g_logOptions.integer & LOGOPTS_BOTS)) ) {
-#if defined(__x86_64__)
+			// [NQ 1.3.1 - Audit L6]: one code path for all builds - the (int) casts are correct on
+			// 32 and 64-bit. The old "#if defined(__x86_64__)" never matched MSVC x64 builds, which
+			// then passed a 64-bit value (pointer difference / strlen) to a %i/%d format.
 			G_LogPrintf("Repair: %d\n", (int) (ent - g_entities));	// OSP
-#else
-			G_LogPrintf("Repair: %d\n", ent - g_entities);	// OSP
-#endif
 		}
 
 		// make sure that our team didn't damage it before awarding xp for repairing it
@@ -2259,11 +2257,10 @@ evilbanigoto:
 								AddScore(traceEnt->parent, WOLF_DYNAMITE_PLANT); // give drop score to guy who dropped it
 								if ( !(traceEnt->parent->r.svFlags & SVF_BOT) || ((traceEnt->parent->r.svFlags & SVF_BOT) && (g_logOptions.integer & LOGOPTS_BOTS)) ) {
 									if(traceEnt->parent && traceEnt->parent->client) {
-#if defined(__x86_64__)
+										// [NQ 1.3.1 - Audit L6]: one code path for all builds - the (int) casts are correct on
+										// 32 and 64-bit. The old "#if defined(__x86_64__)" never matched MSVC x64 builds, which
+										// then passed a 64-bit value (pointer difference / strlen) to a %i/%d format.
 										G_LogPrintf("Dynamite_Plant: %d\n", (int)(traceEnt->parent - g_entities));	// OSP
-#else
-										G_LogPrintf("Dynamite_Plant: %d\n", traceEnt->parent - g_entities);	// OSP
-#endif
 									}
 								}
 								traceEnt->parent = ent; // give explode score to guy who armed it
@@ -2345,11 +2342,10 @@ evilbanigoto:
 								AddScore(traceEnt->parent, WOLF_DYNAMITE_PLANT); // give drop score to guy who dropped it
 								if ( !(traceEnt->parent->r.svFlags & SVF_BOT) || ((traceEnt->parent->r.svFlags & SVF_BOT) && (g_logOptions.integer & LOGOPTS_BOTS)) ) {
 									if( traceEnt->parent && traceEnt->parent->client ) {
-#if defined(__x86_64__)
+										// [NQ 1.3.1 - Audit L6]: one code path for all builds - the (int) casts are correct on
+										// 32 and 64-bit. The old "#if defined(__x86_64__)" never matched MSVC x64 builds, which
+										// then passed a 64-bit value (pointer difference / strlen) to a %i/%d format.
 										G_LogPrintf("Dynamite_Plant: %d\n", (int)(traceEnt->parent - g_entities));	// OSP
-#else
-										G_LogPrintf("Dynamite_Plant: %d\n", traceEnt->parent - g_entities);	// OSP
-#endif
 									}
 								}
 								traceEnt->parent = ent; // give explode score to guy who armed it
@@ -2508,11 +2504,10 @@ evilbanigoto:
 								if ( hit->s.teamNum == TEAM_AXIS && (!scored)) {
 									AddScore(ent,WOLF_DYNAMITE_DIFFUSE);
 									if ( !(ent->r.svFlags & SVF_BOT) || ((ent->r.svFlags & SVF_BOT) && (g_logOptions.integer & LOGOPTS_BOTS)) ) {
-#if defined(__x86_64__)
+										// [NQ 1.3.1 - Audit L6]: one code path for all builds - the (int) casts are correct on
+										// 32 and 64-bit. The old "#if defined(__x86_64__)" never matched MSVC x64 builds, which
+										// then passed a 64-bit value (pointer difference / strlen) to a %i/%d format.
 										if(ent && ent->client) G_LogPrintf("Dynamite_Defuse: %d\n", (int) (ent - g_entities));	// OSP
-#else
-										if(ent && ent->client) G_LogPrintf("Dynamite_Defuse: %d\n", ent - g_entities);	// OSP
-#endif
 									}
 									G_AddSkillPoints( ent, SK_EXPLOSIVES_AND_CONSTRUCTION, 6.f );
 									G_DEBUG_ADD_SKILL_POINTS( ent, SK_EXPLOSIVES_AND_CONSTRUCTION, 6.f, "defusing enemy dynamite" );
@@ -2531,11 +2526,10 @@ evilbanigoto:
 								if ( hit->s.teamNum == TEAM_ALLIES && (!scored)) {
 									AddScore(ent,WOLF_DYNAMITE_DIFFUSE);
 									if ( !(ent->r.svFlags & SVF_BOT) || ((ent->r.svFlags & SVF_BOT) && (g_logOptions.integer & LOGOPTS_BOTS)) ) {
-#if defined(__x86_64__)
+										// [NQ 1.3.1 - Audit L6]: one code path for all builds - the (int) casts are correct on
+										// 32 and 64-bit. The old "#if defined(__x86_64__)" never matched MSVC x64 builds, which
+										// then passed a 64-bit value (pointer difference / strlen) to a %i/%d format.
 										if(ent && ent->client) G_LogPrintf("Dynamite_Defuse: %d\n", (int)(ent - g_entities));	// OSP
-#else
-										if(ent && ent->client) G_LogPrintf("Dynamite_Defuse: %d\n", ent - g_entities);	// OSP
-#endif
 									}
 									G_AddSkillPoints( ent, SK_EXPLOSIVES_AND_CONSTRUCTION, 6.f );
 									G_DEBUG_ADD_SKILL_POINTS( ent, SK_EXPLOSIVES_AND_CONSTRUCTION, 6.f, "defusing enemy dynamite" );
@@ -4989,11 +4983,10 @@ void C_CheckKickedDyna( gentity_t *player, gentity_t *dynaEnt ) {
 				if ( !(hit->spawnflags & OBJECTIVE_DESTROYED) ) {
 					AddScore(dynaEnt->parent, WOLF_DYNAMITE_PLANT); // give drop score to guy who dropped it
 					if ( !(player->r.svFlags & SVF_BOT) || ((player->r.svFlags & SVF_BOT) && (g_logOptions.integer & LOGOPTS_BOTS)) ) {
-#if defined(__x86_64__)
+						// [NQ 1.3.1 - Audit L6]: one code path for all builds - the (int) casts are correct on
+						// 32 and 64-bit. The old "#if defined(__x86_64__)" never matched MSVC x64 builds, which
+						// then passed a 64-bit value (pointer difference / strlen) to a %i/%d format.
 						G_LogPrintf("Dynamite_KickPlant: %d\n", (int)(player - g_entities));	// OSP
-#else
-						G_LogPrintf("Dynamite_KickPlant: %d\n", player - g_entities);
-#endif
 					}
 					dynaEnt->parent = player; // give explode score to guy who armed it
 				}
@@ -5080,11 +5073,10 @@ void C_CheckKickedDyna( gentity_t *player, gentity_t *dynaEnt ) {
 					hit->s.teamNum && (hit->s.teamNum == dynaEnt->s.teamNum) ) {	// ==, as it's inverse
 					AddScore(dynaEnt->parent, WOLF_DYNAMITE_PLANT); // give drop score to guy who dropped it
 					if ( !(player->r.svFlags & SVF_BOT) || ((player->r.svFlags & SVF_BOT) && (g_logOptions.integer & LOGOPTS_BOTS)) ) {
-#if defined(__x86_64__)
+						// [NQ 1.3.1 - Audit L6]: one code path for all builds - the (int) casts are correct on
+						// 32 and 64-bit. The old "#if defined(__x86_64__)" never matched MSVC x64 builds, which
+						// then passed a 64-bit value (pointer difference / strlen) to a %i/%d format.
 						G_LogPrintf("Dynamite_KickPlant: %d\n", (int)(player - g_entities));	// OSP
-#else
-						G_LogPrintf("Dynamite_KickPlant: %d\n", player - g_entities);	// OSP
-#endif
 					}
 					dynaEnt->parent = player; // give explode score to guy who armed it
 				}

@@ -169,21 +169,42 @@ qboolean G_FilterPacket( ipFilterList_t *ipFilterList, char *from )
 {
 	int		i = 0;
 	unsigned	in;
-	byte m[4];
+	byte m[4] = { 0, 0, 0, 0 };
 	char *p = from;
 
-	while (*p && i < 4) {
-		m[i] = 0;
-		while (*p >= '0' && *p <= '9') {
-			m[i] = m[i]*10 + (*p - '0');
+	// [NQ 1.3.1 - Audit M4]: Strict IPv4 parser.
+	// The old loop assumed "a.b.c.d:port": for an IPv6 address ("[2001:db8::1]:27960"
+	// from ET: Legacy) or "localhost" it produced garbage octets, left some of m[]
+	// uninitialised (random filter matches) and let IPv6 players bypass bans.
+	// The filter list (g_banIPs / addip) can only hold IPv4 masks, so an address
+	// that is not a well-formed IPv4 address is treated as "not in the list".
+	if ( !p ) {
+		return g_filterBan.integer == 0;
+	}
+	for ( i = 0; i < 4; i++ ) {
+		int val = 0, digits = 0;
+
+		while ( *p >= '0' && *p <= '9' && digits < 4 ) {
+			val = val * 10 + (*p - '0');
+			p++;
+			digits++;
+		}
+		if ( digits == 0 || digits > 3 || val > 255 ) {
+			return g_filterBan.integer == 0;	// not IPv4 -> not listed
+		}
+		m[i] = (byte)val;
+		if ( i < 3 ) {
+			if ( *p != '.' ) {
+				return g_filterBan.integer == 0;
+			}
 			p++;
 		}
-		if (!*p || *p == ':')
-			break;
-		i++, p++;
+	}
+	if ( *p != '\0' && *p != ':' ) {
+		return g_filterBan.integer == 0;
 	}
 
-	in = *(unsigned *)m;
+	memcpy( &in, m, sizeof(in) );	// was *(unsigned *)m (type-punned read)
 
 	for( i = 0; i < ipFilterList->numIPFilters; i++ ) {
 		if( (in & ipFilterList->ipFilters[i].mask) == ipFilterList->ipFilters[i].compare) {
@@ -385,13 +406,11 @@ void	Svcmd_EntityList_f (void) {
 		}
 		G_Printf("\n");
 	}
-#if defined(__x86_64__)
+	// [NQ 1.3.1 - Audit L6]: one code path for all builds - the (int) casts are correct on
+	// 32 and 64-bit. The old "#if defined(__x86_64__)" never matched MSVC x64 builds, which
+	// then passed a 64-bit value (pointer difference / strlen) to a %i/%d format.
 	G_Printf("%4i: first_free_entity\n", (int) (first_free_entity - g_entities) );
 	G_Printf("%4i: last_free_entity\n", (int)(last_free_entity - g_entities));
-#else
-	G_Printf("%4i: first_free_entity\n", first_free_entity - g_entities );
-	G_Printf("%4i: last_free_entity\n", last_free_entity - g_entities);
-#endif
 	G_Printf("%4i: entities not in use\n", entsFree);
 	G_Printf("%4i: num_entities\n", level.num_entities);
 }

@@ -668,16 +668,15 @@ float Q_rsqrt( float f );		// reciprocal square root
 
 #define SQRTFAST( x ) ( 1.0f / Q_rsqrt( x ) )
 
-// fast float to int conversion
+// [NQ 1.3.1 - Math]: Use int instead of long to prevent 8-byte return on 64-bit Linux (LP64)
 #if id386 && !( (defined __linux__ || defined __FreeBSD__ || defined __GNUC__ ) && (defined __i386__ ) ) // rb010123
-long myftol( float f );
+int myftol( float f );
 #elif defined( _MSC_VER )
-#define myftol(x) ((long)(x))
+#define myftol(x) ((int)(x))
 #elif defined( __MACOS__ )
-#define	myftol(x) (long)(x)
+#define	myftol(x) (int)(x)
 #else
-extern long int lrintf(float x);
-#define	myftol(x) lrintf(x)
+#define	myftol(x) ((int)(x))
 #endif
 
 signed char ClampChar( int i );
@@ -727,7 +726,9 @@ void ByteToDir( int b, vec3_t dir );
 //
 // note: the arguments must all be variables (no constants)
 #if ( defined __GNUC__ || defined __clang__ ) && ( defined __linux__ || defined __FreeBSD__ )
-#define SinCos(rad,s,c) sincos((rad), &(s), &(c))
+// [NQ 1.3.1 - Math]: glibc sincos() takes double* and writes 8-byte doubles into our 4-byte floats,
+// corrupting AngleVectors() et al. on every Linux build (movement, traces, bullet trajectory).
+#define SinCos(rad,s,c) do { (s) = sinf(rad); (c) = cosf(rad); } while(0)
 #elif id386 && (defined WIN32) && !( defined __GNUC__ )
 #define SinCos(rad,s,c)		\
 	__asm fld (rad)			\

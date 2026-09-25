@@ -1398,16 +1398,124 @@ void ClientCleanName( const char *in, char *out, int outSize ) {
 	}
 }
 
+/*
+============
+[NQ 1.3.1 - Audit M1]: G_ValidateUTF8Name
+
+Returns qfalse if the name contains bytes that are not valid UTF-8 (this still
+catches the old raw "extended ASCII" names). A multi-byte character that was
+cut off at the very end of the string is removed in place rather than rejected,
+but ONLY when the name has the maximum length (MAX_NETNAME-1 bytes), i.e. when
+the cut was made by the MAX_NETNAME truncation before this check. A short name
+ending in a lone high byte is still rejected.
+Rejected: stray continuation bytes, 0xC0/0xC1/0xF5-0xFF lead bytes, overlong
+encodings, UTF-16 surrogates (U+D800-U+DFFF) and code points above U+10FFFF.
+============
+*/
+qboolean G_ValidateUTF8Name( char *name ) {
+	unsigned char	*s = (unsigned char *)name;
+	unsigned char	*seqStart;
+	int				need, i;
+	unsigned int	cp;
+	qboolean		wasTruncated;
+
+	if ( !name ) {
+		return qfalse;
+	}
+	wasTruncated = ( (int)strlen(name) >= MAX_NETNAME - 1 ) ? qtrue : qfalse;
+
+	while ( *s ) {
+		if ( *s < 0x80 ) {					// plain ASCII
+			s++;
+			continue;
+		}
+
+		seqStart = s;
+		if ( *s >= 0xC2 && *s <= 0xDF )		{ need = 1; cp = *s & 0x1F; }
+		else if ( *s >= 0xE0 && *s <= 0xEF ){ need = 2; cp = *s & 0x0F; }
+		else if ( *s >= 0xF0 && *s <= 0xF4 ){ need = 3; cp = *s & 0x07; }
+		else {
+			return qfalse;					// continuation byte or invalid lead byte
+		}
+		s++;
+
+		for ( i = 0; i < need; i++, s++ ) {
+			if ( *s == '\0' ) {
+				if ( wasTruncated ) {
+					// sequence cut off by the MAX_NETNAME truncation - drop the partial character
+					*seqStart = '\0';
+					return qtrue;
+				}
+				return qfalse;				// short name ending in an incomplete sequence
+			}
+			if ( (*s & 0xC0) != 0x80 ) {
+				return qfalse;
+			}
+			cp = (cp << 6) | (*s & 0x3F);
+		}
+
+		if ( (need == 2 && cp < 0x800) || (need == 3 && cp < 0x10000) ) {
+			return qfalse;					// overlong encoding
+		}
+		if ( (cp >= 0xD800 && cp <= 0xDFFF) || cp > 0x10FFFF ) {
+			return qfalse;					// surrogate / out of range
+		}
+	}
+	return qtrue;
+}
+
 // redeye - copied from ETPub, courtesy of Dens
 const char *GetParsedIP(const char *ipadd) {
 	// code by Dan Pop, http://bytes.com/forum/thread212174.html
 	unsigned b1, b2, b3, b4, port = 0;
 	unsigned char c;
 	int rc;
-	static char ipge[20];
+	// [NQ 1.3.1 - Audit H1]: sized for IPv6 (was 20, enough only for IPv4)
+	static char ipge[MAX_IP_LENGTH_V6];
+
+	if ( !ipadd ) {
+		return NULL;
+	}
 
 	if(!Q_strncmp(ipadd,"localhost", 9)) {
 		return "localhost";
+	}
+
+	// [NQ 1.3.1 - Audit H1]: IPv6 support.
+	// ET: Legacy writes an IPv6 client's address into userinfo as
+	// "[2001:db8::1]:27960" (NET_AdrToString). This function only understood
+	// "a.b.c.d:port", returned NULL, and CheckUserinfo() then refused EVERY
+	// IPv6 player with "Bad userinfo.". Accept the bracketed form:
+	//   - the part inside [] may only contain hex digits, ':' and '.'
+	//     ('.' allows IPv4-mapped addresses like ::ffff:1.2.3.4)
+	//     and must contain at least one ':'
+	//   - after ']' there is either nothing or ":<port>" (1-65535 digits only)
+	// Returns the address without brackets and port, like the IPv4 path.
+	if ( ipadd[0] == '[' ) {
+		const char	*end = strchr(ipadd, ']');
+		int			len;
+
+		if ( !end ) {
+			return NULL;
+		}
+		len = (int)(end - ipadd) - 1;
+		if ( len < 2 || len >= (int)sizeof(ipge) ) {
+			return NULL;
+		}
+		if ( (int)strspn(ipadd + 1, "0123456789abcdefABCDEF:.") != len ) {
+			return NULL;
+		}
+		if ( !memchr(ipadd + 1, ':', len) ) {
+			return NULL;
+		}
+		if ( end[1] != '\0' ) {
+			const char *portStr = end + 2;
+			if ( end[1] != ':' || !*portStr || strspn(portStr, "0123456789") != strlen(portStr) || strlen(portStr) > 5 || atoi(portStr) > 65535 ) {
+				return NULL;
+			}
+		}
+		Q_strncpyz(ipge, ipadd + 1, len + 1);
+		return ipge;
 	}
 
 	rc = sscanf(ipadd, "%3u.%3u.%3u.%3u:%u%c", &b1, &b2, &b3, &b4, &port, &c);
@@ -1420,7 +1528,8 @@ const char *GetParsedIP(const char *ipadd) {
 	if (strspn(ipadd, "0123456789.:") < strlen(ipadd)) {
 		return NULL;
 	}
-	sprintf(ipge, "%u.%u.%u.%u", b1, b2, b3, b4);
+	// [NQ 1.3.1 - Audit H1]: bounded formatting (was sprintf)
+	Com_sprintf(ipge, sizeof(ipge), "%u.%u.%u.%u", b1, b2, b3, b4);
 	return ipge;
 }
 
@@ -1576,23 +1685,31 @@ core:
 qboolean CGAMEFileExists( void ) {
 	char homepath[MAX_OSPATH]; // was 512 before ... but can't be greater than MAX_OSPATH
 
+	// [NQ 1.3.1 - Audit L6]: Q_strcat (bounded) instead of strcat - fs_homepath can be
+	// close to MAX_OSPATH long. Windows 64-bit builds look for the x64 client DLL
+	// (the old code always looked for cgame_mp_x86.dll, so a 64-bit listen-server host
+	// could be flagged by the localhost check when only the x64 DLL was present).
 	trap_Cvar_VariableStringBuffer("fs_homepath", homepath, sizeof(homepath));
 #ifdef __MACOS__
-	strcat(homepath, "/nq/cgame_mac");
+	Q_strcat(homepath, sizeof(homepath), "/nq/cgame_mac");
 	if ( !FileExists(homepath) ) return qfalse;
 #endif
 
 #ifdef __linux__
 #if defined(__x86_64__)
-	strcat(homepath, "/nq/cgame.mp.x86_64.so");
+	Q_strcat(homepath, sizeof(homepath), "/nq/cgame.mp.x86_64.so");
 #else
-	strcat(homepath, "/nq/cgame.mp.i386.so");
+	Q_strcat(homepath, sizeof(homepath), "/nq/cgame.mp.i386.so");
 #endif
 	if ( !FileExists(homepath) ) return qfalse;
 #endif
 
 #ifdef WIN32
-	strcat(homepath, "/nq/cgame_mp_x86.dll");
+#if defined(_WIN64)
+	Q_strcat(homepath, sizeof(homepath), "/nq/cgame_mp_x64.dll");
+#else
+	Q_strcat(homepath, sizeof(homepath), "/nq/cgame_mp_x86.dll");
+#endif
 	if ( !FileExists(homepath) ) return qfalse;
 #endif
 	return qtrue;
@@ -1715,7 +1832,7 @@ The game can override any of the settings and call trap_SetUserinfo
 if desired.
 ============
 */
-extern g_shrubbot_ban_t		*g_shrubbot_mutes[MAX_SHRUBBOT_BANS]; // jaquboss
+extern g_shrubbot_ban_t		*g_shrubbot_mutes[MAX_SHRUBBOT_BANS + 1]; // jaquboss // [NQ 1.3.1 - Audit H4]: +1 NULL terminator slot
 extern void _shrubbot_writeconfig();
 
 void ClientUserinfoChanged( int clientNum ) {
@@ -2352,10 +2469,15 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 		}
 
 		// redeye/IRATA ext. ASCII chars check to avoid active players footkick on bad names connect
-		for (i = 0; i < strlen(cs_name); ++i) {
-			if (cs_name[i] < 0) {// extended ASCII chars have values between -128 and 0 (signed char)
-				return "Bad name: Extended ASCII characters. Please change your name.";
-			}
+		// [NQ 1.3.1 - Audit M1]: The old check refused ANY byte above 127, which
+		// locked out every ET: Legacy player with an accented, Cyrillic, Greek...
+		// name, because ETL clients send names as UTF-8. Keep the original
+		// protection against raw "extended ASCII" (single high bytes, which are
+		// never valid UTF-8) but allow correctly encoded UTF-8.
+		// G_ValidateUTF8Name() also trims a multi-byte character that was cut in
+		// half by the MAX_NETNAME truncation above, instead of rejecting the player.
+		if ( !G_ValidateUTF8Name(cs_name) ) {
+			return "Bad name: invalid (non UTF-8) characters. Please change your name.";
 		}
 
 		// IRATA: Don't let bad pb guids connect ...
@@ -2387,11 +2509,10 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 		// Gordon: porting q3f flag bug fix
 		// If a player reconnects quickly after a disconnect, the client disconnect may never be called, thus flag can get lost in the ether
 		if( ent->inuse ) {
-#if defined(__x86_64__)
+			// [NQ 1.3.1 - Audit L6]: one code path for all builds - the (int) casts are correct on
+			// 32 and 64-bit. The old "#if defined(__x86_64__)" never matched MSVC x64 builds, which
+			// then passed a 64-bit value (pointer difference / strlen) to a %i/%d format.
 			G_LogPrintf( "Forcing disconnect on active client: %i\n", (int)(ent-g_entities) );
-#else
-			G_LogPrintf( "Forcing disconnect on active client: %i\n", ent-g_entities );
-#endif
 			// so lets just fix up anything that should happen on a disconnect
 			ClientDisconnect( ent-g_entities );
 		}
@@ -2730,6 +2851,7 @@ void ClientBegin( int clientNum ) {
 
 		if ( time(&expiretime) ) {
 			int				seconds = 0, i;
+			qboolean		permanent = qfalse;
 
 			for (i=0; g_shrubbot_mutes[i]; ++i) {
 				if ( !Q_stricmp(g_shrubbot_mutes[i]->guid, cs_guid) ) {
@@ -2738,6 +2860,12 @@ void ClientBegin( int clientNum ) {
 			}
 			// [NQ 1.3.1 - BugFix]: NULL check on g_shrubbot_mutes[i] before reading expiration
 			if ( g_shrubbot_mutes[i] ) {
+				// [NQ 1.3.1 - Audit L4]: expires == 0 is a PERMANENT mute. It used to
+				// compute a huge negative "seconds", get clamped to 0 below and the
+				// player was auto-unmuted on the very next frame after reconnecting.
+				if ( g_shrubbot_mutes[i]->expires == 0 ) {
+					permanent = qtrue;
+				}
 				seconds = g_shrubbot_mutes[i]->expires - (expiretime - SHRUBBOT_BAN_EXPIRE_OFFSET);
 			}
 			if ( seconds < 0 ) {
@@ -2745,7 +2873,8 @@ void ClientBegin( int clientNum ) {
 			}
 			// core: fix: let the mute status be put in CS_PLAYERS configstring
 			ent->client->sess.muted = qtrue;
-			ent->client->sess.auto_mute_time = level.time + seconds*SECONDS_1;
+			// [NQ 1.3.1 - Audit L4]: -1 = no automatic unmute; otherwise overflow-safe unmute time
+			ent->client->sess.auto_mute_time = permanent ? -1 : G_MuteUnmuteTime( level.time, seconds );
 			ent->client->sess.muted_by = MUTED_BY_SHRUB;
 			ClientConfigStringChanged( ent );
 		}

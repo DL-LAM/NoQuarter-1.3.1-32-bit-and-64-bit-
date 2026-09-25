@@ -178,7 +178,11 @@ static int _et_G_LogPrint(lua_State *L)
 {
 	char text[1024];
 	Q_strncpyz(text, luaL_checkstring(L, 1), sizeof(text));
-	LOG(text);
+	// [NQ 1.3.1 - Audit H2]: LOG() is printf-style. Passing the script's text
+	// as the FORMAT let any '%' in player names/chat that a script logs (the
+	// shipped wolfadmin ac.lua logs both) be interpreted as %s/%n -> crash or
+	// memory write. Always print the text as data.
+	LOG("%s", text);
 	return 0;
 }
 
@@ -1420,6 +1424,50 @@ int _et_gentity_get(lua_State *L)
 }
 
 // et.gentity_set( entnum, fieldname, arrayindex, (value) )
+/*
+==================
+[NQ 1.3.1 - Audit M6]: Lua-owned string registry
+
+et.gentity_set() on a pointer string field (classname, message, target) used to
+free() the old pointer. Those pointers normally point at string literals
+("player") or into the G_Alloc() level pool, which were never malloc()ed, so
+glibc aborted the server ("free(): invalid pointer") / corrupted the heap.
+We now only free strings that THIS code allocated, recorded in a small table.
+If the table is full the old string is simply not freed (a few bytes leak,
+nothing crashes).
+==================
+*/
+#define LUA_OWNED_STRINGS 256
+static char *luaOwnedStrings[LUA_OWNED_STRINGS];
+
+static qboolean _et_lua_forget_owned_string( char *p ) {
+	int i;
+	if ( !p ) {
+		return qfalse;
+	}
+	for ( i = 0; i < LUA_OWNED_STRINGS; i++ ) {
+		if ( luaOwnedStrings[i] == p ) {
+			luaOwnedStrings[i] = NULL;
+			return qtrue;
+		}
+	}
+	return qfalse;
+}
+
+static void _et_lua_remember_owned_string( char *p ) {
+	int i;
+	if ( !p ) {
+		return;
+	}
+	for ( i = 0; i < LUA_OWNED_STRINGS; i++ ) {
+		if ( !luaOwnedStrings[i] ) {
+			luaOwnedStrings[i] = p;
+			return;
+		}
+	}
+	// table full: this string is simply never freed (intentional, see above)
+}
+
 static int _et_gentity_set(lua_State *L)
 {
 	int entnum = luaL_checkint(L, 1);
@@ -1482,10 +1530,20 @@ static int _et_gentity_set(lua_State *L)
 				}
 			}
 			else {
-				free(*(char **)addr);
-				*(char **)addr = malloc(strlen(buffer) + 1);
-				if ( *(char **)addr ) {
-					Q_strncpyz(*(char **)addr, buffer, (int)(strlen(buffer) + 1));
+				// [NQ 1.3.1 - Audit M6]: allocate the new copy first, and only free
+				// the old string if it was allocated here (never free literals or
+				// G_Alloc pool memory). If malloc fails the old value is kept.
+				char *newStr = malloc(strlen(buffer) + 1);
+				if ( newStr ) {
+					char		*oldStr = *(char **)addr;
+					qboolean	oldIsOurs = _et_lua_forget_owned_string( oldStr );	// frees its table slot
+
+					Q_strncpyz(newStr, buffer, (int)(strlen(buffer) + 1));
+					*(char **)addr = newStr;
+					_et_lua_remember_owned_string( newStr );
+					if ( oldIsOurs ) {
+						free( oldStr );
+					}
 				}
 			}
 			break;

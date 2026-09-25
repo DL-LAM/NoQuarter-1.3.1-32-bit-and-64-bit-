@@ -2692,7 +2692,9 @@ static void CG_DrawCrosshairNames( void ) {
 	}
 
 	// NERVE - SMF
-	if ( cg.crosshairClientNum > MAX_CLIENTS ) {
+	// [NQ 1.3.1 - Audit L7]: ">=" - entity number MAX_CLIENTS (64) is not a client and used
+	// to fall through to cgs.clientinfo[64], one past the end of the array
+	if ( cg.crosshairClientNum >= MAX_CLIENTS ) {
 		if ( !enabled ) {
 			return;
 		}

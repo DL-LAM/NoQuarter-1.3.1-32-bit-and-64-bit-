@@ -520,7 +520,9 @@ char *G_createStats(gentity_t *refEnt)
 		}
 	}
 
-#if defined(__x86_64__)
+	// [NQ 1.3.1 - Audit L6]: one code path for all builds - the (int) casts are correct on
+	// 32 and 64-bit. The old "#if defined(__x86_64__)" never matched MSVC x64 builds, which
+	// then passed a 64-bit value (pointer difference / strlen) to a %i/%d format.
 	return( va("%d %d %d%s%s %d%s", (int)(refEnt - g_entities),
 									refEnt->client->sess.rounds,
 									dwWeaponMask,
@@ -528,15 +530,6 @@ char *G_createStats(gentity_t *refEnt)
 									strWeapInfo,
 									dwSkillPointMask,
 									strSkillInfo) );
-#else
-	return( va("%d %d %d%s%s %d%s", refEnt - g_entities,
-									refEnt->client->sess.rounds,
-									dwWeaponMask,
-									strHitRegionInfo,
-									strWeapInfo,
-									dwSkillPointMask,
-									strSkillInfo) );
-#endif
 }
 
 // Resets player's current stats
@@ -584,7 +577,10 @@ void G_parseStats(char *pszStatsInfo)
 	const char *tmp = pszStatsInfo;
 	unsigned int i, dwWeaponMask, dwClientID = atoi(pszStatsInfo);
 
-	if(dwClientID < 0 || dwClientID > MAX_CLIENTS) return;
+	// [NQ 1.3.1 - Audit L9]: ">=" - client ID 64 indexed level.clients[64], one past the end.
+	// (dwClientID is unsigned, so the old "< 0" test could never be true; a negative
+	// number in the string wraps to a huge value and is rejected by this check.)
+	if(dwClientID >= MAX_CLIENTS) return;
 
 	cl = &level.clients[dwClientID];
 

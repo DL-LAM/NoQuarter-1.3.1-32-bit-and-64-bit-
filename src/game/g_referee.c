@@ -39,6 +39,7 @@ static int G_RecordAuthFailure(gentity_t *ent)
 	qboolean foundOldest = qfalse;
 	time_t now;
 	char *client_ip;
+	char clean_ip[MAX_IP_LENGTH_V6];	// [NQ 1.3.1 - Audit L5]: address without :port
 	int ipFailures = 0;
 	// [NQ 1.3.1 - Security]: Configurable auth failure tracking expiration window (cvar g_authFailExpireTime)
 	int expireTime = (g_authFailExpireTime.integer > 0) ? g_authFailExpireTime.integer : AUTH_TRACK_EXPIRE_SECONDS;
@@ -50,7 +51,11 @@ static int G_RecordAuthFailure(gentity_t *ent)
 	time(&now);
 
 	ent->client->pers.authFailures++;
-	client_ip = ent->client->pers.client_ip;
+	// [NQ 1.3.1 - Audit L5]: pers.client_ip includes the source port, which changes
+	// on every reconnect, so each reconnect got a fresh table entry and per-IP
+	// failure counting never accumulated. Track the address without the port.
+	G_StripPort(ent->client->pers.client_ip, clean_ip, sizeof(clean_ip));
+	client_ip = clean_ip;
 
 	if(client_ip && *client_ip && Q_stricmp(client_ip, "localhost")) {
 		for(i = 0; i < MAX_AUTH_TRACK_IPS; i++) {
@@ -107,13 +112,18 @@ static void G_ClearAuthFailures(gentity_t *ent)
 {
 	int i;
 	char *client_ip;
+	char clean_ip[MAX_IP_LENGTH_V6];	// [NQ 1.3.1 - Audit L5]: address without :port
 
 	if(!ent || !ent->client) {
 		return;
 	}
 
 	ent->client->pers.authFailures = 0;
-	client_ip = ent->client->pers.client_ip;
+	// [NQ 1.3.1 - Audit L5]: pers.client_ip includes the source port, which changes
+	// on every reconnect, so each reconnect got a fresh table entry and per-IP
+	// failure counting never accumulated. Track the address without the port.
+	G_StripPort(ent->client->pers.client_ip, clean_ip, sizeof(clean_ip));
+	client_ip = clean_ip;
 
 	if(client_ip && *client_ip) {
 		for(i = 0; i < MAX_AUTH_TRACK_IPS; i++) {

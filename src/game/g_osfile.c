@@ -151,6 +151,28 @@ int G_ReadDataFromFile(char const* path, char* data, int sz) {
 	return 0;
 }
 
+/*
+[NQ 1.3.1 - Audit M5]: Read up to maxsz bytes (the file may be shorter).
+Returns the number of bytes read, or -1 on error. Used by the XP save reader,
+which accepts more than one file size (old 32-bit Linux layout and current).
+*/
+int G_ReadDataFromFileMax(char const* path, char* data, int maxsz) {
+	DWORD			processed = 0;
+	HANDLE			handle	= CreateFile(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+
+	if ( handle == INVALID_HANDLE_VALUE ) {
+		G_Printf("G_ReadDataFromFileMax: failed to open file: %s: %d\n", path, (int) GetLastError());
+		return -1;
+	}
+	if ( !ReadFile(handle, data, maxsz, &processed, NULL) ) {
+		G_Printf("G_ReadDataFromFileMax: failed to read file: %s: %d\n", path, (int) GetLastError());
+		CloseHandle(handle);
+		return -1;
+	}
+	CloseHandle(handle);
+	return (int)processed;
+}
+
 qboolean G_DeleteFile(char const* path) {
 	return (DeleteFile(path) ? qtrue : qfalse);
 }
@@ -267,6 +289,37 @@ int G_ReadDataFromFile(char const* path, char* data, int sz) {
 	
 	// Success
 	return 0;
+}
+
+/*
+[NQ 1.3.1 - Audit M5]: Read up to maxsz bytes (the file may be shorter).
+Returns the number of bytes read, or -1 on error.
+*/
+int G_ReadDataFromFileMax(char const* path, char* data, int maxsz) {
+	int		total = 0;
+	int		fd = open(path, O_RDONLY, 0);
+
+	if ( -1 == fd ) {
+		G_Printf("G_ReadDataFromFileMax: failed to open file: %s: %d\n", path, errno);
+		return -1;
+	}
+	while ( total < maxsz ) {
+		int n = read(fd, data + total, maxsz - total);
+		if ( n < 0 ) {
+			if ( errno == EINTR ) {
+				continue;
+			}
+			G_Printf("G_ReadDataFromFileMax: failed to read file: %s: %d\n", path, errno);
+			close(fd);
+			return -1;
+		}
+		if ( n == 0 ) {
+			break;		// end of file
+		}
+		total += n;
+	}
+	close(fd);
+	return total;
 }
 
 qboolean G_DeleteFile(char const* path) {

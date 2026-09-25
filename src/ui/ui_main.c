@@ -3624,7 +3624,9 @@ qboolean UI_CheckExecKey( int key ) {
 	if ( g_editingField )
 		return qtrue;
 
-	if ( key > 256 )
+	// [NQ 1.3.1 - Audit L7]: menu->onKey[] has 255 entries; keys 255/256 (and negative)
+	// used to index past it below.
+	if ( key < 0 || key >= 255 )
 		return qfalse;
 
 	if ( !menu ) {

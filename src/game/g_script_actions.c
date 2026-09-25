@@ -80,6 +80,10 @@ pre parsing command params
 //	* Note: The bitmask for these commands is already prepared when written to data_int[x]
 //
 // [NQ 1.3.1 - Security]: Preparsed script action error calls hardened with "%s" to prevent format string exploits
+// [NQ 1.3.1 - Audit L3]: The accum / globalaccum buffer indexes read from map scripts
+// were only checked against the upper limit. A negative number in a (broken or
+// malicious) community map script wrote before scriptAccumBuffer[] /
+// globalAccumBuffer[]. Every "bufferIndex >= MAX" check now also rejects < 0.
 qboolean PreParse_ScriptAction_Accum( gentity_t *ent, char *params, g_script_preparsed_params_t *preparsed_params )
 {
 	char	*pString 	= params;
@@ -99,7 +103,7 @@ qboolean PreParse_ScriptAction_Accum( gentity_t *ent, char *params, g_script_pre
 	}
 
 	bufferIndex = atoi(token);
-	if (bufferIndex >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+	if (bufferIndex < 0 || bufferIndex >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 		// CHRUKER: b055 - Was printing 10 as the last bufferindex, but its actually 9
 		G_Error( "%s", Error_OutsideRange );
 	}
@@ -268,7 +272,7 @@ qboolean PreParse_ScriptAction_Accum( gentity_t *ent, char *params, g_script_pre
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -279,7 +283,7 @@ qboolean PreParse_ScriptAction_Accum( gentity_t *ent, char *params, g_script_pre
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -290,7 +294,7 @@ qboolean PreParse_ScriptAction_Accum( gentity_t *ent, char *params, g_script_pre
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -302,7 +306,7 @@ qboolean PreParse_ScriptAction_Accum( gentity_t *ent, char *params, g_script_pre
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -313,7 +317,7 @@ qboolean PreParse_ScriptAction_Accum( gentity_t *ent, char *params, g_script_pre
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -324,7 +328,7 @@ qboolean PreParse_ScriptAction_Accum( gentity_t *ent, char *params, g_script_pre
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -335,7 +339,7 @@ qboolean PreParse_ScriptAction_Accum( gentity_t *ent, char *params, g_script_pre
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -346,7 +350,7 @@ qboolean PreParse_ScriptAction_Accum( gentity_t *ent, char *params, g_script_pre
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -357,7 +361,7 @@ qboolean PreParse_ScriptAction_Accum( gentity_t *ent, char *params, g_script_pre
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -368,7 +372,7 @@ qboolean PreParse_ScriptAction_Accum( gentity_t *ent, char *params, g_script_pre
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -383,7 +387,7 @@ qboolean PreParse_ScriptAction_Accum( gentity_t *ent, char *params, g_script_pre
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -394,7 +398,7 @@ qboolean PreParse_ScriptAction_Accum( gentity_t *ent, char *params, g_script_pre
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -405,7 +409,7 @@ qboolean PreParse_ScriptAction_Accum( gentity_t *ent, char *params, g_script_pre
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -417,7 +421,7 @@ qboolean PreParse_ScriptAction_Accum( gentity_t *ent, char *params, g_script_pre
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -428,7 +432,7 @@ qboolean PreParse_ScriptAction_Accum( gentity_t *ent, char *params, g_script_pre
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -439,7 +443,7 @@ qboolean PreParse_ScriptAction_Accum( gentity_t *ent, char *params, g_script_pre
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -450,7 +454,7 @@ qboolean PreParse_ScriptAction_Accum( gentity_t *ent, char *params, g_script_pre
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -461,7 +465,7 @@ qboolean PreParse_ScriptAction_Accum( gentity_t *ent, char *params, g_script_pre
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -472,7 +476,7 @@ qboolean PreParse_ScriptAction_Accum( gentity_t *ent, char *params, g_script_pre
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -483,7 +487,7 @@ qboolean PreParse_ScriptAction_Accum( gentity_t *ent, char *params, g_script_pre
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -522,7 +526,7 @@ qboolean PreParse_ScriptAction_GlobalAccum( gentity_t *ent, char *params, g_scri
 	}
 
 	bufferIndex = atoi(token);
-	if (bufferIndex >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+	if (bufferIndex < 0 || bufferIndex >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 		// CHRUKER: b055 - Was printing 10 as the last bufferindex, but its actually 9
 		G_Error( "%s", Error_OutsideRange );
 	}
@@ -694,7 +698,7 @@ qboolean PreParse_ScriptAction_GlobalAccum( gentity_t *ent, char *params, g_scri
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -705,7 +709,7 @@ qboolean PreParse_ScriptAction_GlobalAccum( gentity_t *ent, char *params, g_scri
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -716,7 +720,7 @@ qboolean PreParse_ScriptAction_GlobalAccum( gentity_t *ent, char *params, g_scri
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -728,7 +732,7 @@ qboolean PreParse_ScriptAction_GlobalAccum( gentity_t *ent, char *params, g_scri
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -739,7 +743,7 @@ qboolean PreParse_ScriptAction_GlobalAccum( gentity_t *ent, char *params, g_scri
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -750,7 +754,7 @@ qboolean PreParse_ScriptAction_GlobalAccum( gentity_t *ent, char *params, g_scri
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -761,7 +765,7 @@ qboolean PreParse_ScriptAction_GlobalAccum( gentity_t *ent, char *params, g_scri
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -772,7 +776,7 @@ qboolean PreParse_ScriptAction_GlobalAccum( gentity_t *ent, char *params, g_scri
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -783,7 +787,7 @@ qboolean PreParse_ScriptAction_GlobalAccum( gentity_t *ent, char *params, g_scri
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -794,7 +798,7 @@ qboolean PreParse_ScriptAction_GlobalAccum( gentity_t *ent, char *params, g_scri
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -809,7 +813,7 @@ qboolean PreParse_ScriptAction_GlobalAccum( gentity_t *ent, char *params, g_scri
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -820,7 +824,7 @@ qboolean PreParse_ScriptAction_GlobalAccum( gentity_t *ent, char *params, g_scri
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -831,7 +835,7 @@ qboolean PreParse_ScriptAction_GlobalAccum( gentity_t *ent, char *params, g_scri
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -843,7 +847,7 @@ qboolean PreParse_ScriptAction_GlobalAccum( gentity_t *ent, char *params, g_scri
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -854,7 +858,7 @@ qboolean PreParse_ScriptAction_GlobalAccum( gentity_t *ent, char *params, g_scri
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -865,7 +869,7 @@ qboolean PreParse_ScriptAction_GlobalAccum( gentity_t *ent, char *params, g_scri
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -876,7 +880,7 @@ qboolean PreParse_ScriptAction_GlobalAccum( gentity_t *ent, char *params, g_scri
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -887,7 +891,7 @@ qboolean PreParse_ScriptAction_GlobalAccum( gentity_t *ent, char *params, g_scri
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -898,7 +902,7 @@ qboolean PreParse_ScriptAction_GlobalAccum( gentity_t *ent, char *params, g_scri
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -909,7 +913,7 @@ qboolean PreParse_ScriptAction_GlobalAccum( gentity_t *ent, char *params, g_scri
 				G_Error( "%s", Error_RequiresParam );
 			}
 			bufferIndex2 = atoi(token);
-			if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+			if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 				G_Error( "%s", Error_OutsideRange );
 			}
 			preparsed_params->data_int[2] = bufferIndex2;
@@ -5696,11 +5700,10 @@ void G_ModifyTOI( gentity_t *ent )
 			cia = 0;
 		}
 	}
-#if defined(__x86_64__)
+	// [NQ 1.3.1 - Audit L6]: one code path for all builds - the (int) casts are correct on
+	// 32 and 64-bit. The old "#if defined(__x86_64__)" never matched MSVC x64 builds, which
+	// then passed a 64-bit value (pointer difference / strlen) to a %i/%d format.
 	G_SetConfigStringValue( CS_OID_DATA + ent->s.teamNum, "e",	va( "%i", (int)(ent-g_entities) ) );
-#else
-	G_SetConfigStringValue( CS_OID_DATA + ent->s.teamNum, "e",	va( "%i", ent-g_entities ) );
-#endif
 
 	if ( cix ) {
 		G_SetConfigStringValue( CS_OID_DATA + ent->s.teamNum, "b",	va( "%i", cix )	); // "cix"
@@ -6061,7 +6064,7 @@ qboolean G_ScriptAction_Accum( gentity_t *ent, char *params )
 	}
 
 	bufferIndex = atoi(token);
-	if (bufferIndex >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+	if (bufferIndex < 0 || bufferIndex >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 		// CHRUKER: b055 - Was printing 10 as the last bufferindex, but its actually 9
 		G_Error(S_COLOR_RED "G_ScriptAction_Accum(): accum buffer is outside range (0 - %i)\n", G_MAX_SCRIPT_ACCUM_BUFFERS-1 );
 	}
@@ -6268,7 +6271,7 @@ qboolean G_ScriptAction_Accum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): accum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): accum buffer is outside range (0 - %i)\n", G_MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		ent->scriptAccumBuffer[bufferIndex] += ent->scriptAccumBuffer[bufferIndex2];
@@ -6278,7 +6281,7 @@ qboolean G_ScriptAction_Accum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): accum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): accum buffer is outside range (0 - %i)\n", G_MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		if (ent->scriptAccumBuffer[bufferIndex] < ent->scriptAccumBuffer[bufferIndex2]) {
@@ -6291,7 +6294,7 @@ qboolean G_ScriptAction_Accum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): accum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): accum buffer is outside range (0 - %i)\n", G_MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		if (ent->scriptAccumBuffer[bufferIndex] > ent->scriptAccumBuffer[bufferIndex2]) {
@@ -6304,7 +6307,7 @@ qboolean G_ScriptAction_Accum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): accum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_Scripting: accum buffer is outside range (0 - %i)\n", G_MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		if (ent->scriptAccumBuffer[bufferIndex] != ent->scriptAccumBuffer[bufferIndex2]) {
@@ -6317,7 +6320,7 @@ qboolean G_ScriptAction_Accum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): accum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): accum buffer is outside range (0 - %i)\n", G_MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		if (ent->scriptAccumBuffer[bufferIndex] == ent->scriptAccumBuffer[bufferIndex2]) {
@@ -6330,7 +6333,7 @@ qboolean G_ScriptAction_Accum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): accum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): accum buffer is outside range (0 - %i)\n", G_MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		ent->scriptAccumBuffer[bufferIndex] = ent->scriptAccumBuffer[bufferIndex2];
@@ -6340,7 +6343,7 @@ qboolean G_ScriptAction_Accum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): accum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): accum buffer is outside range (0 - %i)\n", G_MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		ent->scriptAccumBuffer[bufferIndex] = rand() % ent->scriptAccumBuffer[bufferIndex2];
@@ -6350,7 +6353,7 @@ qboolean G_ScriptAction_Accum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): accum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): accum buffer is outside range (0 - %i)\n", G_MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		ent->scriptAccumBuffer[bufferIndex] -= ent->scriptAccumBuffer[bufferIndex2];
@@ -6360,7 +6363,7 @@ qboolean G_ScriptAction_Accum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): accum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): accum buffer is outside range (0 - %i)\n", G_MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		ent->scriptAccumBuffer[bufferIndex] *= ent->scriptAccumBuffer[bufferIndex2];
@@ -6370,7 +6373,7 @@ qboolean G_ScriptAction_Accum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): accum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): accum buffer is outside range (0 - %i)\n", G_MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		if (ent->scriptAccumBuffer[bufferIndex2]!=0) ent->scriptAccumBuffer[bufferIndex] /= ent->scriptAccumBuffer[bufferIndex2];
@@ -6389,7 +6392,7 @@ qboolean G_ScriptAction_Accum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): accum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): globalaccum buffer is outside range (0 - %i)\n", MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		ent->scriptAccumBuffer[bufferIndex] += level.globalAccumBuffer[bufferIndex2];
@@ -6399,7 +6402,7 @@ qboolean G_ScriptAction_Accum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): accum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): globalaccum buffer is outside range (0 - %i)\n", MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		if (ent->scriptAccumBuffer[bufferIndex] < level.globalAccumBuffer[bufferIndex2]) {
@@ -6412,7 +6415,7 @@ qboolean G_ScriptAction_Accum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): accum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): globalaccum buffer is outside range (0 - %i)\n", MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		if (ent->scriptAccumBuffer[bufferIndex] > level.globalAccumBuffer[bufferIndex2]) {
@@ -6425,7 +6428,7 @@ qboolean G_ScriptAction_Accum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): accum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): globalaccum buffer is outside range (0 - %i)\n", MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		if (ent->scriptAccumBuffer[bufferIndex] != level.globalAccumBuffer[bufferIndex2]) {
@@ -6438,7 +6441,7 @@ qboolean G_ScriptAction_Accum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): accum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): globalaccum buffer is outside range (0 - %i)\n", MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		if (ent->scriptAccumBuffer[bufferIndex] == level.globalAccumBuffer[bufferIndex2]) {
@@ -6451,7 +6454,7 @@ qboolean G_ScriptAction_Accum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): accum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): globalaccum buffer is outside range (0 - %i)\n", MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		ent->scriptAccumBuffer[bufferIndex] = level.globalAccumBuffer[bufferIndex2];
@@ -6461,7 +6464,7 @@ qboolean G_ScriptAction_Accum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): accum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): globalaccum buffer is outside range (0 - %i)\n", MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		ent->scriptAccumBuffer[bufferIndex] = rand() % level.globalAccumBuffer[bufferIndex2];
@@ -6471,7 +6474,7 @@ qboolean G_ScriptAction_Accum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): accum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): globalaccum buffer is outside range (0 - %i)\n", MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		ent->scriptAccumBuffer[bufferIndex] -= level.globalAccumBuffer[bufferIndex2];
@@ -6481,7 +6484,7 @@ qboolean G_ScriptAction_Accum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): accum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): globalaccum buffer is outside range (0 - %i)\n", MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		ent->scriptAccumBuffer[bufferIndex] *= level.globalAccumBuffer[bufferIndex2];
@@ -6491,7 +6494,7 @@ qboolean G_ScriptAction_Accum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): accum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_ScriptAction_Accum(): globalaccum buffer is outside range (0 - %i)\n", MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		if (level.globalAccumBuffer[bufferIndex2]!=0) ent->scriptAccumBuffer[bufferIndex] /= level.globalAccumBuffer[bufferIndex2];
@@ -6522,7 +6525,7 @@ qboolean G_ScriptAction_GlobalAccum( gentity_t *ent, char *params )
 
 	bufferIndex = atoi(token);
 	// CHRUKER: b055 - Was using G_MAX_SCRIPT_ACCUM_BUFFERS, which would result in invalid indexes
-	if (bufferIndex >= MAX_SCRIPT_ACCUM_BUFFERS) {
+	if (bufferIndex < 0 || bufferIndex >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 		G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): globalaccum buffer is outside range (0 - %i)\n", MAX_SCRIPT_ACCUM_BUFFERS-1 );
 	}
 
@@ -6697,7 +6700,7 @@ qboolean G_ScriptAction_GlobalAccum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): globalaccum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): accum buffer is outside range (0 - %i)\n", G_MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		level.globalAccumBuffer[bufferIndex] += ent->scriptAccumBuffer[bufferIndex2];
@@ -6707,7 +6710,7 @@ qboolean G_ScriptAction_GlobalAccum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): globalaccum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): accum buffer is outside range (0 - %i)\n", G_MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		if (level.globalAccumBuffer[bufferIndex] < ent->scriptAccumBuffer[bufferIndex2]) {
@@ -6720,7 +6723,7 @@ qboolean G_ScriptAction_GlobalAccum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): globalaccum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_Scripting: accum buffer is outside range (0 - %i)\n", G_MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		if (level.globalAccumBuffer[bufferIndex] > ent->scriptAccumBuffer[bufferIndex2]) {
@@ -6733,7 +6736,7 @@ qboolean G_ScriptAction_GlobalAccum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): globalaccum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): accum buffer is outside range (0 - %i)\n", G_MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		if (level.globalAccumBuffer[bufferIndex] != ent->scriptAccumBuffer[bufferIndex2]) {
@@ -6746,7 +6749,7 @@ qboolean G_ScriptAction_GlobalAccum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): globalaccum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): accum buffer is outside range (0 - %i)\n", G_MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		if (level.globalAccumBuffer[bufferIndex] == ent->scriptAccumBuffer[bufferIndex2]) {
@@ -6759,7 +6762,7 @@ qboolean G_ScriptAction_GlobalAccum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): globalaccum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): accum buffer is outside range (0 - %i)\n", G_MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		level.globalAccumBuffer[bufferIndex] = ent->scriptAccumBuffer[bufferIndex2];
@@ -6769,7 +6772,7 @@ qboolean G_ScriptAction_GlobalAccum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): globalaccum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): accum buffer is outside range (0 - %i)\n", G_MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		level.globalAccumBuffer[bufferIndex] = rand() % ent->scriptAccumBuffer[bufferIndex2];
@@ -6779,7 +6782,7 @@ qboolean G_ScriptAction_GlobalAccum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): accum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): accum buffer is outside range (0 - %i)\n", G_MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		level.globalAccumBuffer[bufferIndex] -= ent->scriptAccumBuffer[bufferIndex2];
@@ -6789,7 +6792,7 @@ qboolean G_ScriptAction_GlobalAccum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): accum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): accum buffer is outside range (0 - %i)\n", G_MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		level.globalAccumBuffer[bufferIndex] *= ent->scriptAccumBuffer[bufferIndex2];
@@ -6799,7 +6802,7 @@ qboolean G_ScriptAction_GlobalAccum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): accum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= G_MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): accum buffer is outside range (0 - %i)\n", G_MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		if (ent->scriptAccumBuffer[bufferIndex2]!=0) level.globalAccumBuffer[bufferIndex] /= ent->scriptAccumBuffer[bufferIndex2];
@@ -6817,7 +6820,7 @@ qboolean G_ScriptAction_GlobalAccum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): globalaccum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): globalaccum buffer is outside range (0 - %i)\n", MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		level.globalAccumBuffer[bufferIndex] += level.globalAccumBuffer[bufferIndex2];
@@ -6827,7 +6830,7 @@ qboolean G_ScriptAction_GlobalAccum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): globalaccum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): globalaccum buffer is outside range (0 - %i)\n", MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		if (level.globalAccumBuffer[bufferIndex] < level.globalAccumBuffer[bufferIndex2]) {
@@ -6840,7 +6843,7 @@ qboolean G_ScriptAction_GlobalAccum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): globalaccum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): globalaccum buffer is outside range (0 - %i)\n", MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		if (level.globalAccumBuffer[bufferIndex] > level.globalAccumBuffer[bufferIndex2]) {
@@ -6853,7 +6856,7 @@ qboolean G_ScriptAction_GlobalAccum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): globalaccum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): globalaccum buffer is outside range (0 - %i)\n", MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		if (level.globalAccumBuffer[bufferIndex] != level.globalAccumBuffer[bufferIndex2]) {
@@ -6866,7 +6869,7 @@ qboolean G_ScriptAction_GlobalAccum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): globalaccum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): globalaccum buffer is outside range (0 - %i)\n", MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		if (level.globalAccumBuffer[bufferIndex] == level.globalAccumBuffer[bufferIndex2]) {
@@ -6879,7 +6882,7 @@ qboolean G_ScriptAction_GlobalAccum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): globalaccum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_Scripting: globalaccum buffer is outside range (0 - %i)\n", MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		level.globalAccumBuffer[bufferIndex] = level.globalAccumBuffer[bufferIndex2];
@@ -6889,7 +6892,7 @@ qboolean G_ScriptAction_GlobalAccum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): globalaccum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): globalaccum buffer is outside range (0 - %i)\n", MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		level.globalAccumBuffer[bufferIndex] = rand() % level.globalAccumBuffer[bufferIndex2];
@@ -6899,7 +6902,7 @@ qboolean G_ScriptAction_GlobalAccum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): globalaccum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): globalaccum buffer is outside range (0 - %i)\n", MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		level.globalAccumBuffer[bufferIndex] -= level.globalAccumBuffer[bufferIndex2];
@@ -6909,7 +6912,7 @@ qboolean G_ScriptAction_GlobalAccum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): globalaccum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): globalaccum buffer is outside range (0 - %i)\n", MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		level.globalAccumBuffer[bufferIndex] *= level.globalAccumBuffer[bufferIndex2];
@@ -6919,7 +6922,7 @@ qboolean G_ScriptAction_GlobalAccum( gentity_t *ent, char *params )
 			G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): globalaccum %s requires a parameter\n", lastToken );
 		}
 		bufferIndex2 = atoi(token);
-		if (bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {
+		if (bufferIndex2 < 0 || bufferIndex2 >= MAX_SCRIPT_ACCUM_BUFFERS) {	// [NQ 1.3.1 - Audit L3]: negative index check added
 			G_Error(S_COLOR_RED "G_ScriptAction_GlobalAccum(): globalaccum buffer is outside range (0 - %i)\n", MAX_SCRIPT_ACCUM_BUFFERS-1 );
 		}
 		if (level.globalAccumBuffer[bufferIndex2]!=0) level.globalAccumBuffer[bufferIndex] /= level.globalAccumBuffer[bufferIndex2];
@@ -7110,7 +7113,7 @@ qboolean G_ScriptAction_SetState( gentity_t *ent, char *params ) {
 qboolean G_ScriptAction_ToggleSpeaker( gentity_t *ent, char *params )
 {
 	int				i;
-	long			hash;
+	int				hash;
 	gentity_t		*tent;
 	bg_speaker_t	*speaker;
 
@@ -7141,7 +7144,7 @@ qboolean G_ScriptAction_ToggleSpeaker( gentity_t *ent, char *params )
 qboolean G_ScriptAction_DisableSpeaker( gentity_t *ent, char *params )
 {
 	int				i;
-	long			hash;
+	int				hash;
 	gentity_t		*tent;
 	bg_speaker_t	*speaker;
 
@@ -7172,7 +7175,7 @@ qboolean G_ScriptAction_DisableSpeaker( gentity_t *ent, char *params )
 qboolean G_ScriptAction_EnableSpeaker( gentity_t *ent, char *params )
 {
 	int				i;
-	long			hash;
+	int				hash;
 	gentity_t		*tent;
 	bg_speaker_t	*speaker;
 

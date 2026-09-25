@@ -104,7 +104,7 @@ int G_FindConfigstringIndex( const char *name, int start, int max, qboolean crea
 	}
 
 	if ( i == max ) {
-		G_Error( va("G_FindConfigstringIndex: overflow (%i %i) for '%s'", start, start+i, name) );
+		G_Error( "%s", va("G_FindConfigstringIndex: overflow (%i %i) for '%s'", start, start+i, name) );
 	}
 
 	trap_SetConfigstring( start + i, name );
@@ -168,7 +168,7 @@ int G_FindNewConfigstringIndex( const char *name, int start, int max, qboolean c
 	}
 
 	if ( i == max ) {
-		G_Error( va("G_FindNewConfigstringIndex: overflow (%i %i) for '%s'", start, start+i, name) );
+		G_Error( "%s", va("G_FindNewConfigstringIndex: overflow (%i %i) for '%s'", start, start+i, name) );
 	}
 
 	if ( isModels ) {

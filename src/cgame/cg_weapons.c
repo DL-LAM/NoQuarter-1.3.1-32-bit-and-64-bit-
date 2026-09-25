@@ -4110,7 +4110,9 @@ void CG_WeaponBank_f(void) {
 
 	bank = atoi( CG_Argv( 1 ) );
 
-	if ( bank <= 0 || bank > MAX_WEAP_BANKS_MP ) {
+	// [NQ 1.3.1 - Audit L7]: ">=" - banks are 1..MAX_WEAP_BANKS_MP-1; "weaponbank 10" indexed
+	// lastWeapSelInBank[10] / weapBanksMultiPlayer[10], one past the end (same fix as ET: Legacy)
+	if ( bank <= 0 || bank >= MAX_WEAP_BANKS_MP ) {
 		return;
 	}
 

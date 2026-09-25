@@ -63,6 +63,108 @@ void G_StripPort(const char *ip, char *out, int outsize) {
 
 extern char bigTextBuffer[100000];
 
+/*
+==================
+[NQ 1.3.1 - Audit L4]: G_MuteUnmuteTime
+
+Returns base + seconds * 1000 (a level.time value at which the auto-unmute in
+ClientThink fires), or -1 = "no automatic unmute" when that would not fit in an
+int. The old "level.time + seconds*SECONDS_1" overflowed for mutes longer than
+about 24.8 days, produced a negative time and the player was unmuted on the next
+frame. The shrubbot mute record still expires normally; -1 only means this map
+session will not auto-unmute.
+==================
+*/
+int G_MuteUnmuteTime( int base, int seconds ) {
+	int64_t t;
+
+	if ( seconds < 0 ) {
+		seconds = 0;
+	}
+	t = (int64_t)base + (int64_t)seconds * SECONDS_1;
+	if ( t > INT_MAX ) {
+		return -1;
+	}
+	return (int)t;
+}
+
+/*
+==================
+[NQ 1.3.1 - Audit M3]: G_shrubbot_IsRealGUID
+
+"", "unknown" and "NO_GUID" are placeholders, not identities. Comparing them
+made a ban of one key-less player (or an IP-only ban, whose GUID is empty)
+match every other key-less player.
+==================
+*/
+static qboolean G_shrubbot_IsRealGUID( char const* guid ) {
+	if ( !guid || !guid[0] || !Q_stricmp(guid, "unknown") || !Q_stricmp(guid, "NO_GUID") ) {
+		return qfalse;
+	}
+	return qtrue;
+}
+
+/*
+==================
+[NQ 1.3.1 - Audit M2]: G_shrubbot_IPMatch
+
+Replaces strstr(clientIP, banIP), which matched ANYWHERE inside the address:
+a ban on 1.2.3.4 also banned 11.2.3.45, 21.2.3.40, ... Both addresses are
+compared without port. A ban matches when:
+  - the addresses are equal (IPv4 or IPv6, case-insensitive), or
+  - the ban is an IPv4 RANGE: fewer than 4 octets ("1.2.3" / "1.2.3." / "10.")
+    and the client address starts with those whole octets, or
+  - the ban is an IPv6 prefix ending in ':' ("2001:db8:") and the client
+    address starts with it.
+Range bans made with !banip on partial addresses therefore keep working.
+==================
+*/
+static qboolean G_shrubbot_IPMatch( char const* clientIPWithPort, char const* banIPWithPort ) {
+	char	clientIP[MAX_IP_LENGTH_V6];
+	char	banIP[MAX_IP_LENGTH_V6];
+	int		len, dots;
+	char const	*p;
+
+	if ( !clientIPWithPort || !banIPWithPort || !*clientIPWithPort || !*banIPWithPort ) {
+		return qfalse;
+	}
+
+	G_StripPort( clientIPWithPort, clientIP, sizeof(clientIP) );
+	G_StripPort( banIPWithPort, banIP, sizeof(banIP) );
+
+	if ( !clientIP[0] || !banIP[0] || !Q_stricmp(banIP, "localhost") ) {
+		return qfalse;
+	}
+
+	if ( !Q_stricmp(clientIP, banIP) ) {
+		return qtrue;
+	}
+
+	len = strlen(banIP);
+
+	// IPv4 range ban
+	if ( !strchr(banIP, ':') ) {
+		for ( dots = 0, p = banIP; *p; p++ ) {
+			if ( *p == '.' ) {
+				dots++;
+			}
+		}
+		if ( banIP[len-1] == '.' ) {
+			return !Q_strncmp(clientIP, banIP, len) ? qtrue : qfalse;
+		}
+		if ( dots < 3 ) {
+			return ( !Q_strncmp(clientIP, banIP, len) && clientIP[len] == '.' ) ? qtrue : qfalse;
+		}
+		return qfalse;
+	}
+
+	// IPv6 prefix ban
+	if ( banIP[len-1] == ':' ) {
+		return !Q_stricmpn(clientIP, banIP, len) ? qtrue : qfalse;
+	}
+	return qfalse;
+}
+
 // Note flag 'J' is free now - !ammopack & !medpack IS removed
 static const struct g_shrubbot_cmd g_shrubbot_cmds[] =
 {
@@ -133,11 +235,19 @@ static const struct g_shrubbot_cmd g_shrubbot_cmds[] =
 	{"",			NULL,					'\0', 0}
 };
 
-g_shrubbot_level_t		*g_shrubbot_levels[MAX_SHRUBBOT_LEVELS];
-g_shrubbot_admin_t		*g_shrubbot_admins[MAX_SHRUBBOT_ADMINS];
-g_shrubbot_ban_t		*g_shrubbot_bans[MAX_SHRUBBOT_BANS];
-g_shrubbot_ban_t		*g_shrubbot_mutes[MAX_SHRUBBOT_BANS]; // jaquboss
-g_shrubbot_command_t	*g_shrubbot_commands[MAX_SHRUBBOT_COMMANDS];
+// [NQ 1.3.1 - Audit H4]: Every table gets ONE extra slot that always stays NULL.
+// All code walks these tables as NULL-terminated lists ("for(i=0; arr[i]; i++)")
+// but readconfig/!ban/!mute can fill every one of the MAX_* slots. With no spare
+// terminator, a full table (1024 bans is common on long-running servers) made
+// those loops run past the end into the NEXT table, and the "add" functions then
+// stored a new pointer there (memory corruption). With [MAX + 1] the scan always
+// stops at index MAX at the latest, which the existing "if (i == MAX) too many"
+// checks already handle. Nothing is ever written to index MAX.
+g_shrubbot_level_t		*g_shrubbot_levels[MAX_SHRUBBOT_LEVELS + 1];
+g_shrubbot_admin_t		*g_shrubbot_admins[MAX_SHRUBBOT_ADMINS + 1];
+g_shrubbot_ban_t		*g_shrubbot_bans[MAX_SHRUBBOT_BANS + 1];
+g_shrubbot_ban_t		*g_shrubbot_mutes[MAX_SHRUBBOT_BANS + 1]; // jaquboss
+g_shrubbot_command_t	*g_shrubbot_commands[MAX_SHRUBBOT_COMMANDS + 1];
 
 qboolean G_shrubbot_permission(gentity_t *ent, char flag) {
 	int i;
@@ -748,7 +858,9 @@ qboolean G_shrubbot_ban_check(char const* ip, char const* guid, char const* reas
 		if(g_shrubbot_bans[i]->expires != 0 && (g_shrubbot_bans[i]->expires - t) < 1)
 			continue;
 		// check GUID first..
-		if(!Q_stricmp(g_shrubbot_bans[i]->guid, guid)) {
+		// [NQ 1.3.1 - Audit M3]: only compare real GUIDs (see G_shrubbot_IsRealGUID)
+		if( G_shrubbot_IsRealGUID(g_shrubbot_bans[i]->guid) && G_shrubbot_IsRealGUID(guid) &&
+			!Q_stricmp(g_shrubbot_bans[i]->guid, guid)) {
 			if(reason) {
 				Com_sprintf(
 					(char*)reason,
@@ -762,10 +874,9 @@ qboolean G_shrubbot_ban_check(char const* ip, char const* guid, char const* reas
 		}
 
   		// ..then check IP
-		if(*ip && strlen(ip) > 0 &&
-			strlen(g_shrubbot_bans[i]->ip) > 0 &&
-			Q_strncmp( g_shrubbot_bans[i]->ip, "localhost", sizeof(g_shrubbot_bans[i]->ip) ) &&
-			strstr(ip, g_shrubbot_bans[i]->ip) )
+		// [NQ 1.3.1 - Audit M2]: whole-address / whole-octet match instead of strstr()
+		// (see G_shrubbot_IPMatch). Empty and "localhost" ban IPs never match.
+		if( ip && G_shrubbot_IPMatch(ip, g_shrubbot_bans[i]->ip) )
 		{
 			if(reason) {
 				Com_sprintf(
@@ -1007,6 +1118,8 @@ qboolean G_shrubbot_readconfig(gentity_t *ent, int skiparg) {
 	time_t					expiretime;
 	int						seconds;
 	char					duration[MAX_STRING_CHARS];
+	int						skipped = 0;	// [NQ 1.3.1 - Audit H4]: entries dropped because a table was full
+	qboolean				haveTime;		// [NQ 1.3.1 - Audit L4]: current time available for mute re-apply
 
 	if(!g_shrubbot.string[0]) return qfalse;
 	len = trap_FS_FOpenFile(g_shrubbot.string, &f, FS_READ);
@@ -1036,7 +1149,16 @@ qboolean G_shrubbot_readconfig(gentity_t *ent, int skiparg) {
 		if ( !(*t) ) break;
 
 		if(!Q_stricmp(t, "[level]")) {
-			if(lc >= MAX_SHRUBBOT_LEVELS) return qfalse;
+			if(lc >= MAX_SHRUBBOT_LEVELS) {
+				// [NQ 1.3.1 - Audit H4]: Table full. This used to "return qfalse" in the
+				// middle of the file: everything after this point (mutes, commands...)
+				// was silently not loaded and the file buffer leaked. Skip just this
+				// entry (all *_open flags off = its key/value lines are ignored) and
+				// keep reading.
+				skipped++;
+				level_open = admin_open = mute_open = ban_open = command_open = qfalse;
+				continue;
+			}
 			L = malloc(sizeof(g_shrubbot_level_t));
 			L->level	= 0;
 			*L->name	= '\0';
@@ -1047,7 +1169,12 @@ qboolean G_shrubbot_readconfig(gentity_t *ent, int skiparg) {
 			continue;
 		}
 		else if(!Q_stricmp(t, "[admin]")) {
-			if(ac >= MAX_SHRUBBOT_ADMINS) return qfalse;
+			if(ac >= MAX_SHRUBBOT_ADMINS) {
+				// [NQ 1.3.1 - Audit H4]: table full - skip this entry, keep reading (see [level] above)
+				skipped++;
+				level_open = admin_open = mute_open = ban_open = command_open = qfalse;
+				continue;
+			}
 
 			if (nq_noq.integer & NOQ_DONT_READ_ADMINS) continue;
 
@@ -1062,7 +1189,12 @@ qboolean G_shrubbot_readconfig(gentity_t *ent, int skiparg) {
 			continue;
 		}
 		else if(!Q_stricmp(t, "[ban]")) {
-			if(bc >= MAX_SHRUBBOT_BANS) return qfalse;
+			if(bc >= MAX_SHRUBBOT_BANS) {
+				// [NQ 1.3.1 - Audit H4]: table full - skip this entry, keep reading (see [level] above)
+				skipped++;
+				level_open = admin_open = mute_open = ban_open = command_open = qfalse;
+				continue;
+			}
 
 			if (nq_noq.integer & NOQ_DONT_READ_BANS) continue;
 
@@ -1082,7 +1214,12 @@ qboolean G_shrubbot_readconfig(gentity_t *ent, int skiparg) {
 			continue;
 		}
 		else if(!Q_stricmp(t, "[mute]")) {
-			if(mc >= MAX_SHRUBBOT_BANS) return qfalse;
+			if(mc >= MAX_SHRUBBOT_BANS) {
+				// [NQ 1.3.1 - Audit H4]: table full - skip this entry, keep reading (see [level] above)
+				skipped++;
+				level_open = admin_open = mute_open = ban_open = command_open = qfalse;
+				continue;
+			}
 
 			if (nq_noq.integer & NOQ_DONT_READ_MUTES) continue;
 
@@ -1100,7 +1237,10 @@ qboolean G_shrubbot_readconfig(gentity_t *ent, int skiparg) {
 		}
 		else if(!Q_stricmp(t, "[command]")) {
 			if(cc >= MAX_SHRUBBOT_COMMANDS) {  // jaquboss use command count instead
-				return qfalse;
+				// [NQ 1.3.1 - Audit H4]: table full - skip this entry, keep reading (see [level] above)
+				skipped++;
+				level_open = admin_open = mute_open = ban_open = command_open = qfalse;
+				continue;
 			}
 			c = malloc(sizeof(g_shrubbot_command_t));
 			*c->command = '\0';
@@ -1224,7 +1364,11 @@ qboolean G_shrubbot_readconfig(gentity_t *ent, int skiparg) {
 
 				while(*lp) {
 					if(*lp == ' ') {
-						c->levels[cmdlevel++] = atoi(level);
+						// [NQ 1.3.1 - Audit H4]: c->levels[] holds MAX_SHRUBBOT_LEVELS
+						// entries + the -1 terminator; extra numbers used to overflow it.
+						if ( cmdlevel < MAX_SHRUBBOT_LEVELS ) {
+							c->levels[cmdlevel++] = atoi(level);
+						}
 						level[0] = '\0';
 						*lp++;
 						continue;
@@ -1233,7 +1377,7 @@ qboolean G_shrubbot_readconfig(gentity_t *ent, int skiparg) {
 					*lp++;
 				}
 
-				if(level[0]) {
+				if(level[0] && cmdlevel < MAX_SHRUBBOT_LEVELS) {	// [NQ 1.3.1 - Audit H4]: bounded
 					c->levels[cmdlevel++] = atoi(level);
 				}
 
@@ -1247,18 +1391,28 @@ qboolean G_shrubbot_readconfig(gentity_t *ent, int skiparg) {
 	}
 
 	// core: put mute status of clients in the ConfigString CS_PLAYERS
-	for ( len=0; len < mc; ++len ) {
+	// [NQ 1.3.1 - Audit L4]: This loop used localtime(&expiretime) with expiretime
+	// never set (uninitialised), so every re-applied mute got a random duration,
+	// expired mutes were re-applied too, and "duration" could be printed without
+	// ever being written. Use the real current time, skip expired records, treat
+	// expires == 0 as permanent and avoid the seconds*1000 int overflow.
+	haveTime = time(&expiretime) ? qtrue : qfalse;	// no clock -> don't touch anyone's mute state
+	for ( len=0; haveTime && len < mc; ++len ) {
 		n = ClientNumbersFromString(g_shrubbot_mutes[len]->name, pids);
-		pidEnt = &g_entities[pids[0]];
-		if ( n == 1 ) {
-			if ( localtime(&expiretime) ) {
+		if ( n == 1 && pids[0] >= 0 && pids[0] < level.maxclients ) {
+			pidEnt = &g_entities[pids[0]];
+			if ( pidEnt->client ) {
+				duration[0] = '\0';
 				seconds = g_shrubbot_mutes[len]->expires - (expiretime - SHRUBBOT_BAN_EXPIRE_OFFSET);
-				if(seconds) {
+				if ( g_shrubbot_mutes[len]->expires != 0 && seconds <= 0 ) {
+					continue;	// mute already expired
+				}
+				if ( g_shrubbot_mutes[len]->expires != 0 ) {
 					Com_sprintf(duration, sizeof(duration), "for %i seconds", seconds);
 				}
 				// core: fix: let the mute status be put in CS_PLAYERS configstring
 				pidEnt->client->sess.muted = qtrue;
-				pidEnt->client->sess.auto_mute_time = level.time + seconds*SECONDS_1;
+				pidEnt->client->sess.auto_mute_time = ( g_shrubbot_mutes[len]->expires == 0 ) ? -1 : G_MuteUnmuteTime( level.time, seconds );
 				pidEnt->client->sess.muted_by = MUTED_BY_SHRUB;
 				ClientConfigStringChanged( pidEnt );
 				AP(va("chat \"^dmute: ^*%s ^9has been muted %s\"",	pidEnt->client->pers.netname, duration ));
@@ -1268,6 +1422,12 @@ qboolean G_shrubbot_readconfig(gentity_t *ent, int skiparg) {
 
 	free(cnf2);
 	SP(va("readconfig: loaded %d levels, %d admins, %d bans, %d mutes, %d commands\n", lc, ac, bc, mc, cc));
+	// [NQ 1.3.1 - Audit H4]: report entries that did not fit instead of silently dropping the rest of the file
+	if ( skipped ) {
+		SP(va("^dreadconfig: ^1%d entries skipped - a shrubbot table is full (max %d bans/mutes, %d admins, %d levels, %d commands)\n",
+			skipped, MAX_SHRUBBOT_BANS, MAX_SHRUBBOT_ADMINS, MAX_SHRUBBOT_LEVELS, MAX_SHRUBBOT_COMMANDS));
+		G_LogPrintf("readconfig: %d shrubbot entries skipped - table full\n", skipped);
+	}
 
 	if(lc == 0) _shrubbot_default_levels();
 	return qtrue;
@@ -2189,7 +2349,9 @@ qboolean G_shrubbot_unban(gentity_t *ent, int skiparg) {
 	}
 	Q_SayArgv(1+skiparg, bs, sizeof(bs));
 	bnum = atoi(bs);
-	if ( (bnum < 1) || (!g_shrubbot_bans[bnum-1]) ) {
+	// [NQ 1.3.1 - Audit M7]: Upper bound was missing. "!unban 999999" read far
+	// past g_shrubbot_bans[] and then wrote through whatever pointer it found.
+	if ( (bnum < 1) || (bnum > MAX_SHRUBBOT_BANS) || (!g_shrubbot_bans[bnum-1]) ) {
 		SP("^dunban: ^9invalid ban #\n");
 		return qfalse;
 	}
@@ -2353,13 +2515,15 @@ qboolean G_shrubbot_mute(gentity_t *ent, int skiparg) {
 	if ( !vic->client->sess.muted ) {
 		// core: fix: let the mute status be put in CS_PLAYERS configstring
 		vic->client->sess.muted = qtrue;
-		vic->client->sess.auto_mute_time = level.time + seconds*SECONDS_1;	// unmute time
+		// [NQ 1.3.1 - Audit L4]: overflow-safe (seconds*1000 overflowed int for mutes > ~24.8 days)
+		vic->client->sess.auto_mute_time = G_MuteUnmuteTime( level.time, seconds );	// unmute time
 		vic->client->sess.muted_by = MUTED_BY_SHRUB;
 		ClientConfigStringChanged( &g_entities[pids[0]] );
 	}
 	else {
 		if ( vic->client->sess.auto_mute_time >= 0 ) {
-			vic->client->sess.auto_mute_time += seconds*SECONDS_1;	// increase unmute time
+			// [NQ 1.3.1 - Audit L4]: overflow-safe increase of the unmute time
+			vic->client->sess.auto_mute_time = G_MuteUnmuteTime( vic->client->sess.auto_mute_time, seconds );	// increase unmute time
 		}
 	}
 
@@ -2790,11 +2954,10 @@ qboolean G_shrubbot_listplayers(gentity_t *ent, int skiparg) {
 		DecolorString(lname, cleanLevelName);
 		spaces = lname_max - strlen(cleanLevelName);
 		//Com_sprintf(lname_fmt, sizeof(lname_fmt), "%%%is", spaces + strlen(lname));
-#if defined(__x86_64__)
+		// [NQ 1.3.1 - Audit L6]: one code path for all builds - the (int) casts are correct on
+		// 32 and 64-bit. The old "#if defined(__x86_64__)" never matched MSVC x64 builds, which
+		// then passed a 64-bit value (pointer difference / strlen) to a %i/%d format.
 		Com_sprintf(lname_fmt, sizeof(lname_fmt), "%%%ds", spaces + (int)strlen(lname)); // IRATA: int might overflow - but we shouldnt have these high values
-#else
-		Com_sprintf(lname_fmt, sizeof(lname_fmt), "%%%ds", spaces + strlen(lname));
-#endif
 		Com_sprintf(lname2, sizeof(lname2), lname_fmt, lname);
 
 		if (!ent) { // console with no colors
@@ -3167,17 +3330,13 @@ qboolean G_shrubbot_showbans(gentity_t *ent, int skiparg) {
 			spacesName = max_name - strlen(tmp);
 			DecolorString(g_shrubbot_bans[i]->banner, tmp);
 			spacesBanner = max_banner - strlen(tmp);
-#if defined(__x86_64__)
+			// [NQ 1.3.1 - Audit L6]: one code path for all builds - the (int) casts are correct on
+			// 32 and 64-bit. The old "#if defined(__x86_64__)" never matched MSVC x64 builds, which
+			// then passed a 64-bit value (pointer difference / strlen) to a %i/%d format.
 			Com_sprintf(fmt, sizeof(fmt),
 				 "^F%%4i^7 %%-%ds^7 ^F%%-10s^7 %%-%ds^7 ^F%%-9s^7 %%s\n",
 				spacesName + (int)strlen(g_shrubbot_bans[i]->name), // IRATA: cast int might overflow - but we shouldnt have these high values
 				spacesBanner + (int)strlen(g_shrubbot_bans[i]->banner)); // IRATA: cast int might overflow - but we shouldnt have these high values
-#else
-			Com_sprintf(fmt, sizeof(fmt),
-				 "^F%%4i^7 %%-%ds^7 ^F%%-10s^7 %%-%ds^7 ^F%%-9s^7 %%s\n",
-				spacesName + strlen(g_shrubbot_bans[i]->name),
-				spacesBanner + strlen(g_shrubbot_bans[i]->banner));
-#endif
 		SBP(va(fmt,
 			(i+1),
 			g_shrubbot_bans[i]->name,
@@ -5181,7 +5340,7 @@ static int G_shrubbot_adminlevel( gentity_t *ent ) {
 	int i;
 	// Get GUID and hash
 	char *guid = level.clients[ent-g_entities].pers.cl_guid;
-	long hash;
+	int hash;
 
 // TODO
 	// Do not run if no GUID

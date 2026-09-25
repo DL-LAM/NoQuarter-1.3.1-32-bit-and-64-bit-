@@ -26,7 +26,7 @@
 
 qboolean BG_LoadCampaignSave( const char *filename, cpsFile_t *file, const char *profile ) {
 	fileHandle_t f;
-	long hash;
+	int hash;
 	char *ch;
 	int i, j;
 
@@ -52,7 +52,7 @@ qboolean BG_LoadCampaignSave( const char *filename, cpsFile_t *file, const char 
 
 	// generate hash for profile
 	for( hash = 0, ch = (char *)profile; *ch != '\0'; ch++ ) {
-		hash += (long)(tolower(*ch))*((ch-profile)+119);
+		hash += (int)(tolower(*ch))*((ch-profile)+119);
 	}
 
 	if( file->header.profileHash != hash ) {

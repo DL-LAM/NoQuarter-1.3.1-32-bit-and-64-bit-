@@ -1601,7 +1601,8 @@ typedef enum {
 
 
 gitem_t	*BG_FindItem( const char *pickupName );
-gitem_t	*BG_FindItemForClassName( const char *className, long hash );
+// [NQ 1.3.1 - Math]: Use int instead of long to prevent 8-byte hash on 64-bit Linux (LP64)
+gitem_t	*BG_FindItemForClassName( const char *className, int hash );
 gitem_t	*BG_FindItemForWeapon	( weapon_t weapon );
 gitem_t *BG_FindItemForAmmo		( int weapon );
 weapon_t BG_FindAmmoForWeapon	( weapon_t weapon );
@@ -2207,8 +2208,9 @@ typedef struct {
 	qboolean	priv;
 } fireteamData_t;
 
-long BG_StringHashValue( const char *fname );
-long BG_StringHashValue_Lwr( const char *fname );
+// [NQ 1.3.1 - Math]: Use int instead of long to prevent 8-byte hash on 64-bit Linux (LP64)
+int BG_StringHashValue( const char *fname );
+int BG_StringHashValue_Lwr( const char *fname );
 
 void BG_RotatePoint(vec3_t point, const vec3_t matrix[3]);
 void BG_CreateRotationMatrix(const vec3_t angles, vec3_t matrix[3]);
@@ -2362,7 +2364,7 @@ typedef struct bg_speaker_s {
 	qhandle_t				noise;
 	vec3_t					origin;
 	char					targetname[32];
-	long					targetnamehash;
+	int						targetnamehash;
 
 	speakerLoopType_t		loop;
     speakerBroadcastType_t	broadcast;

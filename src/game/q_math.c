@@ -590,19 +590,21 @@ void VectorRotate( vec3_t in, vec3_t matrix[3], vec3_t out )
 /*
 ** float q_rsqrt( float number )
 */
+// [NQ 1.3.1 - Math]: Use 32-bit int instead of long to prevent 8-byte stack overread on 64-bit Linux (LP64)
 float Q_rsqrt( float number )
 {
 	const float	threehalfs = 1.5F;
 	float		x2 = number * 0.5F;
-	float		y = number;
-	long		i = * ( long * ) &y;			// evil floating point bit level hacking
+	union {
+		float f;
+		int i;
+	} u;
 
-	i  = 0x5f3759df - ( i >> 1 );               // what the fuck?
-	y  = * ( float * ) &i;
-	y  = y * ( threehalfs - ( x2 * y * y ) );   // 1st iteration
-//	y  = y * ( threehalfs - ( x2 * y * y ) );   // 2nd iteration, this can be removed
+	u.f = number;
+	u.i = 0x5f3759df - ( u.i >> 1 );
+	u.f = u.f * ( threehalfs - ( x2 * u.f * u.f ) );
 
-	return y;
+	return u.f;
 }
 
 float Q_fabs( float f ) {
@@ -611,7 +613,7 @@ float Q_fabs( float f ) {
 }
 
 #if id386 && !( (defined __linux__ || defined __FreeBSD__ || defined __GNUC__ ) && (defined __i386__ ) ) // rb010123
-long myftol( float f ) {
+int myftol( float f ) {
 	static int tmp;
 	__asm fld f
 	__asm fistp tmp

@@ -344,7 +344,30 @@ void *Omnibot_LL(const char *file)
 eomnibot_error Omnibot_LoadLibrary(int version, const char *lib, const char *path)
 {
 	eomnibot_error r = BOT_ERROR_NONE;
-	g_BotLibrary = Omnibot_LL(OB_VA("%s/%s.so", path ? path : ".", lib));
+	// [NQ 1.3.1 - Linux 64-bit]: Check for .x86_64.so first on 64-bit Linux platforms
+#if defined(__x86_64__) || defined(__amd64__)
+	g_BotLibrary = Omnibot_LL(OB_VA("%s/%s.x86_64.so", path ? path : ".", lib));
+	if(!g_BotLibrary)
+	{
+		g_BotLibrary = Omnibot_LL(OB_VA("./%s.x86_64.so", lib));
+	}
+	if(!g_BotLibrary)
+	{
+		char *homeDir = getenv("HOME");
+		if(homeDir)
+			g_BotLibrary = Omnibot_LL(OB_VA("%s/omni-bot/%s.x86_64.so", homeDir, lib));
+	}
+	if(!g_BotLibrary)
+	{
+		char *homeDir = getenv("HOME");
+		if(homeDir)
+			g_BotLibrary = Omnibot_LL(OB_VA("%s.x86_64.so", lib));
+	}
+#endif
+	if(!g_BotLibrary)
+	{
+		g_BotLibrary = Omnibot_LL(OB_VA("%s/%s.so", path ? path : ".", lib));
+	}
 	if(!g_BotLibrary)
 	{
 		g_BotLibrary = Omnibot_LL(OB_VA("./%s.so", lib));

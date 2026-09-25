@@ -237,7 +237,6 @@ def build_target(arch, target_triple, out_dir):
         "-Wno-unused-function",
         "-Wno-unused-variable",
         "-Wno-deprecated-declarations",
-        "-Wno-incompatible-pointer-types",
         "-Wno-format-security",
         "-Wno-macro-redefined",
         "-Wno-date-time",

@@ -42,12 +42,45 @@ static void G_xpsave_init_struct(g_xpsave_t* data) {
 	data->version			= XP_SAVE_CUR_VER;
 }
 
+/*
+==================
+[NQ 1.3.1 - Audit H3]: G_xpsave_is_valid_guid
+
+XP save files are named "<guid>.xp" and written with direct OS file calls
+(g_osfile.c), NOT through the engine's sandboxed file system. cl_guid comes
+straight from the client's userinfo and was never checked, so a GUID such as
+"../../../../tmp/x" created or overwrote .xp files anywhere the server user
+can write. Only accept what a real GUID looks like: exactly MAX_GUID_LENGTH
+(32) hexadecimal characters. That covers ETL/etkey GUIDs, PunkBuster GUIDs
+and NQ keys (processClientNQKey already enforces the same format).
+==================
+*/
+static qboolean G_xpsave_is_valid_guid(char const* guid) {
+	int i;
+
+	if ( guid == NULL ) {
+		return qfalse;
+	}
+	for ( i = 0; i < MAX_GUID_LENGTH; i++ ) {
+		char c = guid[i];
+		if ( !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) ) {
+			return qfalse;			// also stops at the terminator of a short GUID
+		}
+	}
+	return (guid[MAX_GUID_LENGTH] == '\0') ? qtrue : qfalse;
+}
+
 #ifdef AUTO_GUID
 static char* G_xpsave_get_path_nq(char const* guid) {
 	static char							path[MAX_OSPATH];
 
 	// This check should be done externally to this function but just be sure!
 	if ( !g_XPSaveDirectory.string[0] || guid == NULL ) {
+		return NULL;
+	}
+
+	// [NQ 1.3.1 - Audit H3]: never build a file path from an unvalidated GUID
+	if ( !G_xpsave_is_valid_guid(guid) ) {
 		return NULL;
 	}
 
@@ -67,6 +100,11 @@ static char* G_xpsave_get_path(char const* guid) {
 		return NULL;
 	}
 
+	// [NQ 1.3.1 - Audit H3]: never build a file path from an unvalidated GUID
+	if ( !G_xpsave_is_valid_guid(guid) ) {
+		return NULL;
+	}
+
 	// Build file path
 	G_BuildFilePath(g_XPSaveDirectory.string, guid, XP_SAVE_FILE_EXT, path, MAX_OSPATH);
 
@@ -74,14 +112,75 @@ static char* G_xpsave_get_path(char const* guid) {
 	return path;
 }
 
+/*
+==================
+[NQ 1.3.1 - Audit M5]: G_xpsave_to_disk / G_xpsave_read
+
+Serialise the XP save record at FIXED byte offsets instead of dumping the C
+struct (whose size/padding differs between 32 and 64-bit builds). Layout and
+compatibility notes are in g_xpsave.h. Values are stored in the machine's own
+byte order, exactly like the old raw struct write did.
+==================
+*/
+static void G_xpsave_to_disk(const g_xpsave_t* data, byte* out) {
+	int32_t v;
+
+	memset(out, 0, XP_SAVE_DISK_SIZE);
+	v = data->signature;	memcpy(out + 0, &v, 4);
+	v = data->version;		memcpy(out + 4, &v, 4);
+	memcpy(out + 8, &data->timestamp, 8);
+	memcpy(out + XP_SAVE_DISK_OFS_NAME, data->netname, MAX_NETNAME);
+	memcpy(out + XP_SAVE_DISK_OFS_SKILLS, data->skillpoints, sizeof(float) * SK_NUM_SKILLS);
+}
+
+static qboolean G_xpsave_read(char const* path, g_xpsave_t* data) {
+	byte	buf[XP_SAVE_DISK_SIZE + 16];	// a little extra so an oversized file is detected
+	int		len;
+	int32_t	v;
+
+	memset(data, 0, sizeof(*data));
+	len = G_ReadDataFromFileMax(path, (char*)buf, sizeof(buf));
+
+	if ( len == XP_SAVE_DISK_SIZE ) {
+		// current layout (also what old 64-bit Linux and Windows builds wrote)
+		memcpy(&v, buf + 0, 4);		data->signature = v;
+		memcpy(&v, buf + 4, 4);		data->version = v;
+		memcpy(&data->timestamp, buf + 8, 8);
+		memcpy(data->netname, buf + XP_SAVE_DISK_OFS_NAME, MAX_NETNAME);
+		memcpy(data->skillpoints, buf + XP_SAVE_DISK_OFS_SKILLS, sizeof(float) * SK_NUM_SKILLS);
+	}
+	else if ( len == XP_SAVE_DISK_SIZE_LEGACY32 ) {
+		// file written by an old 32-bit Linux build (4-byte time_t)
+		memcpy(&v, buf + 0, 4);		data->signature = v;
+		memcpy(&v, buf + 4, 4);		data->version = v;
+		memcpy(&v, buf + 8, 4);		data->timestamp = (int64_t)v;
+		memcpy(data->netname, buf + XP_SAVE_LEGACY32_OFS_NAME, MAX_NETNAME);
+		memcpy(data->skillpoints, buf + XP_SAVE_LEGACY32_OFS_SKILLS, sizeof(float) * SK_NUM_SKILLS);
+	}
+	else {
+		if ( len >= 0 ) {
+			G_Printf("G_xpsave_read: unexpected xpsave file size %d (expected %d or %d): %s\n",
+				len, XP_SAVE_DISK_SIZE, XP_SAVE_DISK_SIZE_LEGACY32, path);
+		}
+		return qfalse;
+	}
+
+	data->netname[MAX_NETNAME - 1] = '\0';	// never trust the file to be terminated
+	return qtrue;
+}
+
 static qboolean G_xpsave_write(g_xpsave_t* data, char const* path) {
+	byte	buf[XP_SAVE_DISK_SIZE];
+
 	// Ensure we have a path and some data
 	if ( path == NULL || data == NULL ) {
 		return qfalse;
 	}
 
 	// Write data to file
-	if ( -1 == G_WriteDataToFile(path, (char*)data, sizeof(g_xpsave_t) ) ) {
+	// [NQ 1.3.1 - Audit M5]: fixed, architecture independent layout (was the raw struct)
+	G_xpsave_to_disk(data, buf);
+	if ( -1 == G_WriteDataToFile(path, (char*)buf, XP_SAVE_DISK_SIZE ) ) {
 		return qfalse;
 	}
 
@@ -106,7 +205,12 @@ static void G_xpsave_fix_byte_order(g_xpsave_t* data) {
 
 	// Swap byte order
 	data->signature	= XP_SAVE_SIGNATURE;
-	data->timestamp	= LongSwap(data->timestamp);
+	// [NQ 1.3.1 - Audit M5]: timestamp is 64-bit now - swap both halves
+	{
+		int32_t lo = (int32_t)(data->timestamp & 0xFFFFFFFF);
+		int32_t hi = (int32_t)((data->timestamp >> 32) & 0xFFFFFFFF);
+		data->timestamp = ((int64_t)(uint32_t)LongSwap(lo) << 32) | (int64_t)(uint32_t)LongSwap(hi);
+	}
 	data->version	= LongSwap(data->version);
 }
 
@@ -120,7 +224,7 @@ static qboolean G_xpsave_entry_has_expired(g_xpsave_t* data, int* xp_age) {
 	}
 
 	// Calculate the time since we saved out the xpsave data
-	age = t - data->timestamp;
+	age = (int)(t - data->timestamp);	// [NQ 1.3.1 - Audit M5]: timestamp is int64 now
 
 	// Return the age of the xp via the parameter - if it's not NULL
 	if ( xp_age != NULL ) {
@@ -177,7 +281,8 @@ qboolean G_xpsave_load_nq(gentity_t *ent) {
 	}
 
 	// Read the data from the file
-	if ( -1 == G_ReadDataFromFile(path, (char*)&data, sizeof(data)) ) {
+	// [NQ 1.3.1 - Audit M5]: size-tolerant reader (current + old 32-bit layout)
+	if ( qfalse == G_xpsave_read(path, &data) ) {
 		G_Printf("G_xpsave_load_nq: failed to read xpsave file: %s\n", path);
 		return qfalse;
 	}
@@ -297,7 +402,8 @@ qboolean G_xpsave_load(gentity_t *ent) {
 	}
 
 	// Read the data from the file
-	if ( -1 == G_ReadDataFromFile(path, (char*)&data, sizeof(data)) ) {
+	// [NQ 1.3.1 - Audit M5]: size-tolerant reader (current + old 32-bit layout)
+	if ( qfalse == G_xpsave_read(path, &data) ) {
 		G_Printf("G_xpsave_load: failed to read xpsave file: %s\n", path);
 		return qfalse;
 	}
@@ -501,7 +607,8 @@ static qboolean G_xpsave_wipe_xp_file(char const* file, char const* path, qboole
 		return qtrue;
 
 	// Check the validity of the file...
-	if ( -1 == G_ReadDataFromFile(path, (char*)&data, sizeof(data)) ) {
+	// [NQ 1.3.1 - Audit M5]: size-tolerant reader (current + old 32-bit layout)
+	if ( qfalse == G_xpsave_read(path, &data) ) {
 		G_Printf("G_xpsave_wipe_xp_file: failed to read xpsave file: %s, not wiping file\n", path);
 		return qtrue;
 	}
@@ -621,8 +728,12 @@ static void G_xpsave_convert_old_config() {
 				G_shrubbot_readconfig_string(&next_token, xpsave_guid, sizeof(xpsave_guid));
 			else if ( !Q_stricmp(t, "name") )
 				G_shrubbot_readconfig_string(&next_token, xpsave_entry.netname, sizeof(xpsave_entry.netname));
-			else if ( !Q_stricmp(t, "time") )
-				G_shrubbot_readconfig_int(&next_token, (int*)&xpsave_entry.timestamp);
+			else if ( !Q_stricmp(t, "time") ) {
+				// [NQ 1.3.1 - Audit M5]: timestamp is int64 now - read into an int, then assign
+				int		oldTime = 0;
+				G_shrubbot_readconfig_int(&next_token, &oldTime);
+				xpsave_entry.timestamp = oldTime;
+			}
 			else if ( !Q_stricmpn(t, "skill[", 6) ) {
 				int				i;
 				for ( i = 0; i < SK_NUM_SKILLS; ++i ) {
@@ -674,7 +785,8 @@ static qboolean G_xpsave_cleanup_expired_xp_file(char const* file, char const* p
 	}
 
 	// Check the signature in the file...
-	if ( -1 == G_ReadDataFromFile(path, (char*)&data, sizeof(data)) ) {
+	// [NQ 1.3.1 - Audit M5]: size-tolerant reader (current + old 32-bit layout)
+	if ( qfalse == G_xpsave_read(path, &data) ) {
 		G_Printf("G_xpsave_cleanup_expired_xp_file: failed to read xpsave file: %s\n", path);
 		return qtrue;
 	}

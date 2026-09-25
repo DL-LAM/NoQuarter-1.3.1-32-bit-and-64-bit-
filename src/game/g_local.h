@@ -1861,12 +1861,15 @@ typedef struct
 	int			index;		// the CS index of the string
 } csmEntry_t;
 
+// [NQ 1.3.1 - Audit L2]: size of the per-client csMethod ring buffer (was the literal 625 in 3 places)
+#define CSM_BUFFER_SIZE 625
+
 typedef struct
 {
 	int			push;		// index into the array for writing new entries
 	int			pop;		// index into the array for reading entries
 	int			count;		// the number of entries in this buffer
-	csmEntry_t	entry[625];	// the entries
+	csmEntry_t	entry[CSM_BUFFER_SIZE];	// the entries ([NQ 1.3.1 - Audit L2]: named constant, was literal 625)
 } csmBufferEntry_t;
 
 csmBufferEntry_t csmBuffer[MAX_CLIENTS];
@@ -2865,12 +2868,16 @@ qboolean G_LandmineSnapshotCallback( int entityNum, int clientNum );
 
 // [NQ 1.3.1 - Security]: Strip port from IPv4 or IPv6 (bracketed or unbracketed) address cleanly
 void G_StripPort(const char *ip, char *out, int outsize);
+// [NQ 1.3.1 - Audit L4]: overflow-safe auto-unmute time (g_shrubbot.c)
+int G_MuteUnmuteTime( int base, int seconds );
+// [NQ 1.3.1 - Audit M1]: UTF-8 name validation (g_client.c)
+qboolean G_ValidateUTF8Name( char *name );
 
 #include "g_shrubbot.h"
 #include "g_xpsave.h"
-extern g_shrubbot_level_t	*g_shrubbot_levels[MAX_SHRUBBOT_LEVELS];
-extern g_shrubbot_admin_t	*g_shrubbot_admins[MAX_SHRUBBOT_ADMINS];
-extern g_shrubbot_ban_t		*g_shrubbot_bans[MAX_SHRUBBOT_BANS];
+extern g_shrubbot_level_t	*g_shrubbot_levels[MAX_SHRUBBOT_LEVELS + 1];	// [NQ 1.3.1 - Audit H4]: +1 NULL terminator slot
+extern g_shrubbot_admin_t	*g_shrubbot_admins[MAX_SHRUBBOT_ADMINS + 1];	// [NQ 1.3.1 - Audit H4]: +1 NULL terminator slot
+extern g_shrubbot_ban_t		*g_shrubbot_bans[MAX_SHRUBBOT_BANS + 1];		// [NQ 1.3.1 - Audit H4]: +1 NULL terminator slot
 
 #define CH_KNIFE_DIST           64      // from g_weapon.c
 #define CH_LADDER_DIST          100

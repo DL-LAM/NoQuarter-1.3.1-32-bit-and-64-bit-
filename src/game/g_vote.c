@@ -1201,9 +1201,50 @@ int G_Unreferee_v(gentity_t *ent, unsigned int dwVoteIndex, char *arg, char *arg
 }
 
 // MAPVOTE
+/*
+==================
+[NQ 1.3.1 - Audit C2]: Map vote ID validation helpers.
+
+The map ID a player votes for is an index into level.mapvoteinfo[] and comes
+straight from the client ("mapvote <id> [rank]"). It used to be used without
+any bounds check, so "mapvote -100000" or "mapvote 999999" incremented or
+decremented arbitrary server memory. ET: Legacy checks the same range.
+
+G_MapVoteIDInRange  - the ID can be used as an index into mapvoteinfo[].
+G_MapVoteIDOffered  - the ID is one of the maps actually offered this
+                      intermission (the first maxMaps entries of sortedMaps,
+                      i.e. exactly what G_IntermissionMapList sends).
+==================
+*/
+static qboolean G_MapVoteIDInRange( int mapID ) {
+	return ( mapID >= 0 && mapID < MAX_VOTE_MAPS ) ? qtrue : qfalse;
+}
+
+static qboolean G_MapVoteIDOffered( int mapID ) {
+	int i;
+	int maxMaps = g_maxMapsVotedFor.integer;
+
+	if ( !G_MapVoteIDInRange(mapID) ) {
+		return qfalse;
+	}
+	if ( maxMaps > level.mapVoteNumMaps ) {
+		maxMaps = level.mapVoteNumMaps;
+	}
+	if ( maxMaps > MAX_VOTE_MAPS ) {
+		maxMaps = MAX_VOTE_MAPS;
+	}
+	for ( i = 0; i < maxMaps; i++ ) {
+		if ( level.sortedMaps[i] == mapID ) {
+			return qtrue;
+		}
+	}
+	return qfalse;
+}
+
 void G_IntermissionMapVote( gentity_t *ent ) {
 	char	arg[MAX_TOKEN_CHARS];
 	char	arg2[MAX_TOKEN_CHARS];
+	int		mapID;
 
 	// [NQ 1.3.1 - Bounds]: Ensure valid entity and client pointer
 	if ( !ent || !ent->client ) {
@@ -1226,16 +1267,28 @@ void G_IntermissionMapVote( gentity_t *ent ) {
 	}
 
 	trap_Argv(1, arg, sizeof(arg));
+
+	// [NQ 1.3.1 - Audit C2]: Parse the map ID once and reject anything that is
+	// not one of the maps offered this intermission, before any array access.
+	mapID = atoi(arg);
+	if ( !G_MapVoteIDOffered(mapID) ) {
+		CP("print \"^3Invalid map vote\n\"");
+		return;
+	}
+
 	// normal one-map vote
 	if ( trap_Argc() == 2 ) {
-		if( ent->client->ps.eFlags & EF_VOTED ) {
+		// [NQ 1.3.1 - Audit C2]: Only take back the previous vote if it is a
+		// real map ID. After a ranked vote EF_VOTED is set while
+		// mapVotedFor[0] can still be -1, which used to decrement mapvoteinfo[-1].
+		if( (ent->client->ps.eFlags & EF_VOTED) && G_MapVoteIDInRange(ent->client->sess.mapVotedFor[0]) ) {
 			level.mapvoteinfo[ent->client->sess.mapVotedFor[0]].numVotes--;
 			level.mapvoteinfo[ent->client->sess.mapVotedFor[0]].totalVotes--;
 		}
 		ent->client->ps.eFlags |= EF_VOTED;
-		level.mapvoteinfo[atoi(arg)].numVotes++;
-		level.mapvoteinfo[atoi(arg)].totalVotes++;
-		ent->client->sess.mapVotedFor[0] = atoi(arg);
+		level.mapvoteinfo[mapID].numVotes++;
+		level.mapvoteinfo[mapID].totalVotes++;
+		ent->client->sess.mapVotedFor[0] = mapID;
 	}
 	else if ( trap_Argc() == 3 ) {
 		int		voteRank = 0, i;
@@ -1250,18 +1303,19 @@ void G_IntermissionMapVote( gentity_t *ent ) {
 			if ( voteRank - 1 == i ) {
 				continue;
 			}
-			if ( ent->client->sess.mapVotedFor[i] == atoi(arg) ) {
+			if ( ent->client->sess.mapVotedFor[i] == mapID ) {
 				CP(va("print \"^3Can't vote for the same map twice\n\""));
 				return;
 			}
 		}
-		if ( ent->client->sess.mapVotedFor[voteRank-1] != -1 ) {
+		// [NQ 1.3.1 - Audit C2]: range-check the stored previous vote as well
+		if ( G_MapVoteIDInRange(ent->client->sess.mapVotedFor[voteRank-1]) ) {
 			level.mapvoteinfo[ent->client->sess.mapVotedFor[voteRank-1]].numVotes -= voteRank;
 			level.mapvoteinfo[ent->client->sess.mapVotedFor[voteRank-1]].totalVotes -= voteRank;
 		}
-		level.mapvoteinfo[atoi(arg)].numVotes += voteRank;
-		level.mapvoteinfo[atoi(arg)].totalVotes += voteRank;
-		ent->client->sess.mapVotedFor[voteRank-1] = atoi(arg);
+		level.mapvoteinfo[mapID].numVotes += voteRank;
+		level.mapvoteinfo[mapID].totalVotes += voteRank;
+		ent->client->sess.mapVotedFor[voteRank-1] = mapID;
 		ent->client->ps.eFlags |= EF_VOTED;
 	}
 

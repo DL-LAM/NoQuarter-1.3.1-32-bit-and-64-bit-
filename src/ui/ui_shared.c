@@ -238,14 +238,15 @@ qboolean UI_OutOfMemory() {
 return a hash value for the string
 ================
 */
-static long hashForString(const char *str) {
+// [NQ 1.3.1 - Math]: Use int instead of long to prevent 8-byte hash on 64-bit Linux (LP64)
+static int hashForString(const char *str) {
 	int		i = 0;
-	long	hash = 0;
+	int		hash = 0;
 	char	letter;
 
 	while (str[i] != '\0') {
 		letter = tolower(str[i]);
-		hash+=(long)(letter)*(i+119);
+		hash+=(int)(letter)*(i+119);
 		i++;
 	}
 	hash &= (HASH_TABLE_SIZE-1);
@@ -266,7 +267,7 @@ static stringDef_t *strHandle[HASH_TABLE_SIZE];
 
 const char *String_Alloc(const char *p) {
 	int len;
-	long hash;
+	int hash;
 	stringDef_t *str;
 	static const char *staticNULL = "";
 
@@ -3679,7 +3680,8 @@ void Menu_HandleKey(menuDef_t *menu, int key, qboolean down) {
 	if (!menu->itemHotkeyMode) {
 	// END - TAT 9/16/2002
 
-		if ( key > 0 && key <= 255 && menu->onKey[key] ) {
+		// [NQ 1.3.1 - Audit L7]: onKey[] has 255 entries (0..254); "key <= 255" read onKey[255]
+		if ( key > 0 && key < 255 && menu->onKey[key] ) {
 			itemDef_t it;
 			it.parent = menu;
 			Item_RunScript( &it, NULL, menu->onKey[key] );
@@ -7197,7 +7199,8 @@ qboolean MenuParse_itemDef( itemDef_t *item, int handle ) {
 		//		only do this at all if we're using the item hotkey mode
 		//		NOTE:  we couldn't do this earlier because the menu wasn't set, and I don't know
 		//		what would happen if we tried to set the menu before the parse had succeeded...
-		if (menu->itemHotkeyMode && menu->items[menu->itemCount-1]->hotkey >= 0) {
+		// [NQ 1.3.1 - Audit L7]: hotkey is used as an index into onKey[255] - bound it
+		if (menu->itemHotkeyMode && menu->items[menu->itemCount-1]->hotkey >= 0 && menu->items[menu->itemCount-1]->hotkey < 255) {
 			menu->onKey[menu->items[menu->itemCount-1]->hotkey] = String_Alloc(menu->items[menu->itemCount-1]->onKey);
 		}
 		// END - TAT 9/16/2002
@@ -7216,6 +7219,15 @@ qboolean MenuParse_execKey( itemDef_t *item, int handle ) {
 	}
 	keyindex = keyname;
 
+	// [NQ 1.3.1 - Audit L7]: keyname is a (signed) char from the menu file - characters
+	// above 127 gave a negative index into onKey[]. Parse and discard the script for an
+	// out-of-range key so the rest of the menu still loads.
+	if ( keyindex < 0 || keyindex >= 255 ) {
+		const char *discard = NULL;
+		Com_Printf( S_COLOR_YELLOW "WARNING: execKey '%i' is out of range, ignored\n", keyindex );
+		return PC_Script_Parse( handle, &discard );
+	}
+
 	if ( !PC_Script_Parse( handle, &menu->onKey[keyindex] ) ) {
 		return qfalse;
 	}
@@ -7229,6 +7241,13 @@ qboolean MenuParse_execKeyInt( itemDef_t *item, int handle ) {
 
 	if ( !PC_Int_Parse( handle, &keyname ) ) {
 		return qfalse;
+	}
+
+	// [NQ 1.3.1 - Audit L7]: bound the key number read from the menu file (onKey has 255 entries)
+	if ( keyname < 0 || keyname >= 255 ) {
+		const char *discard = NULL;
+		Com_Printf( S_COLOR_YELLOW "WARNING: execKeyInt '%i' is out of range, ignored\n", keyname );
+		return PC_Script_Parse( handle, &discard );
 	}
 
 	if ( !PC_Script_Parse( handle, &menu->onKey[keyname] ) ) {

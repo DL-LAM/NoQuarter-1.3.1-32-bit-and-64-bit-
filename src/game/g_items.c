@@ -663,11 +663,10 @@ int Pickup_Weapon( gentity_t *ent, gentity_t *other ) {
 						if (g_logOptions.integer & LOGOPTS_PICKUPS) {
 							if ( !(other->r.svFlags & SVF_BOT) || ((other->r.svFlags & SVF_BOT) && (g_logOptions.integer & LOGOPTS_BOTS)) ) {
 								if(ent->parent && ent->parent->client) {
-#if defined(__x86_64__)
+									// [NQ 1.3.1 - Audit L6]: one code path for all builds - the (int) casts are correct on
+									// 32 and 64-bit. The old "#if defined(__x86_64__)" never matched MSVC x64 builds, which
+									// then passed a 64-bit value (pointer difference / strlen) to a %i/%d format.
 									G_LogPrintf("Ammo_Pack: %d %d\n", (int)(ent->parent - g_entities), (int)(other - g_entities));	// OSP
-#else
-									G_LogPrintf("Ammo_Pack: %d %d\n", ent->parent - g_entities, other - g_entities);	// OSP
-#endif
 								}
 							}
 						}
@@ -1075,11 +1074,10 @@ int Pickup_Health(gentity_t *ent, gentity_t *other) {
 				AddScore(ent->parent, WOLF_HEALTH_UP);
 				if (g_logOptions.integer & LOGOPTS_PICKUPS) {
 					if ( !(other->r.svFlags & SVF_BOT) || ((other->r.svFlags & SVF_BOT) && (g_logOptions.integer & LOGOPTS_BOTS)) ) {
-#if defined(__x86_64__)
+						// [NQ 1.3.1 - Audit L6]: one code path for all builds - the (int) casts are correct on
+						// 32 and 64-bit. The old "#if defined(__x86_64__)" never matched MSVC x64 builds, which
+						// then passed a 64-bit value (pointer difference / strlen) to a %i/%d format.
 						G_LogPrintf("Health_Pack: %d %d\n", (int)(ent->parent - g_entities), (int)(other - g_entities));	// OSP
-#else
-						G_LogPrintf("Health_Pack: %d %d\n", ent->parent - g_entities, other - g_entities);	// OSP
-#endif
 					}
 				}
 			}

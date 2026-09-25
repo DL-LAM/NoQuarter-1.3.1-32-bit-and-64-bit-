@@ -1425,11 +1425,10 @@ void SP_trigger_objective_info( gentity_t *ent ) {
 			cia = 0;
 		}
 	}
-#if defined(__x86_64__)
+	// [NQ 1.3.1 - Audit L6]: one code path for all builds - the (int) casts are correct on
+	// 32 and 64-bit. The old "#if defined(__x86_64__)" never matched MSVC x64 builds, which
+	// then passed a 64-bit value (pointer difference / strlen) to a %i/%d format.
 	G_SetConfigStringValue( CS_OID_DATA + level.numOidTriggers,				"e", va("%i", (int) (ent-g_entities) ) );
-#else
-	G_SetConfigStringValue( CS_OID_DATA + level.numOidTriggers,				"e", va("%i", ent-g_entities) );
-#endif
 
 	if (cix) G_SetConfigStringValue( CS_OID_DATA + level.numOidTriggers,	"b", va("%i", cix) ); // "cix" only if handle is not 0..
 	if (cia) G_SetConfigStringValue( CS_OID_DATA + level.numOidTriggers,	"a", va("%i", cia) ); // "cia" only if handle is not 0..

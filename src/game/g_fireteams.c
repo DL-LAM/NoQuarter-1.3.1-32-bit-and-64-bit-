@@ -508,8 +508,13 @@ void G_WarnFireTeamPlayer( int entityNum, int otherEntityNum ) {
 void G_KickFireTeamPlayer( int entityNum, int otherEntityNum ) {
 	fireteamData_t *ft, *ft2;
 
+	// [NQ 1.3.1 - Audit C1]: Self-targeting must NOT call G_Error().
+	// Any player could type "/fireteam kick <own slot+1>" and G_Error() is a
+	// fatal error: ET: Legacy turns it into ERR_DROP -> "Server crashed" and the
+	// server sits with no map loaded. Ignore the request instead, exactly like
+	// G_WarnFireTeamPlayer() below and ET: Legacy's G_KickFireTeamPlayer().
 	if(entityNum == otherEntityNum) {
-		G_Error("G_KickFireTeamPlayer: can not kick yourself");
+		return;
 	}
 
 	if((entityNum < 0 || entityNum >= g_maxclients.integer) || !g_entities[entityNum].client) {
@@ -587,8 +592,10 @@ void G_ProposeFireTeamPlayer( int entityNum, int otherEntityNum ) {
 	fireteamData_t* ft;
 	gentity_t* leader;
 
+	// [NQ 1.3.1 - Audit C1]: Same as G_KickFireTeamPlayer - "/fireteam propose
+	// <own name>" used to shut the whole server down via G_Error(). Ignore it.
 	if(entityNum == otherEntityNum) {
-		G_Error("G_ProposeFireTeamPlayer: can not propsoe yourself");
+		return;
 	}
 
 	if((entityNum < 0 || entityNum >= g_maxclients.integer) || !g_entities[entityNum].client) {

@@ -1593,7 +1593,15 @@ void SP_Props_ChairChatArm(gentity_t *ent) {
 void Use_DamageInflictor (gentity_t *ent, gentity_t *other, gentity_t *activator ) {
 	gentity_t *daent = NULL;
 
-	while ((daent = G_FindByTargetname( daent, daent->target)) != NULL) {
+	// [NQ 1.3.1 - Audit M8]: The search used daent->target while daent was
+	// still NULL -> NULL dereference (server crash) the first time any map's
+	// props_damageinflictor was used. The targets to damage are the entities
+	// named by THIS entity's "target" key.
+	if ( !ent->target || !ent->target[0] ) {
+		return;
+	}
+
+	while ((daent = G_FindByTargetname( daent, ent->target)) != NULL) {
 		if ( daent == ent ) {
 			G_Printf ("Use_DamageInflictor damaging self.\n");
 		}
