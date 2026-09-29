@@ -1997,6 +1997,26 @@ qboolean G_LuaStartVM( lua_vm_t *vm )
 	}
 	lua_pop( vm->L, 1 );
 
+#ifdef NQ_BUILTIN_LUASQL
+	// [NQ 1.3.1 - Lua]: On Linux, Lua is compiled into qagame, so a separate LuaSQL .so
+	// has no Lua to bind to. The LuaSQL SQLite driver is compiled into qagame as well and
+	// registered in package.preload, so require("luasql.sqlite3") works with no file in lualibs/.
+	{
+		extern int luaopen_luasql_sqlite3( lua_State *L );
+
+		lua_getglobal( vm->L, LUA_LOADLIBNAME );
+		if( lua_istable( vm->L, -1 ) ) {
+			lua_getfield( vm->L, -1, "preload" );
+			if( lua_istable( vm->L, -1 ) ) {
+				lua_pushcfunction( vm->L, luaopen_luasql_sqlite3 );
+				lua_setfield( vm->L, -2, "luasql.sqlite3" );
+			}
+			lua_pop( vm->L, 1 );
+		}
+		lua_pop( vm->L, 1 );
+	}
+#endif
+
 	// register globals
 	lua_registerglobal( vm->L, "LUA_PATH", luaPath );
 	lua_registerglobal( vm->L, "LUA_CPATH", luaCPath );

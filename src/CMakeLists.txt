@@ -44,7 +44,15 @@ if(MSVC)
         /wd4267 # size_t to int conversion
         /MP     # multi-processor compilation
     )
+    # [NQ 1.3.1 - Release]: don't embed the builder's folder paths in the shipped DLLs.
+    # /d1trimfile strips the repo root from __FILE__ strings (src\game\... instead of C:\Users\...),
+    # /PDBALTPATH:%_PDB% records only the .pdb file name instead of its full path.
+    # The .pdb files are still generated for debugging; keep them next to the DLL to use them.
+    file(TO_NATIVE_PATH "${CMAKE_SOURCE_DIR}" NQ_SOURCE_ROOT_NATIVE)
+    add_compile_options("/d1trimfile:${NQ_SOURCE_ROOT_NATIVE}")
     set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /DEBUG")
+    # Applies to every configuration (Visual Studio "Open Folder" builds use RelWithDebInfo)
+    add_link_options("/PDBALTPATH:%_PDB%")
     add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_DEPRECATE)
 else()
     add_compile_options(

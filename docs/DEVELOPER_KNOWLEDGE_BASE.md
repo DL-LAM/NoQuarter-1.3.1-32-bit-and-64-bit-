@@ -104,17 +104,28 @@ NoQuarter 1.3.1 solves this cleanly with a **Unified Client Binary Package**:
 nq/
 ├── nq_v1.3.1b7.pk3            # Unified game assets (textures, sounds, models, menus, shaders)
 └── nq_b_v1.3.1b7.pk3          # Unified client binaries (all architectures):
-    ├── cgame.mp.x86_64.dll    # Windows x64 Client Game
-    ├── ui.mp.x86_64.dll       # Windows x64 UI
-    ├── cgame.mp.x86_64.so     # Linux x64 Client Game
-    ├── ui.mp.x86_64.so        # Linux x64 UI
+    ├── cgame_mp_x64.dll       # Windows x64 Client Game
+    ├── ui_mp_x64.dll          # Windows x64 UI
     ├── cgame_mp_x86.dll       # Windows x86 Client Game
     ├── ui_mp_x86.dll          # Windows x86 UI
+    ├── cgame.mp.x86_64.so     # Linux x64 Client Game
+    ├── ui.mp.x86_64.so        # Linux x64 UI
     ├── cgame.mp.i386.so       # Linux x86 Client Game
     └── ui.mp.i386.so          # Linux x86 UI
 ```
 
-The server binary (`qagame.mp.x86_64.dll`, `qagame_mp_x86.dll`, `qagame.mp.x86_64.so`, or `qagame.mp.i386.so`) is **never** placed inside a PK3; it resides directly on the server's filesystem in the `fs_game` folder (`nq/`).
+These names are not a choice. ET:Legacy builds the file name it loads with `Sys_GetDLLName` (`qcommon.h`): `name "_mp_" ARCH ".dll"` on Windows (`x86`, `x64`) and `name ".mp." ARCH ".so"` on Linux (`i386`, `x86_64`). Any other spelling (for example `cgame.mp.x86_64.dll` or `qagame_mp_x64.so`) is never loaded and only adds download size.
+
+The server binary (`qagame_mp_x64.dll`, `qagame_mp_x86.dll`, `qagame.mp.x86_64.so`, or `qagame.mp.i386.so`) is **never** placed inside a PK3; it resides directly on the server's filesystem in the `fs_game` folder (`nq/`), next to its libraries:
+
+| Server | Game module | Lua runtime | SQLite driver (Lua scripts) | Omni-Bot (`nq/omni-bot/`) |
+| :--- | :--- | :--- | :--- | :--- |
+| Windows x64 | `qagame_mp_x64.dll` | `lua5.1.dll` (next to `etlded.exe`) | `nq/lualibs/luasql/sqlite3.dll` | `omnibot_et_x64.dll` |
+| Windows x86 | `qagame_mp_x86.dll` | `lua5.1.dll` (next to `etlded.exe`) | `nq/lualibs/luasql/sqlite3.dll` | `omnibot_et.dll` |
+| Linux x86_64 | `qagame.mp.x86_64.so` | built into qagame | built into qagame (`NQ_BUILTIN_LUASQL`) | `omnibot_et.x86_64.so` |
+| Linux i386 | `qagame.mp.i386.so` | built into qagame | built into qagame (`NQ_BUILTIN_LUASQL`) | `omnibot_et.so` |
+
+> **Linux Lua SQLite:** separate `liblua5.1.so` / `sqlite3.so` files never worked (they were built with `-fvisibility=hidden` and exported nothing, and qagame has its own Lua). Since 1.3.1b7, `build_linux.py` compiles LuaSQL + SQLite into `qagame` and `G_LuaInit` registers `package.preload["luasql.sqlite3"]`, so no extra files are needed. Verified on a Linux server.
 
 Because all client binaries across all architectures reside inside `nq_b_v1.3.1b7.pk3`, every client computes the exact same PK3 checksum regardless of OS or bitness, eliminating pure-server mismatch errors permanently.
 
@@ -193,6 +204,11 @@ float wideXoffset = (SCREEN_WIDTH - 640.0f) * 0.5f;
 * **Behavior**: When set to `1`, health and ammo cabinets never deplete or enter cooldown recharge states, ideal for practice or deathmatch servers.
 * Located in `src/game/g_items.c` (`Use_HealthCabinet` and `Use_AmmoCabinet`).
 
+### 4. Allied Covert Ops Alternate Primary
+* **CVAR**: `g_alliedCovertWeapon` (default: `0`, `SERVERINFO | ARCHIVE`).
+* **Values**: `0` = Johnson M1941 (`WP_JOHNSON`), `1` = BAR (`WP_BAR`), `2` = FG42 (`WP_FG42`).
+* **Implementation**: `src/game/g_main.c` sets `bg_allies_playerclasses[PC_COVERTOPS].classWeapons[1]` from the cvar and publishes the value to clients under the `CW` key (next to `SS` for `g_soldierShotgun`).
+
 ---
 
 ## 7. CVAR Engineering & Synchronization
@@ -202,7 +218,7 @@ CVARs (Console Variables) allow server administrators and clients to tune engine
 ### 1. CVAR Flags Table
 | Flag | Name | Meaning |
 | :--- | :--- | :--- |
-| `0x0001` | `CVAR_ARCHIVE` | Saved to `noquarter.cfg` / `etconfig.cfg` across restarts. |
+| `0x0001` | `CVAR_ARCHIVE` | Written by the engine to its own config (`etconfig.cfg` on clients, `nq/etconfig_server.cfg` on ET:Legacy dedicated servers) and reloaded on restart. Never written to `noquarter.cfg`. |
 | `0x0004` | `CVAR_SERVERINFO` | Broadcasted to server browsers and clients in `CS_SERVERINFO`. |
 | `0x0008` | `CVAR_SYSTEMINFO` | Broadcasted in `CS_SYSTEMINFO` to all connected clients. |
 | `0x0010` | `CVAR_INIT` | Can only be set on the command line at launch. |
@@ -219,14 +235,28 @@ CVARs (Console Variables) allow server administrators and clients to tune engine
    // In G_RegisterCvars():
    { &g_myCvar, "g_myCvar", "0", CVAR_SERVERINFO | CVAR_ARCHIVE, 0, qfalse, qtrue },
    ```
+   Table rows are `{ &cvar, "name", "default", flags, modificationCount, trackChange, fConfigReset }`; trailing fields may be omitted.
 3. **Handle in Console/Scripts**:
    Update `docs/noquarter_commented.txt` and `config/noquarter3.0.cfg`.
+
+### 3. Security & Timing CVARs (1.3.1)
+| Cvar | Default | Meaning |
+| :--- | :---: | :--- |
+| `g_authFailures` | `3` | Wrong `/ref` passwords before the client is kicked and temp-banned. `0` = no lockout (failures still logged). |
+| `g_authFailBanTime` | `300` | Temp-ban length in **seconds**. |
+| `g_authFailExpireTime` | `900` | Seconds before a failed attempt stops counting. |
+| `sv_fps` | `20` | NQ timing assumes 50 ms frames (`SERVER_FRAMETIME`); `G_InitGame` warns if it isn't 20. |
+
+### 4. Command-Line `+set` vs. Config Files
+The engine applies every `+set` on the command line **before** it runs any `+exec`. A cvar that `noquarter.cfg` also sets will therefore end up with the cfg's value, not the command-line one. Change such cvars in the cfg itself.
 
 ---
 
 ## 8. Lua Scripting Subsystem
 
-NoQuarter includes an embedded Lua 5.1 runtime allowing server administrators to customize gameplay without recompiling C code.
+NoQuarter includes an embedded Lua 5.1 runtime allowing server administrators to customize gameplay without recompiling C code. On Windows the runtime is `lua5.1.dll` (qagame imports it); on Linux it is compiled into `qagame`. Scripts that use SQLite (WolfAdmin, XPSave) load the LuaSQL driver via `require("luasql.sqlite3")`: `sqlite3.dll` on Windows (exports `luaopen_luasql_sqlite3`, installed as `nq/lualibs/luasql/sqlite3.dll`); on Linux the driver is compiled into `qagame` and registered in `package.preload`. Scripts to load are listed in the `lua_modules` cvar.
+
+> Lua scripts must not hardcode server paths; build them from `et.trap_Cvar_Get("fs_homepath")` and `et.trap_Cvar_Get("fs_game")` at runtime. `et.G_LogPrint` prints its text as data (Audit H2), so player names containing `%` are safe to log.
 
 ### 1. Core Callbacks
 * `et_InitGame(levelTime, randomSeed, restart)`: Called on map load.
@@ -248,31 +278,41 @@ The full list of addressable entity and client memory fields is documented in [n
 ## 9. Build, Compilation & PK3 Distribution Pipeline
 
 ### 1. Windows MSVC Build
-Requirements: Visual Studio 2022 / Build Tools and CMake $\ge 3.20$.
+Requirements: Visual Studio 2026 (its bundled CMake; the `Visual Studio 18 2026` generator produces `.slnx` solutions).
 ```powershell
 # 1. Generate solutions
 cmake -B build64 -S . -A x64
 cmake -B build32 -S . -A Win32
 
-# 2. Build Release DLLs
+# 2. Build Release DLLs (output: build64/src/Release, build32/src/Release)
 msbuild build64/NoQuarterWrapper.slnx /p:Configuration=Release /m
 msbuild build32/NoQuarterWrapper.slnx /p:Configuration=Release /m
 ```
+Visual Studio "Open Folder" builds (**x64-Release** / **x86-Release** from `CMakeSettings.json`) go to `out/build/<config>/src/` instead. Both routes produce `qagame`, `cgame`, `ui`, `lua5.1.dll`, `sqlite3.dll` and matching `.pdb` files.
+
+**Release builds don't embed build paths.** `src/CMakeLists.txt` passes `/d1trimfile:<repo root>` (shortens `__FILE__` strings) and links with `/PDBALTPATH:%_PDB%` (the DLL records only the `.pdb` file name). To debug a crash, keep the matching `.pdb` next to the DLL.
 
 ### 2. Linux Cross-Compilation via Zig
 Using Zig as a cross-compiler allows building Linux `.so` shared libraries directly from Windows without setting up a Linux virtual machine:
 ```bash
 python scripts/build_linux.py
 ```
-This builds:
-* `qagame.mp.x86_64.so`, `cgame.mp.x86_64.so`, `ui.mp.x86_64.so` (Linux 64-bit)
-* `qagame.mp.i386.so`, `cgame.mp.i386.so`, `ui.mp.i386.so` (Linux 32-bit)
+This builds the following (Lua and LuaSQL/SQLite are compiled into `qagame`; the small `liblua5.1.so` / `sqlite3.so` stubs it also writes are not shipped):
+* `qagame.mp.x86_64.so`, `cgame.mp.x86_64.so`, `ui.mp.x86_64.so` (Linux 64-bit, `build64/Release/linux/`)
+* `qagame.mp.i386.so`, `cgame.mp.i386.so`, `ui.mp.i386.so` (Linux 32-bit, `build32/Release/linux/`)
+
+Zig is found via `PATH`, the `ZIG_EXE` environment variable, or `~/zig/`. The script compiles with `-ffile-prefix-map=<repo>=.`, `-g0` and `-s`, so the `.so` files carry no debug info or build paths.
 
 ### 3. Automated Packaging (`package_release.py`)
-Run the packaging automation script to generate deployment-ready PK3s and distribute them to server and client directories:
+Builds `nq_b_v1.3.1b7.pk3` (the 8 client binaries), refreshes `nq_v1.3.1b7.pk3` from the release folder's current copy plus the source overrides (menudefs, vote menu, `meyer.shader`, texture fixes), and fills `DLL's/<Windows|Linux>/<32 Bit|64 Bit>/` with the server files from the table in section 3.
 ```bash
 python scripts/package_release.py
 ```
+| Environment variable | Default | Purpose |
+| :--- | :--- | :--- |
+| `NQ_RELEASE_DIR` | `release/` in the repo (git-ignored) | Where the release is assembled. Must already contain the current `nq_v1.3.1b7.pk3`. |
+| `NQ_BUILD64_DIR` / `NQ_BUILD32_DIR` | newer of `build64/src/Release` and `out/build/x64-Release/src` (x86 likewise) | Which Windows build to package. The script prints the folder it picked. |
+| `ET64_DIR`, `ET32_DIR`, `NQ_CLIENT_DIR` | unset | Optional local `nq/` folders to copy the new build into for testing. Nothing is copied unless set. |
 
 ---
 
@@ -288,3 +328,11 @@ python scripts/package_release.py
 | **Crashing on 64-bit when casting pointers** | Casting `void*` directly to `int` (truncating 64-bit pointer to 32 bits). | Use `intptr_t` or `uintptr_t`. |
 | **Shotgun not appearing in Limbo for Heavy Weapons Soldier** | `g_soldierShotgun` is set to 0 or skill check in `ui_shared.c` failed. | Ensure `g_soldierShotgun 1` and player has Heavy Weapons level 4. |
 | **Server cabinets depleted and not recharging** | Standard cabinet gameplay cooldown. | Enable `g_infiniteCabinets 1` in `noquarter.cfg`. |
+| **64-bit Windows server dies with `Received signal 11` right after `Game Initialization completed` (bots on)** | Old `BotLoadLibrary.cpp` loaded the 32-bit `omnibot_et.dll`, then crashed in `OB_ShowLastError`. | Fixed in 1.3.1: rebuild qagame and make sure `omni-bot/omnibot_et_x64.dll` exists. A failed bot load now prints an `Omni-bot:` error instead. |
+| **`WARNING: G_Script_ScriptParse(): unknown action '...'`** | Map made for another mod (e.g. TC:E `wm_camo`). | Harmless; the action is skipped. Remove the map from the rotation if it doesn't play correctly. |
+| **`BG_IndexForString: unknown token '...'` / many `BG_RegisterWeapon failed` errors** | `nq_v1.3.1b7.pk3` isn't in the server's `nq/` folder, so assets from other pk3s are used. | Put both NQ pk3s back in `nq/`. |
+| **Server crashes on its first frame only when output is redirected (`> file.log`)** | ET:Legacy's Windows console code expects a real console. | Don't redirect; use `+set logfile 2` (writes `nq/etconsole.log`). |
+| **`Received signal 11` with no other clue** | ET:Legacy only prints the signal number for access violations. | Run `etlded.exe` under the Visual Studio debugger with the matching `.pdb` next to the DLL; the call stack shows the line. |
+| **A command-line `+set` has no effect** | `+set` runs before `+exec`, so `noquarter.cfg` overrides it. | Change the cvar in the cfg. |
+| **`WARNING: sv_fps is N`** | `sv_fps` isn't 20. | Set `sv_fps 20`; NQ timing depends on it. |
+| **A fix "didn't work" after rebuilding** | An older build was deployed (command-line and Visual Studio builds go to different folders). | Compare dates of `build64/src/Release` vs `out/build/x64-Release/src`, redeploy the newer DLL. |

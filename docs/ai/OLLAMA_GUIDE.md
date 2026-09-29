@@ -120,17 +120,17 @@ You will be greeted with the interactive prompt:
 
 ## 6. Tuning for Your Hardware (Model Options)
 
-The default `Modelfile` specifies `FROM qwen2.5-coder:7b`. You can easily swap the base model to match your computer's specifications by editing the first line of `Modelfile`:
+The default `Modelfile` specifies `FROM qwen2.5-coder:7b`. You can easily swap the base model to match your computer's specifications by editing the `FROM` line in `Modelfile`:
 
 ### For Lighter / Older Laptops (4 GB – 8 GB RAM):
-Edit line 1 of `Modelfile`:
+Edit the `FROM` line in `Modelfile`:
 ```dockerfile
 FROM qwen2.5-coder:3b
 ```
 Then run `ollama create nq-dev -f Modelfile`. This version uses only ~2 GB of memory and generates answers instantaneously.
 
 ### For Powerful Workstations (16 GB+ VRAM / 32 GB+ RAM):
-Edit line 1 of `Modelfile`:
+Edit the `FROM` line in `Modelfile`:
 ```dockerfile
 FROM qwen2.5-coder:14b
 ```

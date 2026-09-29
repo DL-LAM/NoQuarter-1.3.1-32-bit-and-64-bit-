@@ -23,3 +23,9 @@ Read AGENT.md and docs/DEVELOPER_KNOWLEDGE_BASE.md before making architectural d
    - Client rendering/sound/HUD -> `src/cgame/` (cgame)
    - Menus/UI -> `src/ui/` (ui)
    - Shared structs -> `src/game/q_shared.h`, `bg_public.h`
+   - File names are fixed by the engine: Windows `<module>_mp_x86.dll` / `_mp_x64.dll`, Linux `<module>.mp.i386.so` / `.mp.x86_64.so`.
+6. Server stability:
+   - `G_Error()` shuts the whole ET:Legacy server down. For bad map/asset/config/player input, warn and skip; keep `G_Error()` for internal bugs.
+   - Range-check every client-supplied index. NoQuarter timing assumes `sv_fps 20`.
+   - 1.3.1 audit fixes are tagged `[NQ 1.3.1 - Audit <ID>]`; see `docs/AUDIT_2026-09-25.md`.
+7. Never hardcode a developer's own paths, GUIDs or credentials in code, scripts, configs or Lua.

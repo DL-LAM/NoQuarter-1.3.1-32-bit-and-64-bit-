@@ -104,7 +104,7 @@ LUASQL_SRC = [
     "sqlite3/sqlite3.c",
 ]
 
-QAGAME_SRC = BG_SRC + LUA_SRC + [
+QAGAME_SRC = BG_SRC + LUA_SRC + LUASQL_SRC + [
     "game/bg_profiler_hook.c",
     "game/etpro_mdx.c",
     "game/et-antiwarp.c",
@@ -243,6 +243,12 @@ def build_target(arch, target_triple, out_dir):
         "-Wno-error",
         "-fvisibility=hidden",
         "-D_GNU_SOURCE",
+        # [NQ 1.3.1 - Release]: don't embed the builder's folder paths in the shipped .so files.
+        # -ffile-prefix-map makes __FILE__ paths relative to the repo, -g0/-s drop debug info
+        # (zig cc adds it by default, and it records every source and zig libc path).
+        f"-ffile-prefix-map={ROOT_DIR}=.",
+        "-g0",
+        "-s",
     ]
     for inc in INCLUDES:
         common_flags.extend(["-I", inc])
@@ -292,6 +298,7 @@ def build_target(arch, target_triple, out_dir):
     print(f"Compiling {qagame_out}...")
     cmd = [ZIG_EXE, "c++"] + common_flags + [
         "-DGAMEDLL", "-DNEW_ANIMS", "-DET_LUA", "-DLUA_USE_LINUX", "-DOMNIBOTS",
+        "-DNQ_BUILTIN_LUASQL",  # LuaSQL SQLite driver compiled in; see g_lua.c
         "-Wl,-rpath,$ORIGIN",
         "-Wl,-z,origin",
         "-o", qagame_out
@@ -300,10 +307,6 @@ def build_target(arch, target_triple, out_dir):
     if res.returncode != 0:
         print(f"Failed to build {qagame_out}")
         return False
-    if arch != "x86_64":
-        shutil.copyfile(qagame_out, os.path.join(out_dir, "qagame_mp_x86.so"))
-    else:
-        shutil.copyfile(qagame_out, os.path.join(out_dir, "qagame_mp_x64.so"))
 
     # 4. Build cgame
     if arch == "x86_64":
@@ -321,10 +324,6 @@ def build_target(arch, target_triple, out_dir):
     if res.returncode != 0:
         print(f"Failed to build {cgame_out}")
         return False
-    if arch != "x86_64":
-        shutil.copyfile(cgame_out, os.path.join(out_dir, "cgame_mp_x86.so"))
-    else:
-        shutil.copyfile(cgame_out, os.path.join(out_dir, "cgame_mp_x64.so"))
 
     # 5. Build ui
     if arch == "x86_64":
@@ -342,10 +341,6 @@ def build_target(arch, target_triple, out_dir):
     if res.returncode != 0:
         print(f"Failed to build {ui_out}")
         return False
-    if arch != "x86_64":
-        shutil.copyfile(ui_out, os.path.join(out_dir, "ui_mp_x86.so"))
-    else:
-        shutil.copyfile(ui_out, os.path.join(out_dir, "ui_mp_x64.so"))
 
     print(f"Successfully built all Linux {arch} binaries in {out_dir}")
     return True

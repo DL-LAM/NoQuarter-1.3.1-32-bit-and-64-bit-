@@ -171,26 +171,36 @@ HINSTANCE g_BotLibrary = NULL;
 
 bool OB_ShowLastError(const char *context)
 {
-	LPVOID lpMsgBuf;
+	// [NQ 1.3.1]: FORMAT_MESSAGE_IGNORE_INSERTS is required, otherwise FormatMessage fails on
+	// system messages containing %1 (e.g. error 193 "%1 is not a valid Win32 application",
+	// returned when a 64-bit game DLL tries to load a 32-bit Omni-bot DLL). The old code
+	// never checked the result and called strlen() on a NULL buffer, crashing the server.
+	LPSTR lpMsgBuf = NULL;
 	DWORD dw = GetLastError();
-	FormatMessage(
+	DWORD len = FormatMessageA(
 		FORMAT_MESSAGE_ALLOCATE_BUFFER |
-		FORMAT_MESSAGE_FROM_SYSTEM,
+		FORMAT_MESSAGE_FROM_SYSTEM |
+		FORMAT_MESSAGE_IGNORE_INSERTS,
 		NULL,
 		dw,
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-		(LPTSTR) &lpMsgBuf,
+		(LPSTR) &lpMsgBuf,
 		0, NULL );
+
+	if(len == 0 || lpMsgBuf == NULL)
+	{
+		Omnibot_Load_PrintErr(OB_VA("%s Failed with Error %lu", context, (unsigned long)dw));
+		return true;
+	}
 
 	//////////////////////////////////////////////////////////////////////////
 	// Strip Newlines
-	char *pMessage = (char*)lpMsgBuf;
-	int i = (int)strlen(pMessage)-1;
-	while(pMessage[i] == '\n' || pMessage[i] == '\r')
-		pMessage[i--] = 0;
+	int i = (int)strlen(lpMsgBuf)-1;
+	while(i >= 0 && (lpMsgBuf[i] == '\n' || lpMsgBuf[i] == '\r'))
+		lpMsgBuf[i--] = 0;
 	//////////////////////////////////////////////////////////////////////////
 
-	Omnibot_Load_PrintErr(OB_VA("%s Failed with Error: %s", context, pMessage));
+	Omnibot_Load_PrintErr(OB_VA("%s Failed with Error %lu: %s", context, (unsigned long)dw, lpMsgBuf));
 	LocalFree(lpMsgBuf);
 	return true;
 }
@@ -214,6 +224,16 @@ HINSTANCE Omnibot_LL(const char *file)
 eomnibot_error Omnibot_LoadLibrary(int version, const char *lib, const char *path)
 {
 	eomnibot_error r = BOT_ERROR_NONE;
+#if defined(_WIN64)
+	// [NQ 1.3.1 - Windows 64-bit]: a 64-bit game DLL can only load the 64-bit Omni-bot build
+	// (omnibot_et_x64.dll), so check for it first. Mirrors the .x86_64.so lookup on Linux.
+	g_BotLibrary = Omnibot_LL( OB_VA("%s\\%s_x64.dll", path ? path : ".", lib) );
+	if(g_BotLibrary == 0)
+		g_BotLibrary = Omnibot_LL( OB_VA(".\\omni-bot\\%s_x64.dll", lib) );
+	if(g_BotLibrary == 0)
+		g_BotLibrary = Omnibot_LL( OB_VA("%s_x64.dll", lib) );
+	if(g_BotLibrary == 0)
+#endif
 	g_BotLibrary = Omnibot_LL( OB_VA("%s\\%s.dll", path ? path : ".", lib) );
 	if(g_BotLibrary == 0)
 		g_BotLibrary = Omnibot_LL( OB_VA(".\\omni-bot\\%s.dll", lib) );
@@ -337,7 +357,7 @@ void *Omnibot_LL(const char *file)
 	if(!pLib)
 		OB_ShowLastError("LoadLibrary", dlerror());
 
-	Omnibot_Load_PrintMsg(OB_VA("Looking for %s, ", g_OmnibotLibPath.c_str(), pLib ? "found." : "not found"));
+	Omnibot_Load_PrintMsg(OB_VA("Looking for %s, %s", g_OmnibotLibPath.c_str(), pLib ? "found." : "not found"));
 	return pLib;
 }
 

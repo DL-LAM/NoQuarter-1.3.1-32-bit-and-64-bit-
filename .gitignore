@@ -41,3 +41,5 @@ scratch/
 
 # SVN metadata (legacy — this repo was originally converted from SVN)
 .svn/
+release/
+__pycache__/

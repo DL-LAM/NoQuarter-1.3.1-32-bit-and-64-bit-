@@ -22,16 +22,36 @@ def check_dll_exports(dll_path, expected_exports):
 SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
 SOURCE_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, ".."))
 TRUNK_DIR = os.path.abspath(os.path.join(SOURCE_DIR, ".."))
-BUILD64_DIR = os.path.join(SOURCE_DIR, "build64", "src", "Release")
-BUILD32_DIR = os.path.join(SOURCE_DIR, "build32", "src", "Release")
+
+def pick_build_dir(env_name, candidates, marker):
+    """Use env override if set, else whichever candidate folder has the newest build."""
+    if os.environ.get(env_name):
+        return os.environ[env_name]
+    found = [d for d in candidates if os.path.exists(os.path.join(d, marker))]
+    if not found:
+        sys.exit(f"ERROR: {marker} not found in any of: {candidates}. Build first, or set {env_name}.")
+    return max(found, key=lambda d: os.path.getmtime(os.path.join(d, marker)))
+
+# Windows build output: command-line builds (build64/build32) or Visual Studio "Open Folder" builds (out/build/...)
+BUILD64_DIR = pick_build_dir("NQ_BUILD64_DIR", [
+    os.path.join(SOURCE_DIR, "build64", "src", "Release"),
+    os.path.join(SOURCE_DIR, "out", "build", "x64-Release", "src")], "qagame_mp_x64.dll")
+BUILD32_DIR = pick_build_dir("NQ_BUILD32_DIR", [
+    os.path.join(SOURCE_DIR, "build32", "src", "Release"),
+    os.path.join(SOURCE_DIR, "out", "build", "x86-Release", "src")], "qagame_mp_x86.dll")
+print(f"Using Windows 64-bit build: {BUILD64_DIR}")
+print(f"Using Windows 32-bit build: {BUILD32_DIR}")
 LINUX64_DIR = os.path.join(SOURCE_DIR, "build64", "Release", "linux")
 LINUX32_DIR = os.path.join(SOURCE_DIR, "build32", "Release", "linux")
 
-user_docs = os.path.join(os.path.expanduser("~"), "Documents")
-RELEASE_DIR = os.environ.get("NQ_RELEASE_DIR", os.path.join(user_docs, "NQ_1.3.1_Mod"))
-ET64_NQ_DIR = os.environ.get("ET64_DIR", r"C:\ETLegacy64\nq")
-CLIENT_NQ_DIR = os.path.join(user_docs, "ETLegacy", "nq")
-ET32_NQ_DIR = os.environ.get("ET32_DIR", r"C:\Enemy Territory - Legacy\nq")
+# Where the release is assembled. Defaults to <repo>/release (git-ignored);
+# set NQ_RELEASE_DIR to use another folder.
+RELEASE_DIR = os.environ.get("NQ_RELEASE_DIR", os.path.join(SOURCE_DIR, "release"))
+# Optional local installs to copy the new build into for testing.
+# Nothing is copied unless these environment variables are set.
+ET64_NQ_DIR = os.environ.get("ET64_DIR", "")
+ET32_NQ_DIR = os.environ.get("ET32_DIR", "")
+CLIENT_NQ_DIR = os.environ.get("NQ_CLIENT_DIR", "")
 
 # 1. Verify 64-bit and 32-bit DLL exports
 cgame64 = os.path.join(BUILD64_DIR, "cgame_mp_x64.dll")
@@ -54,34 +74,26 @@ def build_universal_binary_pk3(pk3_path):
         # Windows 64-bit Client DLLs
         z.write(cgame64, "cgame_mp_x64.dll")
         z.write(ui64, "ui_mp_x64.dll")
-        z.write(cgame64, "cgame.mp.x86_64.dll")
-        z.write(ui64, "ui.mp.x86_64.dll")
 
         # Windows 32-bit Client DLLs
         z.write(cgame32, "cgame_mp_x86.dll")
         z.write(ui32, "ui_mp_x86.dll")
-        z.write(cgame32, "cgame.mp.i386.dll")
-        z.write(ui32, "ui.mp.i386.dll")
 
         # Linux 64-bit Client SOs
         cgame64_so = os.path.join(LINUX64_DIR, "cgame.mp.x86_64.so")
         ui64_so = os.path.join(LINUX64_DIR, "ui.mp.x86_64.so")
         if os.path.exists(cgame64_so):
             z.write(cgame64_so, "cgame.mp.x86_64.so")
-            z.write(cgame64_so, "cgame_mp_x64.so")
         if os.path.exists(ui64_so):
             z.write(ui64_so, "ui.mp.x86_64.so")
-            z.write(ui64_so, "ui_mp_x64.so")
 
         # Linux 32-bit Client SOs
         cgame32_so = os.path.join(LINUX32_DIR, "cgame.mp.i386.so")
         ui32_so = os.path.join(LINUX32_DIR, "ui.mp.i386.so")
         if os.path.exists(cgame32_so):
             z.write(cgame32_so, "cgame.mp.i386.so")
-            z.write(cgame32_so, "cgame_mp_x86.so")
         if os.path.exists(ui32_so):
             z.write(ui32_so, "ui.mp.i386.so")
-            z.write(ui32_so, "ui_mp_x86.so")
     print(f"Built {pk3_path} successfully.")
 
 # 2. Build Unified nq_b_v1.3.1b7.pk3
@@ -94,6 +106,9 @@ if not os.path.exists(src_base_asset_pk3):
     src_base_asset_pk3 = os.path.join(RELEASE_DIR, "nq_v1.3.1b6.pk3")
 if not os.path.exists(src_base_asset_pk3):
     src_base_asset_pk3 = os.path.join(RELEASE_DIR, "nq_v1.3.1_b.pk3")
+if not os.path.exists(src_base_asset_pk3):
+    sys.exit(f"ERROR: no base asset pk3 (nq_v1.3.1b7.pk3) found in {RELEASE_DIR}. "
+             "Copy the current one there, or set NQ_RELEASE_DIR to your release folder.")
 nq_v131b7 = os.path.join(RELEASE_DIR, "nq_v1.3.1b7.pk3")
 
 menudef_h = os.path.join(TRUNK_DIR, "etmain", "ui", "menudef.h")
@@ -154,24 +169,36 @@ win64_dir = os.path.join(RELEASE_DIR, "DLL's", "Windows", "64 Bit")
 win32_dir = os.path.join(RELEASE_DIR, "DLL's", "Windows", "32 Bit")
 lin64_dir = os.path.join(RELEASE_DIR, "DLL's", "Linux", "64 Bit")
 lin32_dir = os.path.join(RELEASE_DIR, "DLL's", "Linux", "32 Bit")
+for d in [win64_dir, win32_dir, lin64_dir, lin32_dir]:
+    os.makedirs(d, exist_ok=True)
 
-shutil.copy2(qagame64, os.path.join(RELEASE_DIR, "qagame_mp_x64.dll"))
+def copy_if_exists(src, dst):
+    if os.path.exists(src):
+        shutil.copy2(src, dst)
+
+# Server files only; client cgame/ui ship inside nq_b_v1.3.1b7.pk3. Names are exactly what ET:Legacy loads:
+# Windows = underscore names (qagame_mp_x64.dll), Linux = dot names (qagame.mp.x86_64.so).
 shutil.copy2(qagame64, os.path.join(win64_dir, "qagame_mp_x64.dll"))
+# lua5.1.dll goes next to etlded.exe; the LuaSQL driver goes where
+# require("luasql.sqlite3") looks: nq/lualibs/luasql/sqlite3.dll
+for build_dir, out_dir in ((BUILD64_DIR, win64_dir), (BUILD32_DIR, win32_dir)):
+    copy_if_exists(os.path.join(build_dir, "lua5.1.dll"), os.path.join(out_dir, "lua5.1.dll"))
+    luasql_dir = os.path.join(out_dir, "lualibs", "luasql")
+    os.makedirs(luasql_dir, exist_ok=True)
+    copy_if_exists(os.path.join(build_dir, "sqlite3.dll"), os.path.join(luasql_dir, "sqlite3.dll"))
 shutil.copy2(pk3_unified_path, os.path.join(win64_dir, "nq_b_v1.3.1b7.pk3"))
 
 shutil.copy2(qagame32, os.path.join(win32_dir, "qagame_mp_x86.dll"))
 shutil.copy2(pk3_unified_path, os.path.join(win32_dir, "nq_b_v1.3.1b7.pk3"))
 
 if os.path.exists(os.path.join(LINUX64_DIR, "qagame.mp.x86_64.so")):
-    shutil.copy2(os.path.join(LINUX64_DIR, "qagame.mp.x86_64.so"), os.path.join(lin64_dir, "qagame_mp_x64.so"))
-    shutil.copy2(os.path.join(LINUX64_DIR, "qagame.mp.x86_64.so"), os.path.join(RELEASE_DIR, "qagame.mp.x86_64.so"))
-    shutil.copy2(os.path.join(LINUX64_DIR, "qagame.mp.x86_64.so"), os.path.join(RELEASE_DIR, "qagame_mp_x64.so"))
+    shutil.copy2(os.path.join(LINUX64_DIR, "qagame.mp.x86_64.so"), os.path.join(lin64_dir, "qagame.mp.x86_64.so"))
+# Linux: Lua and LuaSQL/SQLite are built into qagame (NQ_BUILTIN_LUASQL), so the
+# small liblua5.1.so / sqlite3.so stubs build_linux.py writes are not shipped.
 shutil.copy2(pk3_unified_path, os.path.join(lin64_dir, "nq_b_v1.3.1b7.pk3"))
 
 if os.path.exists(os.path.join(LINUX32_DIR, "qagame.mp.i386.so")):
-    shutil.copy2(os.path.join(LINUX32_DIR, "qagame.mp.i386.so"), os.path.join(lin32_dir, "qagame_mp_x86.so"))
-    shutil.copy2(os.path.join(LINUX32_DIR, "qagame.mp.i386.so"), os.path.join(RELEASE_DIR, "qagame.mp.i386.so"))
-    shutil.copy2(os.path.join(LINUX32_DIR, "qagame.mp.i386.so"), os.path.join(RELEASE_DIR, "qagame_mp_x86.so"))
+    shutil.copy2(os.path.join(LINUX32_DIR, "qagame.mp.i386.so"), os.path.join(lin32_dir, "qagame.mp.i386.so"))
 shutil.copy2(pk3_unified_path, os.path.join(lin32_dir, "nq_b_v1.3.1b7.pk3"))
 
 # Clean old pk3s in DLL's subfolders
@@ -192,7 +219,7 @@ def safe_copy(src, dst):
 
 # 6. Copy to active test game directories and remove legacy pk3s
 for target_dir in [ET64_NQ_DIR, CLIENT_NQ_DIR, ET32_NQ_DIR]:
-    if os.path.exists(target_dir):
+    if target_dir and os.path.exists(target_dir):
         print(f"\nUpdating {target_dir}...")
         safe_copy(pk3_unified_path, os.path.join(target_dir, "nq_b_v1.3.1b7.pk3"))
         safe_copy(nq_v131b7, os.path.join(target_dir, "nq_v1.3.1b7.pk3"))
@@ -206,17 +233,17 @@ for target_dir in [ET64_NQ_DIR, CLIENT_NQ_DIR, ET32_NQ_DIR]:
                 except Exception as e:
                     print(f"  [WARN] Could not remove {legacy}: {e}")
 
-if os.path.exists(ET64_NQ_DIR):
+if ET64_NQ_DIR and os.path.exists(ET64_NQ_DIR):
     safe_copy(qagame64, os.path.join(ET64_NQ_DIR, "qagame_mp_x64.dll"))
 
-if os.path.exists(CLIENT_NQ_DIR):
+if CLIENT_NQ_DIR and os.path.exists(CLIENT_NQ_DIR):
     safe_copy(cgame64, os.path.join(CLIENT_NQ_DIR, "cgame_mp_x64.dll"))
     safe_copy(ui64, os.path.join(CLIENT_NQ_DIR, "ui_mp_x64.dll"))
     safe_copy(cgame32, os.path.join(CLIENT_NQ_DIR, "cgame_mp_x86.dll"))
     safe_copy(ui32, os.path.join(CLIENT_NQ_DIR, "ui_mp_x86.dll"))
     safe_copy(qagame64, os.path.join(CLIENT_NQ_DIR, "qagame_mp_x64.dll"))
 
-if os.path.exists(ET32_NQ_DIR):
+if ET32_NQ_DIR and os.path.exists(ET32_NQ_DIR):
     safe_copy(cgame32, os.path.join(ET32_NQ_DIR, "cgame_mp_x86.dll"))
     safe_copy(ui32, os.path.join(ET32_NQ_DIR, "ui_mp_x86.dll"))
     safe_copy(qagame32, os.path.join(ET32_NQ_DIR, "qagame_mp_x86.dll"))
