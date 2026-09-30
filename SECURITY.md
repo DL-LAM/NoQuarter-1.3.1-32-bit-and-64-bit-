@@ -5,7 +5,7 @@
 | Version | Supported |
 | :--- | :--- |
 | 1.3.1b7 (latest release) | Yes |
-| 1.3.0 and older (including 1.2.9) | No. These have known crash bugs that are fixed in 1.3.1. Please upgrade. |
+| 1.3.0 and older (including 1.2.9) | No. These have known crash bugs that are fixed in 1.3.1.  |
 
 ## Reporting a vulnerability
 
