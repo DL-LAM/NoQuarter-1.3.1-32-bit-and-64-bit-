@@ -59,7 +59,7 @@ Stuff was fixed, enjoy! If you run into any issues, have questions, or need help
 * **Weapon HUD Glow**:
   * Dynamic weapon state glow on the HUD inspired by ET:Legacy.
 * **Engine & Server Crash Hardening**:
-  * Added rock-solid guards across referee commands, voting handlers, fireteam logic, bot memory bounds, and server tickrate divisions. Tested through 30 consecutive stress boundary checks with zero crashes.
+  * Added guards across referee commands, voting handlers, fireteam logic, bot memory bounds, and server tickrate divisions. Tested through 30 consecutive stress boundary checks with zero crashes.
 
 ---
 
