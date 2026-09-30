@@ -144,19 +144,43 @@ for sub_dir in ["ctf_pool", "pool"]:
                 arcname = f"textures/{sub_dir}/{fname}".replace("\\", "/")
                 overrides[arcname] = fpath
 
-# [EoTS 1.0 - Rename]: version text shown in the in-game and NQ options menus.
+# [EoTS 1.0 - Rename]: NQ logo and version text in the in-game (ESC) and NQ options menus.
 # Patched inside the pk3's own copy of each menu, so nothing else in those menus changes.
+# The logo is centered under the menu window and the version text is centered on its own
+# line below it. Everything stays in menu coordinates (640x480 virtual screen), so it
+# scales with resolution and widescreen exactly like the rest of the menu.
+# Safe to run again on an already patched pk3.
 VERSION_MENUS = ["ui/ingame_main.menu", "ui/options_nq.menu"]
-VERSION_TEXT_RE = re.compile(rb'(name\s+"versionString2?"[^}]*?text\s+)"[^"]*"', re.S)
+ITEMDEF_RE = re.compile(rb'itemDef\s*\{[^{}]*\}', re.S)
+# Both menus are 160 wide (WINDOW_WIDTH). The visible logo sits at x 139..370 of the 512-wide
+# logo_nq.tga, so in a 232-wide rect its middle is 115 from the left: x = 80 - 115 = -35.
+# (A plain number, as the original -58 was; negative $evalfloat results are best avoided.)
+LOGO_RECT = b'rect      -35 200 232 32'
+VERSION_LINES = {
+    rb'rect\s+[^\r\n]*': b'rect      0 232 WINDOW_WIDTH 12',
+    rb'textalign\s+[^\r\n]*': b'textalign   ITEM_ALIGN_CENTER',
+    rb'textalignx\s+[^\r\n]*': b'textalignx   $evalfloat(.5*WINDOW_WIDTH)',
+    rb'text\s+"[^"]*"': f'text      "^7EoTS {EOTS_VERSION}"'.encode(),
+}
 
-# The version text starts at 70% of the window width, which fit "1.3.1" but not "EoTS 1.0.7b",
-# so it is moved left to start at 50%.
-VERSION_X_RE = re.compile(rb'(name\s+"versionString2?"[^}]*?textalignx\s+)\$evalfloat\(\.7\*\(WINDOW_WIDTH-8\)\)', re.S)
+def _set_line(block, pattern, value):
+    # replace a "key value" line at the start of a line (so "text" doesn't hit "textalign")
+    return re.sub(rb'(?m)^(\s*)' + pattern + rb'[ \t]*(?=\r?$)', lambda m: m.group(1) + value, block, count=1)
 
 def patch_version_text(data):
-    new_data, count = VERSION_TEXT_RE.subn(lambda m: m.group(1) + f'"^7EoTS {EOTS_VERSION}"'.encode(), data)
-    new_data = VERSION_X_RE.sub(lambda m: m.group(1) + b'$evalfloat(.5*(WINDOW_WIDTH-8))', new_data)
-    return new_data, count
+    count = 0
+    def fix_item(m):
+        nonlocal count
+        block = m.group(0)
+        if re.search(rb'background\s+"ui/assets/logo_nq"', block):
+            block = _set_line(block, rb'rect\s+[^\r\n]*', LOGO_RECT)
+            count += 1
+        elif re.search(rb'name\s+"versionString2?"', block):
+            for pattern, value in VERSION_LINES.items():
+                block = _set_line(block, pattern, value)
+            count += 1
+        return block
+    return ITEMDEF_RE.sub(fix_item, data), count
 
 print(f"\nBuilding {asset_pk3_path} with menudef headers, menus, caduceus fix, and texture fixes ({len(overrides)} overrides)...")
 temp_asset_pk3 = asset_pk3_path + ".tmp"
@@ -171,7 +195,7 @@ with zipfile.ZipFile(src_base_asset_pk3, 'r') as zin, zipfile.ZipFile(temp_asset
             buffer = zin.read(item.filename)
             if norm_name in VERSION_MENUS:
                 buffer, count = patch_version_text(buffer)
-                print(f"  Set version text in {norm_name} ({count} item(s))")
+                print(f"  Set NQ logo and version text in {norm_name} ({count} item(s))")
             zout.writestr(item, buffer)
     
     # Add any new files that weren't in the original pk3
