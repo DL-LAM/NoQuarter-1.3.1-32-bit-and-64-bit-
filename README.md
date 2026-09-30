@@ -1,4 +1,4 @@
-# NoQuarter 1.3.1 (32-bit & 64-bit)
+# NoQuarter CE V1.3.1 (32-bit & 64-bit) *Community Edition*
 
 Maintained and updated by **Hawkeye** (`nqv1.3.1help@gmail.com`)
 
