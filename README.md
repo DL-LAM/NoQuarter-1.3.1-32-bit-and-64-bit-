@@ -2,7 +2,7 @@
 
 Maintained and updated by **Hawkeye** (`nqv1.3.1help@gmail.com`)
 
-Welcome to NoQuarter 1.3.1! This update modernizes the classic Wolfenstein: Enemy Territory mod so it runs great on modern systems, high-res widescreen/ultrawide monitors, and modern engines (ET:Legacy as well as classic ET 2.60b). 
+Welcome to NoQuarter 1.3.1! This unoffical community update modernizes the classic Wolfenstein: Enemy Territory mod so it runs great on modern systems, high-res widescreen/ultrawide monitors, and modern engines (ET:Legacy as well as classic ET 2.60b). 
 
 We've got full native 64-bit and 32-bit support across both Windows and Linux, cleaner menus, tons of crash-proofing, quality-of-life gameplay tweaks, and unified packaging so players and server admins don't get hit with annoying pure-server PK3 mismatch errors.
 
