@@ -106,12 +106,20 @@ char *CG_BuildLocationString( int clientNum, vec3_t origin, int flag ) {
 				}
 			}
 		}
-		if ( cg_locations.integer & LOC_SHOWCOORDS && locValid )
+		if ( cg_locations.integer & LOC_SHOWCOORDS && locValid && locStr )
 		{
-			Q_strcat( locStr, 64, va(" ^3(%s)", BG_GetLocationString(loc)) ); // append a location
+			// [EoTS 1.0 - Bugfix]: build a new va() string. locStr is itself a va() string, and
+			// Q_strcat(locStr, 64, ...) wrote over the va() text being appended (it is stored right
+			// after locStr) and past the end of locStr, which garbled the location text.
+			locStr = va( "%s ^3(%s)", locStr, BG_GetLocationString(loc) ); // append a location
 		}
 	} else {
 		locStr = va( "^3(%s)", BG_GetLocationString(loc) );
+	}
+
+	// [EoTS 1.0 - Bugfix]: distance mode with no valid local client left locStr NULL
+	if ( !locStr ) {
+		locStr = va( "%s", "" );
 	}
 
 	return locStr;

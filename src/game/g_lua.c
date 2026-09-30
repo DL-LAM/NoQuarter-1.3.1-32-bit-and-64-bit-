@@ -1027,6 +1027,13 @@ static const gentity_field_t gentity_fields[] = {
 };
 
 // gentity fields helper functions
+// [EoTS 1.0 - Security]: true if index is a valid element of an int/float array field.
+// Uses the field's byte size, so flat indexes into arrays of structs (sess.aWeaponStats) still work.
+static qboolean _et_field_index_ok( const gentity_field_t *field, int index )
+{
+	return ( index >= 0 && (size_t)(index + 1) * sizeof(int) <= field->size ) ? qtrue : qfalse;
+}
+
 gentity_field_t *_et_gentity_getfield(gentity_t *ent, char *fieldname)
 {
 	int i;
@@ -1411,13 +1418,29 @@ int _et_gentity_get(lua_State *L)
 			_et_gentity_getvec3(L, *(vec3_t *)addr);
 			return 1;
 		case FIELD_INT_ARRAY:
-			lua_pushinteger(L, (*(int *)(addr + (sizeof(int) * luaL_optint(L, 3, 0)))));
+			{
+				// [EoTS 1.0 - Security]: array index is bounds-checked (was unchecked, so a script
+				// could read any memory past the array). Out of range returns nil.
+				int index = luaL_optint(L, 3, 0);
+				if ( !_et_field_index_ok(field, index) ) {
+					lua_pushnil(L);
+					return 1;
+				}
+				lua_pushinteger(L, (*(int *)(addr + (sizeof(int) * index))));
+			}
 			return 1;
 		case FIELD_TRAJECTORY:
 			_et_gentity_gettrajectory(L, (trajectory_t *)addr);
 			return 1;
 		case FIELD_FLOAT_ARRAY:
-			lua_pushnumber(L, (*(float *)(addr + (sizeof(int) * luaL_optint(L, 3, 0)))));
+			{
+				int index = luaL_optint(L, 3, 0);	// [EoTS 1.0 - Security]: bounds-checked, see above
+				if ( !_et_field_index_ok(field, index) ) {
+					lua_pushnil(L);
+					return 1;
+				}
+				lua_pushnumber(L, (*(float *)(addr + (sizeof(int) * index))));
+			}
 			return 1;
 	}
 	return 0;
@@ -1557,13 +1580,27 @@ static int _et_gentity_set(lua_State *L)
 			_et_gentity_setvec3(L, (vec3_t *)addr);
 			break;
 		case FIELD_INT_ARRAY:
-			*(int *)(addr + (sizeof(int) * luaL_checkint(L, 3))) = luaL_checkint(L, 4);
+			{
+				// [EoTS 1.0 - Security]: array index is bounds-checked (was unchecked, so a script
+				// could write any memory past the array)
+				int index = luaL_checkint(L, 3);
+				if ( !_et_field_index_ok(field, index) ) {
+					return luaL_error(L, "et.gentity_set: index %d out of range for %s", index, fieldname);
+				}
+				*(int *)(addr + (sizeof(int) * index)) = luaL_checkint(L, 4);
+			}
 			break;
 		case FIELD_TRAJECTORY:
 			_et_gentity_settrajectory(L, (trajectory_t *)addr);
 			break;
 		case FIELD_FLOAT_ARRAY:
-			*(float *)(addr + (sizeof(int) * luaL_checkint(L, 3))) = luaL_checknumber(L, 4);
+			{
+				int index = luaL_checkint(L, 3);	// [EoTS 1.0 - Security]: bounds-checked, see above
+				if ( !_et_field_index_ok(field, index) ) {
+					return luaL_error(L, "et.gentity_set: index %d out of range for %s", index, fieldname);
+				}
+				*(float *)(addr + (sizeof(int) * index)) = luaL_checknumber(L, 4);
+			}
 			return 1;
 	}
 	return 0;

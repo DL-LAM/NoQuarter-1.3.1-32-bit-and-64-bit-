@@ -47,6 +47,22 @@ itself is the same as 1.3.1b7.
   (No Quarter is under the No Quarter Mod Team's Modified RPL 1.1, not the
   GPL) and corrected the credits.
 
+Fixes
+- Lua: et.gentity_get / et.gentity_set now bounds-check the index of array
+  fields (ps.stats, ps.ammo, sess.skill, ...). A script could read or write
+  memory past the end of the array. Out-of-range reads return nil and
+  out-of-range writes raise a Lua error. (src/game/g_lua.c, src/game/g_lua.h)
+- Location text with cg_locations coordinates turned on could come out
+  garbled: the coordinates were appended into a shared va() buffer on top
+  of the text being appended. Distance mode with no valid local client
+  could return no string at all. (src/cgame/cg_localents.c)
+- abs() was used on float values, which cuts them to whole numbers:
+  prediction view-angle check (src/cgame/cg_predict.c), weapon pitch while
+  leaning (src/cgame/cg_weapons.c) and menu transition speeds
+  (src/ui/ui_shared.c). Now fabs().
+- Release (WolfAdmin nq.lua flag map): added the !nade, !pip and !rocket
+  permissions (flags x, z, j, matching NoQuarter's shrubbot).
+
 
 1.3.1b7 (beta)                                         2026-09-26 - 2026-09-29
 --------------------------------------------------------------------------------
@@ -198,6 +214,7 @@ Source files modified from No Quarter SVN r5758
   src/cgame/cg_particles.c
   src/cgame/cg_players.c
   src/cgame/cg_popupmessages.c
+  src/cgame/cg_predict.c
   src/cgame/cg_scoreboard.c
   src/cgame/cg_servercmds.c
   src/cgame/cg_sound.c

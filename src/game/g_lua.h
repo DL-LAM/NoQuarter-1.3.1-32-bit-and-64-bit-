@@ -59,10 +59,11 @@
 #define lua_regconststring(L, n) (lua_pushstring(L, #n), lua_pushstring(L, n), lua_settable(L, -3))
 
 // macros to add gentity and gclient fields
-#define _et_gentity_addfield(n, t, f) {#n, t, offsetof(struct gentity_s, n), FIELD_FLAG_GENTITY + f}
-#define _et_gentity_addfieldalias(n, a, t, f) {#n, t, offsetof(struct gentity_s, a), FIELD_FLAG_GENTITY + f}
-#define _et_gclient_addfield(n, t, f) {#n, t, offsetof(struct gclient_s, n), FIELD_FLAG_GCLIENT + f}
-#define _et_gclient_addfieldalias(n, a, t, f) {#n, t, offsetof(struct gclient_s, a), FIELD_FLAG_GCLIENT + f}
+// [EoTS 1.0 - Security]: the last value is the field's size in bytes, used to bounds-check array indexes
+#define _et_gentity_addfield(n, t, f) {#n, t, offsetof(struct gentity_s, n), FIELD_FLAG_GENTITY + f, sizeof(((struct gentity_s *)0)->n)}
+#define _et_gentity_addfieldalias(n, a, t, f) {#n, t, offsetof(struct gentity_s, a), FIELD_FLAG_GENTITY + f, sizeof(((struct gentity_s *)0)->a)}
+#define _et_gclient_addfield(n, t, f) {#n, t, offsetof(struct gclient_s, n), FIELD_FLAG_GCLIENT + f, sizeof(((struct gclient_s *)0)->n)}
+#define _et_gclient_addfieldalias(n, a, t, f) {#n, t, offsetof(struct gclient_s, a), FIELD_FLAG_GCLIENT + f, sizeof(((struct gclient_s *)0)->a)}
 
 typedef struct
 {
@@ -81,6 +82,7 @@ typedef struct {
 	int				type;
 	size_t			mapping;
 	int				flags;
+	size_t			size;		// [EoTS 1.0 - Security]: size of the field in bytes
 } gentity_field_t;
 
 extern lua_vm_t * lVM[LUA_NUM_VM];

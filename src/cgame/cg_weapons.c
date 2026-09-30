@@ -1609,7 +1609,7 @@ static void CG_CalculateWeaponPosition( vec3_t origin, vec3_t angles ) {
 		VectorMA(origin, angles[ROLL], right, origin);
 
 		// pitch the gun down a bit to show that firing is not allowed when leaning
-		angles[PITCH] += (abs(leanf)/2.0f);
+		angles[PITCH] += (fabs(leanf)/2.0f);	// [EoTS 1.0 - Bugfix]: fabs, abs() cut leanf to a whole number
 
 		// this gives you some impression that the weapon stays in relatively the same
 		// position while you lean, so you appear to 'peek' over the weapon
