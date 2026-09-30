@@ -1,0 +1,238 @@
+NoQuarter Community Edition (NQ-CE) - CHANGES
+===============================================
+
+NoQuarter Community Edition is an unofficial, community-maintained
+continuation of No Quarter. It is a modified version (an "Extension")
+of No Quarter by the No Quarter Mod Team and is distributed under the
+No Quarter Mod Team's Modified Reciprocal Public License 1.1
+(see License.txt). It is not affiliated with or endorsed by the
+original No Quarter Mod Team. All credit for No Quarter itself belongs
+to them and to its contributors.
+
+Based on:    No Quarter SVN trunk, revision 5758 (2012-04-16)
+Maintainer:  Hawkeye
+Source code: https://github.com/DL-LAM/NoQuarter-1.3.1-32-bit-and-64-bit-
+Contact:     NoQuarter Discord - https://discord.gg/c5yREDTt5
+
+All changes listed below are by Hawkeye unless stated otherwise.
+
+Finding a change in the source code
+-----------------------------------
+Modified code is marked with comment tags of the form
+[NQ 1.3.1 - <Area>], for example [NQ 1.3.1 - Security],
+[NQ 1.3.1 - Widescreen] or [NQ 1.3.1 - Audit C1]. Search the source
+for the tag to find the change. The audit fixes (tags "Audit <ID>")
+are listed individually in docs/AUDIT_2026-09-25.md. The full history
+of the git era (2026-09-01 onward) is in the repository's commit log.
+
+
+1.3.1b7 (beta)                                         2026-09-26 - 2026-09-29
+--------------------------------------------------------------------------------
+Engine / platform
+- Windows 64-bit servers load Omni-bot from omnibot_et_x64.dll. Fixed a
+  crash in the Omni-bot loader's error reporting (OB_ShowLastError) that
+  shut 64-bit Windows servers down at startup.
+  (Omnibot/Common/BotLoadLibrary.cpp)
+- Fixed the Omni-bot "Looking for" log message on Linux (missing format
+  argument). (Omnibot/Common/BotLoadLibrary.cpp)
+- Linux: LuaSQL and SQLite are compiled into qagame (NQ_BUILTIN_LUASQL) and
+  registered as a preloaded Lua module, so require("luasql.sqlite3") works
+  on Linux servers without extra library files. The previous separate
+  Linux sqlite3.so / liblua5.1.so files were empty and never worked.
+  (src/game/g_lua.c, scripts/build_linux.py)
+
+Build and packaging
+- Windows builds no longer embed the builder's folder paths (/d1trimfile,
+  /PDBALTPATH:%_PDB%). Linux builds use -ffile-prefix-map, no debug info,
+  and stripped binaries. (src/CMakeLists.txt, scripts/build_linux.py)
+- Release packaging picks the newest build folder, ships the Windows LuaSQL
+  driver as lualibs/luasql/sqlite3.dll, and no longer ships the empty Linux
+  library stubs. (scripts/package_release.py)
+- Added CMakeSettings.json for Visual Studio "Open Folder" builds.
+- Unified binary pk3 (nq_b_v1.3.1b7.pk3) rebuilt with all eight client
+  binaries (Windows x86/x64, Linux i386/x86_64).
+
+Configuration and scripts (release package)
+- noquarter.cfg: added g_log, g_logSync, g_logChat, g_tyranny,
+  sv_allowDownload and g_discordURL; referee lockout cvars in all sample
+  configs; docs/noquarter_commented.txt documents each one.
+- WolfAdmin: new !discord / !bug command (shows g_discordURL for bug
+  reports), new !resetmyxp for standalone mode (permission resetxp_self),
+  a Discord banner, and pip/rocket permission constants.
+- xpsave.lua: database path taken from fs_homepath/fs_game instead of a
+  hardcoded path; !setxp respects WolfAdmin admin levels in standalone
+  mode; removed hardcoded admin GUIDs.
+- Disabled a bot XP-reset hook in WolfAdmin's greetings module.
+- Removed the unfinished shrubbot_fun.lua from the release.
+
+Documentation
+- README, installation guide, developer knowledge base and agent notes
+  updated (Lua/SQLite file layout, build notes, solved issues).
+- Added SECURITY.md (private vulnerability reporting).
+
+
+1.3.1 source audit                                                  2026-09-25
+--------------------------------------------------------------------------------
+Security, stability and 64-bit fixes from a full review of the game code.
+Each item is tagged [NQ 1.3.1 - Audit <ID>] in the source and described in
+docs/AUDIT_2026-09-25.md. Highlights:
+- C1: fireteam kick/propose on yourself could shut the server down.
+- C2: map-vote IDs were not range-checked (write outside the vote table).
+- H1: IPv6 players were refused ("Bad userinfo").
+- H2: Lua et.G_LogPrint used its text as a printf format string.
+- H3: XP save file path built from an unvalidated cl_guid (path traversal).
+- H4: full shrubbot tables wrote past the end of the array; readconfig
+  stopped reading mid-file.
+- M1-M10: UTF-8 names accepted, exact IP ban matching, GUID-less ban fix,
+  IPv4 filter parser, portable 32/64-bit XP save files, Lua string
+  ownership, !unban bounds, props NULL check, bounded va(), info-string
+  fixes.
+- L1-L9: assorted bounds checks and 64-bit printf fixes.
+- Linux 64-bit (LP64) math fixes: Q_rsqrt, SinCos, COM_Bit* and long-based
+  string hashes.
+- Map scripts: unknown map-script actions/events are skipped with a
+  warning instead of shutting the server down (maps made for other mods).
+  [NQ 1.3.1 - MapScript]
+
+
+1.3.1b6 / b7 packaging                                   2026-09-20 - 2026-09-22
+--------------------------------------------------------------------------------
+- Unified pk3 layout: one asset pk3 (nq_v1.3.1bX.pk3) and one binary pk3
+  (nq_b_v1.3.1bX.pk3) with the client binaries for every platform, so
+  32-bit and 64-bit players can share a pure server.
+- Version bumped to 1.3.1b7; build scripts and documentation updated.
+- Removed 778 leftover SVN metadata files from version control.
+
+
+Security and widescreen hardening                        2026-09-15 - 2026-09-21
+--------------------------------------------------------------------------------
+- RCON and referee authentication: configurable lockout after repeated
+  failed passwords (g_authFailures, g_authFailBanTime,
+  g_authFailExpireTime), IPv6-safe address buffers.
+- Lua subsystem and shrubbot bridge hardened against privilege escalation
+  and memory corruption; format-string, bounds and pointer fixes across the
+  game code. [NQ 1.3.1 - Security] / [NQ 1.3.1 - Bounds]
+- NQKey stack buffer overflow fixed; IPv6 support in shrubbot bans.
+- NULL client/entity guards in referee, vote, fireteam and multiview code;
+  sv_fps division guards; Omni-bot interface bounds checks.
+- Widescreen (16:9, 16:10, 21:9) UI and aspect-ratio overhaul: centered
+  menus, main menu docked left, fullscreen backgrounds without gaps.
+  [NQ 1.3.1 - Widescreen]
+- Airstrike plane flyover animation fixed; center-print HUD text no longer
+  overlaps the kill feed. [NQ 1.3.1 - Airstrike] / [NQ 1.3.1 - HUD]
+- Linux server: Lua embedded statically, ORIGIN rpath, GCC inline symbol fix.
+- Server configs and commented documentation updated for 1.3.1.
+- Developer knowledge base and build documentation added.
+
+
+1.3.1 initial work (before git history)                           to 2026-09-05
+--------------------------------------------------------------------------------
+Changes made to the r5758 source before and during the first git commits
+(2026-09-01 import, 2026-09-05 release):
+- 64-bit support for Windows (x64) and Linux (x86_64): pointer-safe
+  syscalls in cgame, ui and qagame; 64-bit crash handlers; ET:Legacy
+  OS-support flags and pk3 checks. [NQ 1.3.1 - Windows 64-bit] /
+  [NQ 1.3.1 - Linux 64-bit] / [NQ 1.3.1 - Portability]
+- Widescreen Hor+ field-of-view correction. [NQ 1.3.1 - Widescreen]
+- Modernized intermission / debriefing screens (scoreboard, awards, stats
+  and map-vote tabs) and a modern XP popup showing the reason for XP gains.
+- Weapon icon color reflects the weapon's current state.
+- Limbo panel default secondary-weapon selection updated for the soldier
+  shotgun and akimbo pistols; soldier level 4+ SMG/shotgun secondary.
+- Bounds checks for custom maps with more spawn points or objective
+  triggers than the original limits.
+- Map location file parsing rewritten (cg_localents.c).
+- Omni-bot 0.93 integration.
+- Asset fixes in the asset pk3: menus, right-side-up caduceus in
+  meyer.shader, and CMYK JPEG textures converted so 32-bit clients no
+  longer crash.
+
+
+Third-party components included in the release
+-----------------------------------------------
+These keep their own licenses and are not covered by the No Quarter
+license: Lua 5.1 (MIT), SQLite (public domain), LuaSQL (MIT),
+WolfAdmin 1.2.1 by Timo 'Timothy' Smit (GPLv3), Omni-bot.
+
+
+Source files modified from No Quarter SVN r5758
+-----------------------------------------------
+  src/cgame/cg_character.c
+  src/cgame/cg_consolecmds.c
+  src/cgame/cg_crash.c
+  src/cgame/cg_debriefing.c
+  src/cgame/cg_draw.c
+  src/cgame/cg_drawtools.c
+  src/cgame/cg_ents.c
+  src/cgame/cg_event.c
+  src/cgame/cg_info.c
+  src/cgame/cg_limbopanel.c
+  src/cgame/cg_local.h
+  src/cgame/cg_localents.c
+  src/cgame/cg_main.c
+  src/cgame/cg_missionmessages.c
+  src/cgame/cg_newDraw.c
+  src/cgame/cg_particles.c
+  src/cgame/cg_players.c
+  src/cgame/cg_popupmessages.c
+  src/cgame/cg_scoreboard.c
+  src/cgame/cg_servercmds.c
+  src/cgame/cg_sound.c
+  src/cgame/cg_spawn.c
+  src/cgame/cg_syscalls.c
+  src/cgame/cg_view.c
+  src/cgame/cg_weapons.c
+  src/cgame/md5.c
+  src/game/bg_animation.c
+  src/game/bg_campaign.c
+  src/game/bg_misc.c
+  src/game/bg_public.h
+  src/game/g_character.c
+  src/game/g_client.c
+  src/game/g_cmds.c
+  src/game/g_combat.c
+  src/game/g_crash.c
+  src/game/g_etbot_interface.cpp
+  src/game/g_fireteams.c
+  src/game/g_items.c
+  src/game/g_local.h
+  src/game/g_lua.c
+  src/game/g_lua.h
+  src/game/g_main.c
+  src/game/g_match.c
+  src/game/g_match_tokens.c
+  src/game/g_misc.c
+  src/game/g_multiview.c
+  src/game/g_osfile.c
+  src/game/g_osfile.h
+  src/game/g_props.c
+  src/game/g_referee.c
+  src/game/g_script.c
+  src/game/g_script_actions.c
+  src/game/g_session.c
+  src/game/g_shrubbot.c
+  src/game/g_shrubbot.h
+  src/game/g_spawn.c
+  src/game/g_stats.c
+  src/game/g_svcmds.c
+  src/game/g_syscalls.c
+  src/game/g_systemmsg.c
+  src/game/g_trigger.c
+  src/game/g_utils.c
+  src/game/g_vote.c
+  src/game/g_weapon.c
+  src/game/g_xpsave.c
+  src/game/g_xpsave.h
+  src/game/q_math.c
+  src/game/q_shared.c
+  src/game/q_shared.h
+  src/profiler/p_profiler.c
+  src/ui/ui_atoms.c
+  src/ui/ui_gameinfo.c
+  src/ui/ui_loadpanel.c
+  src/ui/ui_local.h
+  src/ui/ui_main.c
+  src/ui/ui_shared.c
+  src/ui/ui_syscalls.c
+Plus: Omnibot/Common/BotLoadLibrary.cpp, src/CMakeLists.txt, scripts/,
+config/, docs/ and the asset pk3 contents (menus, shaders, textures).
