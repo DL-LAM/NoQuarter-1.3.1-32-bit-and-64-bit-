@@ -3,6 +3,15 @@ import sys
 import shutil
 import zipfile
 import ctypes
+import re
+
+# [EoTS 1.0 - Rename]: release name and pk3 names. Keep in sync with EOTS_VERSION in src/game/bg_public.h.
+EOTS_VERSION = "1.0.7b"
+BIN_PK3 = f"nqeots_b_v{EOTS_VERSION}.pk3"
+ASSET_PK3 = f"nqeots_v{EOTS_VERSION}.pk3"
+# pk3s the EoTS ones replace. Removed from the release folder and test installs.
+OLD_PK3S = ["nq_b_v1.3.1_64.pk3", "nq_b_v1.3.1_32.pk3", "nq_b_v1.3.1b6.pk3", "nq_v1.3.1b6.pk3",
+            "nq_b_v1.3.1b7.pk3", "nq_v1.3.1b7.pk3"]
 
 def check_dll_exports(dll_path, expected_exports):
     print(f"Checking {dll_path}...")
@@ -96,20 +105,22 @@ def build_universal_binary_pk3(pk3_path):
             z.write(ui32_so, "ui.mp.i386.so")
     print(f"Built {pk3_path} successfully.")
 
-# 2. Build Unified nq_b_v1.3.1b7.pk3
-pk3_unified_path = os.path.join(RELEASE_DIR, "nq_b_v1.3.1b7.pk3")
+# 2. Build the unified binary pk3 (nqeots_b_v<ver>.pk3)
+pk3_unified_path = os.path.join(RELEASE_DIR, BIN_PK3)
 build_universal_binary_pk3(pk3_unified_path)
 
-# 3. Update menudef files, menus, meyer.shader, and texture fixes into nq_v1.3.1b7.pk3
-src_base_asset_pk3 = os.path.join(RELEASE_DIR, "nq_v1.3.1b7.pk3")
-if not os.path.exists(src_base_asset_pk3):
-    src_base_asset_pk3 = os.path.join(RELEASE_DIR, "nq_v1.3.1b6.pk3")
-if not os.path.exists(src_base_asset_pk3):
-    src_base_asset_pk3 = os.path.join(RELEASE_DIR, "nq_v1.3.1_b.pk3")
-if not os.path.exists(src_base_asset_pk3):
-    sys.exit(f"ERROR: no base asset pk3 (nq_v1.3.1b7.pk3) found in {RELEASE_DIR}. "
+# 3. Build the asset pk3 (nqeots_v<ver>.pk3) from the previous asset pk3, with menudef files,
+#    menus, meyer.shader and texture fixes swapped in. The first EoTS build starts from nq_v1.3.1b7.pk3.
+src_base_asset_pk3 = None
+for base_name in [ASSET_PK3, "nq_v1.3.1b7.pk3", "nq_v1.3.1b6.pk3", "nq_v1.3.1_b.pk3"]:
+    if os.path.exists(os.path.join(RELEASE_DIR, base_name)):
+        src_base_asset_pk3 = os.path.join(RELEASE_DIR, base_name)
+        break
+if not src_base_asset_pk3:
+    sys.exit(f"ERROR: no base asset pk3 ({ASSET_PK3} or nq_v1.3.1b7.pk3) found in {RELEASE_DIR}. "
              "Copy the current one there, or set NQ_RELEASE_DIR to your release folder.")
-nq_v131b7 = os.path.join(RELEASE_DIR, "nq_v1.3.1b7.pk3")
+print(f"Using base asset pk3: {src_base_asset_pk3}")
+asset_pk3_path = os.path.join(RELEASE_DIR, ASSET_PK3)
 
 menudef_h = os.path.join(TRUNK_DIR, "etmain", "ui", "menudef.h")
 menudef2_h = os.path.join(TRUNK_DIR, "etmain", "ui", "menudef2.h")
@@ -133,9 +144,22 @@ for sub_dir in ["ctf_pool", "pool"]:
                 arcname = f"textures/{sub_dir}/{fname}".replace("\\", "/")
                 overrides[arcname] = fpath
 
+# [EoTS 1.0 - Rename]: version text shown in the in-game and NQ options menus.
+# Patched inside the pk3's own copy of each menu, so nothing else in those menus changes.
+VERSION_MENUS = ["ui/ingame_main.menu", "ui/options_nq.menu"]
+VERSION_TEXT_RE = re.compile(rb'(name\s+"versionString2?"[^}]*?text\s+)"[^"]*"', re.S)
 
-print(f"\nBuilding {nq_v131b7} with menudef headers, menus, caduceus fix, and texture fixes ({len(overrides)} overrides)...")
-temp_asset_pk3 = nq_v131b7 + ".tmp"
+# The version text starts at 70% of the window width, which fit "1.3.1" but not "EoTS 1.0.7b",
+# so it is moved left to start at 50%.
+VERSION_X_RE = re.compile(rb'(name\s+"versionString2?"[^}]*?textalignx\s+)\$evalfloat\(\.7\*\(WINDOW_WIDTH-8\)\)', re.S)
+
+def patch_version_text(data):
+    new_data, count = VERSION_TEXT_RE.subn(lambda m: m.group(1) + f'"^7EoTS {EOTS_VERSION}"'.encode(), data)
+    new_data = VERSION_X_RE.sub(lambda m: m.group(1) + b'$evalfloat(.5*(WINDOW_WIDTH-8))', new_data)
+    return new_data, count
+
+print(f"\nBuilding {asset_pk3_path} with menudef headers, menus, caduceus fix, and texture fixes ({len(overrides)} overrides)...")
+temp_asset_pk3 = asset_pk3_path + ".tmp"
 written_arcnames = set()
 with zipfile.ZipFile(src_base_asset_pk3, 'r') as zin, zipfile.ZipFile(temp_asset_pk3, 'w', compression=zipfile.ZIP_DEFLATED) as zout:
     for item in zin.infolist():
@@ -145,6 +169,9 @@ with zipfile.ZipFile(src_base_asset_pk3, 'r') as zin, zipfile.ZipFile(temp_asset
             written_arcnames.add(norm_name)
         else:
             buffer = zin.read(item.filename)
+            if norm_name in VERSION_MENUS:
+                buffer, count = patch_version_text(buffer)
+                print(f"  Set version text in {norm_name} ({count} item(s))")
             zout.writestr(item, buffer)
     
     # Add any new files that weren't in the original pk3
@@ -154,11 +181,11 @@ with zipfile.ZipFile(src_base_asset_pk3, 'r') as zin, zipfile.ZipFile(temp_asset
             written_arcnames.add(arcname)
             print(f"  Added new asset to pk3: {arcname}")
 
-os.replace(temp_asset_pk3, nq_v131b7)
-print(f"Built {nq_v131b7} successfully.")
+os.replace(temp_asset_pk3, asset_pk3_path)
+print(f"Built {asset_pk3_path} successfully.")
 
 # 4. Clean up obsolete/legacy pk3s from RELEASE_DIR
-for old_file in ["nq_b_v1.3.1_64.pk3", "nq_b_v1.3.1_32.pk3", "nq_b_v1.3.1b6.pk3"]:
+for old_file in OLD_PK3S:
     old_p = os.path.join(RELEASE_DIR, old_file)
     if os.path.exists(old_p):
         os.remove(old_p)
@@ -176,7 +203,7 @@ def copy_if_exists(src, dst):
     if os.path.exists(src):
         shutil.copy2(src, dst)
 
-# Server files only; client cgame/ui ship inside nq_b_v1.3.1b7.pk3. Names are exactly what ET:Legacy loads:
+# Server files only; client cgame/ui ship inside the binary pk3. Names are exactly what ET:Legacy loads:
 # Windows = underscore names (qagame_mp_x64.dll), Linux = dot names (qagame.mp.x86_64.so).
 shutil.copy2(qagame64, os.path.join(win64_dir, "qagame_mp_x64.dll"))
 # lua5.1.dll goes next to etlded.exe; the LuaSQL driver goes where
@@ -186,24 +213,24 @@ for build_dir, out_dir in ((BUILD64_DIR, win64_dir), (BUILD32_DIR, win32_dir)):
     luasql_dir = os.path.join(out_dir, "lualibs", "luasql")
     os.makedirs(luasql_dir, exist_ok=True)
     copy_if_exists(os.path.join(build_dir, "sqlite3.dll"), os.path.join(luasql_dir, "sqlite3.dll"))
-shutil.copy2(pk3_unified_path, os.path.join(win64_dir, "nq_b_v1.3.1b7.pk3"))
+shutil.copy2(pk3_unified_path, os.path.join(win64_dir, BIN_PK3))
 
 shutil.copy2(qagame32, os.path.join(win32_dir, "qagame_mp_x86.dll"))
-shutil.copy2(pk3_unified_path, os.path.join(win32_dir, "nq_b_v1.3.1b7.pk3"))
+shutil.copy2(pk3_unified_path, os.path.join(win32_dir, BIN_PK3))
 
 if os.path.exists(os.path.join(LINUX64_DIR, "qagame.mp.x86_64.so")):
     shutil.copy2(os.path.join(LINUX64_DIR, "qagame.mp.x86_64.so"), os.path.join(lin64_dir, "qagame.mp.x86_64.so"))
 # Linux: Lua and LuaSQL/SQLite are built into qagame (NQ_BUILTIN_LUASQL), so the
 # small liblua5.1.so / sqlite3.so stubs build_linux.py writes are not shipped.
-shutil.copy2(pk3_unified_path, os.path.join(lin64_dir, "nq_b_v1.3.1b7.pk3"))
+shutil.copy2(pk3_unified_path, os.path.join(lin64_dir, BIN_PK3))
 
 if os.path.exists(os.path.join(LINUX32_DIR, "qagame.mp.i386.so")):
     shutil.copy2(os.path.join(LINUX32_DIR, "qagame.mp.i386.so"), os.path.join(lin32_dir, "qagame.mp.i386.so"))
-shutil.copy2(pk3_unified_path, os.path.join(lin32_dir, "nq_b_v1.3.1b7.pk3"))
+shutil.copy2(pk3_unified_path, os.path.join(lin32_dir, BIN_PK3))
 
 # Clean old pk3s in DLL's subfolders
 for d in [win64_dir, win32_dir, lin64_dir, lin32_dir]:
-    for old_name in ["nq_b_v1.3.1_64.pk3", "nq_b_v1.3.1_32.pk3", "nq_b_v1.3.1b6.pk3"]:
+    for old_name in OLD_PK3S:
         op = os.path.join(d, old_name)
         if os.path.exists(op):
             os.remove(op)
@@ -221,10 +248,10 @@ def safe_copy(src, dst):
 for target_dir in [ET64_NQ_DIR, CLIENT_NQ_DIR, ET32_NQ_DIR]:
     if target_dir and os.path.exists(target_dir):
         print(f"\nUpdating {target_dir}...")
-        safe_copy(pk3_unified_path, os.path.join(target_dir, "nq_b_v1.3.1b7.pk3"))
-        safe_copy(nq_v131b7, os.path.join(target_dir, "nq_v1.3.1b7.pk3"))
-        # Clean obsolete early test pk3s
-        for legacy in ["nq_b_v1.3.1_64.pk3", "nq_b_v1.3.1_32.pk3", "nq_b_v1.3.1b6.pk3", "nq_v1.3.1b6.pk3"]:
+        safe_copy(pk3_unified_path, os.path.join(target_dir, BIN_PK3))
+        safe_copy(asset_pk3_path, os.path.join(target_dir, ASSET_PK3))
+        # Remove the pk3s the EoTS ones replace
+        for legacy in OLD_PK3S:
             lp = os.path.join(target_dir, legacy)
             if os.path.exists(lp):
                 try:

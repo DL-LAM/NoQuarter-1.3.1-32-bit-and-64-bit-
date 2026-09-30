@@ -4,7 +4,8 @@
 
 | Version | Supported |
 | :--- | :--- |
-| 1.3.1b7 (latest release) | Yes |
+| EoTS 1.0.7b (latest release) | Yes |
+| 1.3.1 betas (1.3.1b7 and earlier) | No. EoTS 1.0.7b is the 1.3.1b7 code under its new name. |
 | 1.3.0 and older (including 1.2.9) | No. These have known crash bugs that are fixed in 1.3.1.  |
 
 ## Reporting a vulnerability
@@ -18,7 +19,7 @@ Please don't open a public issue, post in public Discord channels, or share work
 
 ### What to include
 
-- NoQuarter version, engine (ET:Legacy version or ET 2.60b) and platform (Windows or Linux, 32-bit or 64-bit)
+- NoQuarter EoTS version (shown on the loading screen and in the `mod_version` server cvar), engine (ET:Legacy version or ET 2.60b) and platform (Windows or Linux, 32-bit or 64-bit)
 - What happens and how to reproduce it: the command, map, cvar values or client action that triggers it
 - Server console output or a crash log (`nq/crash.log`, `etconsole.log`) if you have one
 

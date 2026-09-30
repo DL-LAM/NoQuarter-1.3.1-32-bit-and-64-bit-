@@ -27,8 +27,8 @@ Welcome to the **NoQuarter 1.3.1 Modernized** repository. This document serves a
 
 5. **Universal Unified PK3 Multi-Architecture Layout**:
    - All client binaries are bundled into a single unified binary package so 32-bit and 64-bit clients on Windows and Linux connect without pure-server checksum or PK3 mismatch errors:
-     - `nq_b_v1.3.1b7.pk3`: Contains exactly 8 client binaries: `cgame_mp_x64.dll`, `ui_mp_x64.dll`, `cgame_mp_x86.dll`, `ui_mp_x86.dll`, `cgame.mp.x86_64.so`, `ui.mp.x86_64.so`, `cgame.mp.i386.so`, `ui.mp.i386.so`.
-     - `nq_v1.3.1b7.pk3`: Core game assets (models, sounds, textures, animations). Always zip an exported/clean copy; a working folder with `.svn`/`.git` metadata roughly doubles its size.
+     - `nqeots_b_v1.0.7b.pk3`: Contains exactly 8 client binaries: `cgame_mp_x64.dll`, `ui_mp_x64.dll`, `cgame_mp_x86.dll`, `ui_mp_x86.dll`, `cgame.mp.x86_64.so`, `ui.mp.x86_64.so`, `cgame.mp.i386.so`, `ui.mp.i386.so`.
+     - `nqeots_v1.0.7b.pk3`: Core game assets (models, sounds, textures, animations). Always zip an exported/clean copy; a working folder with `.svn`/`.git` metadata roughly doubles its size.
    - **Module file names are fixed by the engine** (ET:Legacy `Sys_GetDLLName` in `qcommon.h`): Windows uses underscores and `x86`/`x64` (`qagame_mp_x64.dll`), Linux uses dots and `i386`/`x86_64` (`qagame.mp.x86_64.so`). Names like `cgame.mp.x86_64.dll` or `qagame_mp_x64.so` are never loaded; don't produce or ship them.
    - The server module (`qagame`) is **never** put inside a pk3; it ships as a loose file in the server's `nq/` folder.
 
@@ -216,7 +216,7 @@ Outputs `qagame/cgame/ui.mp.x86_64.so` to `build64/Release/linux/`, and the `i38
 
 ### Packaging PK3 Files
 PK3 files are standard ZIP archives containing files without leading root path components.
-- `nq_b_v1.3.1b7.pk3` holds exactly the 8 client binaries listed in rule 5, at the root of the zip.
+- `nqeots_b_v1.0.7b.pk3` holds exactly the 8 client binaries listed in rule 5, at the root of the zip.
 - The server game module (`qagame_mp_x64.dll`, `qagame_mp_x86.dll`, `qagame.mp.x86_64.so`, `qagame.mp.i386.so`) goes loose in the server's `nq/` folder, **never** inside a client-downloaded PK3.
 - `python scripts/package_release.py` builds both pk3s and the `DLL's/<Windows|Linux>/<32 Bit|64 Bit>/` server folders. It uses whichever Windows build folder is newer (override with `NQ_BUILD64_DIR` / `NQ_BUILD32_DIR`) and needs the current `nq_v1.3.1b7.pk3` in the release folder as its base.
   - `NQ_RELEASE_DIR`: release folder (default `release/` in the repo, git-ignored).

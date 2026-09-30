@@ -300,7 +300,7 @@ void CG_DrawConnectScreen( qboolean interactive, qboolean forcerefresh ) {
 
 		x = 540.0f + cgs.wideXoffset;
 		y = 322;
-		CG_Text_Paint_Centred_Ext( x, y, 0.22f, 0.22f, clr3, va("^1NO QUARTER ^8V%s^7", NQ_VERSION), 0, 0, 0, &bg_loadscreenfont1 );
+		CG_Text_Paint_Centred_Ext( x, y, 0.22f, 0.22f, clr3, va("^1NOQUARTER EOTS ^8V%s^7", EOTS_VERSION), 0, 0, 0, &bg_loadscreenfont1 );
 
 		y = 340;
 		str = Info_ValueForKey( buffer, "sv_hostname" );

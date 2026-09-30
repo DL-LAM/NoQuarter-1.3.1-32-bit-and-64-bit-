@@ -214,9 +214,9 @@ void CrashHandler(int signal, siginfo_t *siginfo, ucontext_t *ctx) {
 		crashLog=fopen(va("%s/%s/nq_crash.log",homepath,gamepath),"w");
 
 		Crash_Printf("-8<--- Client Crash Information ---->8-\n");
-		Crash_Printf("Please forward to No Quarter mod team. \n");
+		Crash_Printf("Please forward to the " EOTS_NAME " maintainers.\n");
 		Crash_Printf("---------------------------------------\n");
-		Crash_Printf("Version Linux: %s %s %s\n", NQ_VERSION, __DATE__, GAME_VERSION_DATED);
+		Crash_Printf("Version Linux: %s (NQ %s) %s %s\n", EOTS_FULLVERSION, NQ_VERSION, __DATE__, GAME_VERSION_DATED);
 		Crash_Printf("Map: %s\n",cgs.rawmapname);
 		linux_siginfo(signal, siginfo);
 		linux_dsoinfo();
@@ -490,9 +490,9 @@ LONG CALLBACK win32_exception_handler(LPEXCEPTION_POINTERS e) {
 	crashLog=fopen(va("%s\\%s\\nq_crash.log",homepath,gamepath),"w");
 	pfnSymInitialize(GetCurrentProcess(), va("%s\\%s", basepath, gamepath), TRUE);
 	Crash_Printf("-8<--- Client Crash Information ---->8-\n");
-	Crash_Printf("Please forward to No Quarter mod team. \n");
+	Crash_Printf("Please forward to the " EOTS_NAME " maintainers.\n");
 	Crash_Printf("---------------------------------------\n");
-	Crash_Printf("Version Windows: %s %s %s\n", NQ_VERSION, __DATE__, GAME_VERSION_DATED);
+	Crash_Printf("Version Windows: %s (NQ %s) %s %s\n", EOTS_FULLVERSION, NQ_VERSION, __DATE__, GAME_VERSION_DATED);
 	Crash_Printf("Map: %s\n",cgs.rawmapname);
 	win32_exceptioninfo(e);
 	win32_dllinfo();

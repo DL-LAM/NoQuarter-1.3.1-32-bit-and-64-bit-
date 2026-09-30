@@ -189,10 +189,10 @@ void CrashHandler(int signal, siginfo_t *siginfo, ucontext_t *ctx) {
 
 	if(segvloop < 2) {
 		G_CrashLogPrintf("-8<------- Crash Information ------->8-\n");
-		G_CrashLogPrintf("   Please forward to No Quarter mod team.   \n");
+		G_CrashLogPrintf("   Please forward to the " EOTS_NAME " maintainers.   \n");
 		G_CrashLogPrintf("---------------------------------------\n");
-		G_LogPrintf("Version: %s %s %s %s\n", GAMEVERSION, NQ_VERSION, __DATE__, GAME_VERSION_DATED);
-		G_CrashLogPrintf("Version: %s %s %s %s\n", GAMEVERSION, NQ_VERSION, __DATE__, GAME_VERSION_DATED);
+		G_LogPrintf("Version: %s %s (NQ %s) %s %s\n", GAMEVERSION, EOTS_FULLVERSION, NQ_VERSION, __DATE__, GAME_VERSION_DATED);
+		G_CrashLogPrintf("Version: %s %s (NQ %s) %s %s\n", GAMEVERSION, EOTS_FULLVERSION, NQ_VERSION, __DATE__, GAME_VERSION_DATED);
 		G_CrashLogPrintf("Map: %s\n",level.rawmapname);
 		linux_siginfo(signal, siginfo);
 		linux_dsoinfo();
@@ -380,10 +380,10 @@ LONG CALLBACK win32_exception_handler(LPEXCEPTION_POINTERS e) {
 	trap_Cvar_VariableStringBuffer("fs_game", gamepath, sizeof(gamepath));
 	pfnSymInitialize(GetCurrentProcess(), va("%s\\%s", basepath, gamepath), TRUE);
 	G_CrashLogPrintf("-8<------- Crash Information ------->8-\n");
-	G_CrashLogPrintf("   Please forward to No Quarter mod team.   \n");
+	G_CrashLogPrintf("   Please forward to the " EOTS_NAME " maintainers.   \n");
 	G_CrashLogPrintf("---------------------------------------\n");
-	G_LogPrintf("Version: %s %s %s %s\n", GAMEVERSION, NQ_VERSION, __DATE__, GAME_VERSION_DATED);
-	G_CrashLogPrintf("Version: %s %s %s %s\n", GAMEVERSION, NQ_VERSION, __DATE__, GAME_VERSION_DATED);
+	G_LogPrintf("Version: %s %s (NQ %s) %s %s\n", GAMEVERSION, EOTS_FULLVERSION, NQ_VERSION, __DATE__, GAME_VERSION_DATED);
+	G_CrashLogPrintf("Version: %s %s (NQ %s) %s %s\n", GAMEVERSION, EOTS_FULLVERSION, NQ_VERSION, __DATE__, GAME_VERSION_DATED);
 	G_CrashLogPrintf("Map: %s\n",level.rawmapname);
 	win32_exceptioninfo(e);
 	win32_dllinfo();

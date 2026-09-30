@@ -1,7 +1,7 @@
-NoQuarter Community Edition (NQ-CE) - CHANGES
-===============================================
+NoQuarter EoTS (Eye of the Storm) - CHANGES
+===========================================
 
-NoQuarter Community Edition is an unofficial, community-maintained
+NoQuarter EoTS (short: NQ EoTS) is an unofficial, community-maintained
 continuation of No Quarter. It is a modified version (an "Extension")
 of No Quarter by the No Quarter Mod Team and is distributed under the
 No Quarter Mod Team's Modified Reciprocal Public License 1.1
@@ -21,9 +21,31 @@ Finding a change in the source code
 Modified code is marked with comment tags of the form
 [NQ 1.3.1 - <Area>], for example [NQ 1.3.1 - Security],
 [NQ 1.3.1 - Widescreen] or [NQ 1.3.1 - Audit C1]. Search the source
-for the tag to find the change. The audit fixes (tags "Audit <ID>")
+for the tag to find the change. Changes made after the rename to
+NoQuarter EoTS use tags of the form [EoTS 1.0 - <Area>]. The audit fixes (tags "Audit <ID>")
 are listed individually in docs/AUDIT_2026-09-25.md. The full history
 of the git era (2026-09-01 onward) is in the repository's commit log.
+
+
+EoTS 1.0.7b (beta)                                                  2026-09-30
+--------------------------------------------------------------------------------
+Renamed from NoQuarter 1.3.1 to NoQuarter EoTS ("Eye of the Storm") and
+reversioned to 1.0.7b; the "b7" matches the last 1.3.1 beta, and the game
+itself is the same as 1.3.1b7.
+- New name and version on the loading screen, in the in-game and NQ options
+  menus, in console help, crash logs, server check messages and the default
+  server_motd0. (src/game/bg_public.h, src/game/g_main.c, src/game/g_crash.c,
+  src/cgame/cg_loadpanel.c, src/cgame/cg_crash.c, src/cgame/cg_consolecmds.c,
+  src/cgame/nq_server_help.h, scripts/package_release.py)
+- pk3s renamed to nqeots_v1.0.7b.pk3 and nqeots_b_v1.0.7b.pk3. The server warns
+  when old nq_v1.3.x / nq_b_v1.3.x pk3s are still installed.
+- mod_version is "NQ EoTS 1.0.7b"; mod_url points to this project's source
+  repository instead of the original team's site.
+- Not changed: the mod folder and gamename stay "nq", and Omni-bot is still
+  told the mod version is 1.3.1.
+- README: added the derived-from statement, corrected the license section
+  (No Quarter is under the No Quarter Mod Team's Modified RPL 1.1, not the
+  GPL) and corrected the credits.
 
 
 1.3.1b7 (beta)                                         2026-09-26 - 2026-09-29
@@ -167,6 +189,7 @@ Source files modified from No Quarter SVN r5758
   src/cgame/cg_event.c
   src/cgame/cg_info.c
   src/cgame/cg_limbopanel.c
+  src/cgame/cg_loadpanel.c
   src/cgame/cg_local.h
   src/cgame/cg_localents.c
   src/cgame/cg_main.c
@@ -183,6 +206,7 @@ Source files modified from No Quarter SVN r5758
   src/cgame/cg_view.c
   src/cgame/cg_weapons.c
   src/cgame/md5.c
+  src/cgame/nq_server_help.h
   src/game/bg_animation.c
   src/game/bg_campaign.c
   src/game/bg_misc.c

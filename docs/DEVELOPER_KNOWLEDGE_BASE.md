@@ -102,8 +102,8 @@ When clients connect to a pure server (`sv_pure 1`), the engine verifies that th
 NoQuarter 1.3.1 solves this cleanly with a **Unified Client Binary Package**:
 ```text
 nq/
-├── nq_v1.3.1b7.pk3            # Unified game assets (textures, sounds, models, menus, shaders)
-└── nq_b_v1.3.1b7.pk3          # Unified client binaries (all architectures):
+├── nqeots_v1.0.7b.pk3            # Unified game assets (textures, sounds, models, menus, shaders)
+└── nqeots_b_v1.0.7b.pk3          # Unified client binaries (all architectures):
     ├── cgame_mp_x64.dll       # Windows x64 Client Game
     ├── ui_mp_x64.dll          # Windows x64 UI
     ├── cgame_mp_x86.dll       # Windows x86 Client Game
@@ -127,7 +127,7 @@ The server binary (`qagame_mp_x64.dll`, `qagame_mp_x86.dll`, `qagame.mp.x86_64.s
 
 > **Linux Lua SQLite:** separate `liblua5.1.so` / `sqlite3.so` files never worked (they were built with `-fvisibility=hidden` and exported nothing, and qagame has its own Lua). Since 1.3.1b7, `build_linux.py` compiles LuaSQL + SQLite into `qagame` and `G_LuaInit` registers `package.preload["luasql.sqlite3"]`, so no extra files are needed. Verified on a Linux server.
 
-Because all client binaries across all architectures reside inside `nq_b_v1.3.1b7.pk3`, every client computes the exact same PK3 checksum regardless of OS or bitness, eliminating pure-server mismatch errors permanently.
+Because all client binaries across all architectures reside inside `nqeots_b_v1.0.7b.pk3`, every client computes the exact same PK3 checksum regardless of OS or bitness, eliminating pure-server mismatch errors permanently.
 
 ---
 
@@ -304,13 +304,13 @@ This builds the following (Lua and LuaSQL/SQLite are compiled into `qagame`; the
 Zig is found via `PATH`, the `ZIG_EXE` environment variable, or `~/zig/`. The script compiles with `-ffile-prefix-map=<repo>=.`, `-g0` and `-s`, so the `.so` files carry no debug info or build paths.
 
 ### 3. Automated Packaging (`package_release.py`)
-Builds `nq_b_v1.3.1b7.pk3` (the 8 client binaries), refreshes `nq_v1.3.1b7.pk3` from the release folder's current copy plus the source overrides (menudefs, vote menu, `meyer.shader`, texture fixes), and fills `DLL's/<Windows|Linux>/<32 Bit|64 Bit>/` with the server files from the table in section 3.
+Builds `nqeots_b_v1.0.7b.pk3` (the 8 client binaries), refreshes `nqeots_v1.0.7b.pk3` from the release folder's current copy plus the source overrides (menudefs, vote menu, `meyer.shader`, texture fixes), and fills `DLL's/<Windows|Linux>/<32 Bit|64 Bit>/` with the server files from the table in section 3.
 ```bash
 python scripts/package_release.py
 ```
 | Environment variable | Default | Purpose |
 | :--- | :--- | :--- |
-| `NQ_RELEASE_DIR` | `release/` in the repo (git-ignored) | Where the release is assembled. Must already contain the current `nq_v1.3.1b7.pk3`. |
+| `NQ_RELEASE_DIR` | `release/` in the repo (git-ignored) | Where the release is assembled. Must already contain the current `nqeots_v1.0.7b.pk3` (the first EoTS build starts from `nq_v1.3.1b7.pk3`). |
 | `NQ_BUILD64_DIR` / `NQ_BUILD32_DIR` | newer of `build64/src/Release` and `out/build/x64-Release/src` (x86 likewise) | Which Windows build to package. The script prints the folder it picked. |
 | `ET64_DIR`, `ET32_DIR`, `NQ_CLIENT_DIR` | unset | Optional local `nq/` folders to copy the new build into for testing. Nothing is copied unless set. |
 
@@ -324,13 +324,13 @@ python scripts/package_release.py
 | **Airstrike called, sound plays, but planes do not appear** | Invalid model paths in `cg_main.c` (`planes/ju87.md3` instead of `etl_plane/junker88.md3`). | Update registration to `etl_plane/junker88.md3` and `etl_plane/b-25.md3`. |
 | **Airstrike propeller jumps or stutters** | Propeller animation frames defined as 4 instead of 10. | Set `NUM_FRAME_PROPELLER 10` in `cg_ents.c`. |
 | **Kill announcement text overlaps left-hand obituary feed** | Center print rendered at `Y=360` with wide `limboFont1`. | Switch font to `&cgs.media.limboFont2` (scale `0.22f`) and clamp `baseY >= 384`. |
-| **`pure server` rejection when joining server** | Client has outdated binary PK3 or mismatched build. | Ensure both server and client use unified `nq_b_v1.3.1b7.pk3`. |
+| **`pure server` rejection when joining server** | Client has outdated binary PK3 or mismatched build. | Ensure both server and client use unified `nqeots_b_v1.0.7b.pk3`. |
 | **Crashing on 64-bit when casting pointers** | Casting `void*` directly to `int` (truncating 64-bit pointer to 32 bits). | Use `intptr_t` or `uintptr_t`. |
 | **Shotgun not appearing in Limbo for Heavy Weapons Soldier** | `g_soldierShotgun` is set to 0 or skill check in `ui_shared.c` failed. | Ensure `g_soldierShotgun 1` and player has Heavy Weapons level 4. |
 | **Server cabinets depleted and not recharging** | Standard cabinet gameplay cooldown. | Enable `g_infiniteCabinets 1` in `noquarter.cfg`. |
 | **64-bit Windows server dies with `Received signal 11` right after `Game Initialization completed` (bots on)** | Old `BotLoadLibrary.cpp` loaded the 32-bit `omnibot_et.dll`, then crashed in `OB_ShowLastError`. | Fixed in 1.3.1: rebuild qagame and make sure `omni-bot/omnibot_et_x64.dll` exists. A failed bot load now prints an `Omni-bot:` error instead. |
 | **`WARNING: G_Script_ScriptParse(): unknown action '...'`** | Map made for another mod (e.g. TC:E `wm_camo`). | Harmless; the action is skipped. Remove the map from the rotation if it doesn't play correctly. |
-| **`BG_IndexForString: unknown token '...'` / many `BG_RegisterWeapon failed` errors** | `nq_v1.3.1b7.pk3` isn't in the server's `nq/` folder, so assets from other pk3s are used. | Put both NQ pk3s back in `nq/`. |
+| **`BG_IndexForString: unknown token '...'` / many `BG_RegisterWeapon failed` errors** | `nqeots_v1.0.7b.pk3` isn't in the server's `nq/` folder, so assets from other pk3s are used. | Put both NQ pk3s back in `nq/`. |
 | **Server crashes on its first frame only when output is redirected (`> file.log`)** | ET:Legacy's Windows console code expects a real console. | Don't redirect; use `+set logfile 2` (writes `nq/etconsole.log`). |
 | **`Received signal 11` with no other clue** | ET:Legacy only prints the signal number for access violations. | Run `etlded.exe` under the Visual Studio debugger with the matching `.pdb` next to the DLL; the call stack shows the line. |
 | **A command-line `+set` has no effect** | `+set` runs before `+exec`, so `noquarter.cfg` overrides it. | Change the cvar in the cfg. |

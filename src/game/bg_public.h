@@ -29,6 +29,21 @@
 #define USE_MDXFILE
 
 #define NQ_VERSION "1.3.1" // compatibility reasons with Omni-Bots...
+
+// [EoTS 1.0 - Rename]: NoQuarter EoTS (Eye of the Storm), derived from No Quarter
+// by the No Quarter Mod Team (SVN trunk r5758). NQ_VERSION above stays "1.3.1"
+// because it is what Omni-bot is told the mod version is. Anything players or
+// admins see uses the EOTS_* names below. The mod folder and gamename stay "nq"
+// so existing servers, configs and server-browser filters keep working.
+#define EOTS_NAME			"NoQuarter EoTS"
+#define EOTS_SHORTNAME		"NQ EoTS"
+#define EOTS_VERSION		"1.0.7b"
+#define EOTS_FULLVERSION	EOTS_SHORTNAME " " EOTS_VERSION
+#define EOTS_URL			"https://github.com/DL-LAM/NoQuarter-1.3.1-32-bit-and-64-bit-"
+// pk3 names (without .pk3). "nqeots_" sorts after every old "nq_" pk3, so these
+// win if an old NoQuarter pk3 is left in the folder.
+#define EOTS_ASSET_PK3		"nqeots_v" EOTS_VERSION
+#define EOTS_BIN_PK3		"nqeots_b_v" EOTS_VERSION
 #define NOQUARTER
 
 #define SPRINTTIME					20000.0f

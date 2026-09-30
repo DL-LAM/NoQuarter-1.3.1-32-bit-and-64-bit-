@@ -444,8 +444,8 @@ cvarTable_t		gameCvarTable[] =
 	{ NULL,									"gamename",								GAMEVERSION,							CVAR_SERVERINFO | CVAR_ROM, 								0,		qfalse },
 	{ NULL,									"gamedate",								__DATE__,								CVAR_ROM, 													0,		qfalse },
 	{ &g_gamestate,							"gamestate",							"-1",									CVAR_WOLFINFO | CVAR_ROM,									0,		qfalse },
-	{ NULL,									"mod_version",							NQ_VERSION,								CVAR_SERVERINFO | CVAR_ROM },
-	{ NULL,									"mod_url",								"http://shitstorm.org",					CVAR_SERVERINFO | CVAR_ROM },
+	{ NULL,									"mod_version",							EOTS_FULLVERSION,								CVAR_SERVERINFO | CVAR_ROM },
+	{ NULL,									"mod_url",								EOTS_URL,								CVAR_SERVERINFO | CVAR_ROM },
 	{ &g_oss,								"g_oss",								"399",									CVAR_SERVERINFO | CVAR_ROM,									0,		qfalse },
 	{ &g_restarted,							"g_restarted",							"0", 									CVAR_ROM, 													0,		qfalse },
 	{ &g_reset,								"g_reset",								"0", 									CVAR_ROM, 													0,		qfalse },
@@ -555,7 +555,7 @@ cvarTable_t		gameCvarTable[] =
 	{ &g_intermissionTime,					"g_intermissionTime",					"60",									0 },
 	{ &g_intermissionReadyPercent,			"g_intermissionReadyPercent",			"100",									0 },
 
-	{ &server_motd0,						"server_motd0", 						"^dNo Quarter",							0,															0,		qfalse,		qfalse },
+	{ &server_motd0,						"server_motd0", 						"^d" EOTS_NAME,							0,															0,		qfalse,		qfalse },
 	{ &server_motd1,						"server_motd1", 						"",										0,															0,		qfalse,		qfalse },
 	{ &server_motd2,						"server_motd2", 						"",										0,															0,		qfalse,		qfalse },
 	{ &server_motd3,						"server_motd3", 						"", 									0,															0,		qfalse,		qfalse },
@@ -2875,14 +2875,14 @@ static void ServerCheck( void ) {
 	qboolean msgWhine = qfalse;
 	qboolean shutdown = qfalse;
 
-	G_Printf("--- Starting NQ server check ... ---\n" );
+	G_Printf("--- Starting " EOTS_SHORTNAME " server check ... ---\n" );
 
 	trap_Cvar_VariableStringBuffer( "version", versionStr, sizeof(versionStr) );
 
 /* TODO: double check sever version*/
 #ifdef __MACOS__
 	if ( !strstr( versionStr, "2.60d") ) {
-		G_Printf( "^1Error: No Quarter doesn't support ET version %s. Upgrade to 2.60d on Mac systems.\n", versionStr);
+		G_Printf( "^1Error: NoQuarter EoTS doesn't support ET version %s. Upgrade to 2.60d on Mac systems.\n", versionStr);
 		shutdown = qtrue;
 		msgWhine = qtrue;
 	}
@@ -2890,21 +2890,21 @@ static void ServerCheck( void ) {
 /*
 	if ( (int)trap_Cvar_VariableValue("protocol") < 0x54 ) {
  		// trap_Error(" ");
- 		// G_Printf( "^1Error: No Quarter doesn't support ET version %s. Upgrade to 2.60b on Windows/Linux systems.\n", versionStr);
+ 		// G_Printf( "^1Error: NoQuarter EoTS doesn't support ET version %s. Upgrade to 2.60b on Windows/Linux systems.\n", versionStr);
 		shutdown = qtrue;
 		msgWhine = qtrue;
 	}
 
 
 	if ( !strstr( versionStr, "OpenWolf") ) {
-		G_Printf( "^1Error: No Quarter doesn't support this ET version/engine %s..\n", versionStr);
+		G_Printf( "^1Error: NoQuarter EoTS doesn't support this ET version/engine %s..\n", versionStr);
 		G_Printf( "^1Use ET 2.60b for Win/Linux or 2.60d for Mac or use ET:Xreal/OpenWolf");
 		shutdown = qtrue;
 		msgWhine = qtrue;
 	}
 	*/
 	if ( !strstr( versionStr, "2.60b") && !strstr( versionStr, "OpenWolf") ) {
-		G_Printf( "^1Error: No Quarter doesn't support this ET version/engine %s..\n", versionStr);
+		G_Printf( "^1Error: NoQuarter EoTS doesn't support this ET version/engine %s..\n", versionStr);
 		G_Printf( "^1Use ET 2.60b for Win/Linux or 2.60d for Mac or use ET:Xreal/OpenWolf");
 		shutdown = qtrue;
 		msgWhine = qtrue;
@@ -2913,7 +2913,7 @@ static void ServerCheck( void ) {
 	
 	trap_Cvar_VariableStringBuffer( "fs_game", versionStr, sizeof(versionStr) );
 	if ( !Q_stricmp(versionStr, "etmain" ) ) {
-		G_Printf( "^1Error: Server installed in etmain directory, No Quarter will not work!\n" );
+		G_Printf( "^1Error: Server installed in etmain directory, NoQuarter EoTS will not work!\n" );
 		msgWhine = qtrue;
 		shutdown = qtrue;
 	}
@@ -2925,7 +2925,7 @@ static void ServerCheck( void ) {
 
 	trap_Cvar_VariableStringBuffer( "sv_pure", versionStr, sizeof(versionStr) );
 	if ( atoi(versionStr) < 0 ) {
-		G_Printf("^1Error: Server is not pure!! No Quarter will not work properly!\n" );
+		G_Printf("^1Error: Server is not pure!! NoQuarter EoTS will not work properly!\n" );
 		msgWhine = qtrue;
 		shutdown = qtrue;
 	}
@@ -2946,29 +2946,23 @@ static void ServerCheck( void ) {
 	// until the player joins a server or hosts a game
 	if (pakNames[0]) {
 
-		// [NQ 1.3.1 - Packaging]: Asset pk3 check (prioritizes nq_v1.3.1b7)
-		if (!strstr(pakNames, "nq_v1.3.1b7") && !strstr(pakNames, "nq_v1.3.1b6") && !strstr(pakNames, "nq_v1.3.1") && !strstr(pakNames, "nq_v1.3.0_b")) {
-			G_Printf("^1Error: No nq_v1.3.1b7.pk3 (or nq_v1.3.1.pk3) found on server! Missing essential files!\n" );
+		// [EoTS 1.0 - Rename]: Asset pk3 check
+		if (!strstr(pakNames, EOTS_ASSET_PK3)) {
+			G_Printf("^1Error: No " EOTS_ASSET_PK3 ".pk3 found on server! Missing essential files!\n" );
 			msgWhine = qtrue;
 			// shutdown = qtrue; // activate this on release as some 2.55 admins/hacker have to rename the files
 		}
 
-		// [NQ 1.3.1 - Packaging]: Unified binary pk3 check (nq_b_v1.3.1b7.pk3 works for both 64-bit and 32-bit clients)
-#if defined(__x86_64__) || defined(_M_X64)
-		if (!strstr(pakNames, "nq_b_v1.3.1b7") && !strstr(pakNames, "nq_b_v1.3.1b6") && !strstr(pakNames, "nq_b_v1.3.1_64") && !strstr(pakNames, "nq_b_v1.3.1") && !strstr(pakNames, "nq_b_v1.3.0_b")) {
-			G_Printf("^1Error: No nq_b_v1.3.1b7.pk3 found on server! Missing 64-bit binary files!\n" );
+		// [EoTS 1.0 - Rename]: Binary pk3 check (one pk3 holds the 32-bit and 64-bit client binaries)
+		if (!strstr(pakNames, EOTS_BIN_PK3)) {
+			G_Printf("^1Error: No " EOTS_BIN_PK3 ".pk3 found on server! Missing client binary files!\n" );
 			msgWhine = qtrue;
 		}
-#else
-		if (!strstr(pakNames, "nq_b_v1.3.1b7") && !strstr(pakNames, "nq_b_v1.3.1b6") && !strstr(pakNames, "nq_b_v1.3.1_32") && !strstr(pakNames, "nq_b_v1.3.1") && !strstr(pakNames, "nq_b_v1.3.0_b")) {
-			G_Printf("^1Error: No nq_b_v1.3.1b7.pk3 found on server! Missing 32-bit binary files!\n" );
-			msgWhine = qtrue;
-		}
-#endif
 
-		// [NQ 1.3.1 - Packaging]: Warn about outdated early-test binary/asset packages to prevent client pure checksum mismatches
-		if (strstr(pakNames, "nq_b_v1.3.1_64") || strstr(pakNames, "nq_b_v1.3.1_32") || strstr(pakNames, "nq_b_v1.3.1b6")) {
-			G_Printf("^1Warning: Outdated binary pk3 found on server! Replace with unified nq_b_v1.3.1b7.pk3.\n" );
+		// [EoTS 1.0 - Rename]: NoQuarter 1.3.x pk3s are replaced by the EoTS ones. They no longer
+		// override anything, but clients would still have to download them.
+		if (strstr(pakNames, "nq_v1.3.") || strstr(pakNames, "nq_b_v1.3.")) {
+			G_Printf("^1Warning: Old NoQuarter 1.3.x pk3 found on server! Remove the nq_v1.3.x / nq_b_v1.3.x pk3s.\n" );
 			msgWhine = qtrue;
 		}
 
@@ -3008,14 +3002,14 @@ static void ServerCheck( void ) {
 	// create msg in banner
 	if (msgWhine) {
 		// this will write the admin notify into banner cvars
-		// trap_Cvar_Set( "g_msg0", "^1Warning:^3 Invalid No Quarter installation! Read log & installation instructions."  );
-		trap_Cvar_Set( "g_msg1", "^1Warning:^3 Invalid No Quarter installation! Read logs & docs."  );
-		trap_Cvar_Set( "g_msg2", "^1Warning:^3 Invalid No Quarter installation! Read logs & docs."  );
-		trap_Cvar_Set( "g_msg3", "^1Warning:^3 Invalid No Quarter installation! Read logs & docs."  );
+		// trap_Cvar_Set( "g_msg0", "^1Warning:^3 Invalid NoQuarter EoTS installation! Read log & installation instructions."  );
+		trap_Cvar_Set( "g_msg1", "^1Warning:^3 Invalid NoQuarter EoTS installation! Read logs & docs."  );
+		trap_Cvar_Set( "g_msg2", "^1Warning:^3 Invalid NoQuarter EoTS installation! Read logs & docs."  );
+		trap_Cvar_Set( "g_msg3", "^1Warning:^3 Invalid NoQuarter EoTS installation! Read logs & docs."  );
 		// get message in chat for intermission
 		// g_msgPos is set in nq.cfg ... in case of no whine anymore (and wanted by admins) it's set <> 0
 		trap_Cvar_Set( "g_msgPos", "0" );
-		G_Printf("--- Invalid No Quarter installation found! Read installation instructions! ---\n" );
+		G_Printf("--- Invalid NoQuarter EoTS installation found! Read installation instructions! ---\n" );
 	}
 	else {
 		G_Printf("--- Server check done. Installation seems to be fine. ---\n" );

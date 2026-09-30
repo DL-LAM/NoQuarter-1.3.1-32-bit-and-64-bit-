@@ -144,13 +144,13 @@ helpText_t helpTexts[] =
 										"Value 3 : Intermission",
 										"","","","","","","","","","","","","",""}},
 
-{"mod_version",							"1.3.0",
+{"mod_version",							EOTS_FULLVERSION,
 										HELP_CAT_NONE,
 										{"Type: Read-Only String",
 										"Version of the modification the server is running.",
 										"","","","","","","","","","","","","","","","","",""}},
 
-{"mod_url",								"http://shitstorm.org",
+{"mod_url",								EOTS_URL,
 										HELP_CAT_NONE,
 										{"Type: Read-Only String",
 										"Website URL of the modification the server is running.",

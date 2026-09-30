@@ -698,7 +698,7 @@ static void CG_Server_Help_f( void ) {
 	CG_Printf("%s", colorLine);
 	// check for special arguments..
 	if ( explain ) {
-		CG_Printf( "%s", va("%sNo Quarter %sSERVER%s help\n", colorDesc, colorSpecial, colorDesc));
+		CG_Printf( "%s", va("%s" EOTS_NAME " %sSERVER%s help\n", colorDesc, colorSpecial, colorDesc));
 		CG_Printf( "%s", va("%sUsage:  nqadmin <cvar || special>\n\n",colorDesc));
 		CG_Printf( "%s", va("%sYou can enter a CVAR-name you want a description of.\n\n",colorDesc));
 		CG_Printf( "%s", va("%sYou can instead enter a special search-argument\n",colorDesc));
@@ -801,7 +801,7 @@ static void CG_Client_Help_f( void ) {
 	CG_Printf("%s", colorLine);
 	// check for special arguments..
 	if ( explain ) {
-		CG_Printf( "%s", va("%sNo Quarter %sCLIENT%s help.\n", colorDesc, colorSpecial, colorDesc));
+		CG_Printf( "%s", va("%s" EOTS_NAME " %sCLIENT%s help.\n", colorDesc, colorSpecial, colorDesc));
 		CG_Printf( "%s", va("%sUsage:  nqhelp <cvar || special>\n\n",colorDesc));
 		CG_Printf( "%s", va("%sYou can enter a CVAR-name you want a description of.\n\n",colorDesc));
 		CG_Printf( "%s", va("%sYou can instead enter a special search-argument\n",colorDesc));

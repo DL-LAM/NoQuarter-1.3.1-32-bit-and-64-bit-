@@ -1,8 +1,14 @@
-# NoQuarter 1.3.1 (32-bit & 64-bit)
+# NoQuarter EoTS (Eye of the Storm)
+
+**NQ EoTS 1.0.7b** (beta) · 32-bit & 64-bit · Windows & Linux · ET:Legacy and ET 2.60b
 
 Maintained and updated by **Hawkeye** (`nqv1.3.1help@gmail.com`)
 
-Welcome to NoQuarter 1.3.1! This update modernizes the classic Wolfenstein: Enemy Territory mod so it runs great on modern systems, high-res widescreen/ultrawide monitors, and modern engines (ET:Legacy as well as classic ET 2.60b). 
+> **NoQuarter EoTS is derived from No Quarter by the No Quarter Mod Team** (No Quarter SVN trunk, revision 5758). It is an unofficial, community-maintained continuation and is not affiliated with or endorsed by the original No Quarter Mod Team. It is distributed under the No Quarter Mod Team's Modified Reciprocal Public License 1.1 (see the License section below). All changes are listed in [`CHANGES`](CHANGES).
+>
+> The name is a nod to Shitstorm, the original home of No Quarter.
+
+Welcome to NoQuarter EoTS! Version 1.0.7b is NoQuarter 1.3.1b7 under its new name. The version number keeps the "b7" so it is easy to match to the 1.3.1 betas. It modernizes the classic Wolfenstein: Enemy Territory mod so it runs great on modern systems, high-res widescreen/ultrawide monitors, and modern engines (ET:Legacy as well as classic ET 2.60b). 
 
 We've got full native 64-bit and 32-bit support across both Windows and Linux, cleaner menus, tons of crash-proofing, quality-of-life gameplay tweaks, and unified packaging so players and server admins don't get hit with annoying pure-server PK3 mismatch errors.
 
@@ -97,16 +103,18 @@ The whole game code got a line-by-line review. Every fix is tagged in the source
 
 ---
 
-### 5. PK3 Packaging & Architecture (`v1.3.1b7`)
+### 5. PK3 Packaging & Architecture (`EoTS 1.0.7b`)
 
 To keep things dead simple and prevent pure-server checksum mismatches, this release uses a **unified PK3 architecture**:
 
-* **`nq_b_v1.3.1b7.pk3` (Unified Binaries)**:
+* **`nqeots_b_v1.0.7b.pk3` (Unified Binaries)**:
   * Contains the client binaries for **both** 64-bit and 32-bit on Windows and Linux (`cgame` and `ui` DLLs and `.so` files), with exactly the file names each engine looks for.
-  * **Why unified?** In the past, separating 32-bit and 64-bit binary PK3s caused headaches: players on 32-bit clients couldn't join 64-bit servers, server admins would misconfigure the pk3 files, and players would get hit with pure-server checksum errors. Having all client binaries bundled in `nq_b_v1.3.1b7.pk3` means it just works out of the box regardless of what system people are running.
+  * **Why unified?** In the past, separating 32-bit and 64-bit binary PK3s caused headaches: players on 32-bit clients couldn't join 64-bit servers, server admins would misconfigure the pk3 files, and players would get hit with pure-server checksum errors. Having all client binaries bundled in `nqeots_b_v1.0.7b.pk3` means it just works out of the box regardless of what system people are running.
   * If a server admin really wants stripped-down, arch-specific packages for a dedicated box, they can repackage it, but the unified PK3 is standard to protect players from mismatch errors.
-* **`nq_v1.3.1b7.pk3` (Core Assets)**:
+* **`nqeots_v1.0.7b.pk3` (Core Assets)**:
   * Contains updated assets, menus, textures, and shader fixes (including the right-side-up Caduceus fix in `meyer.shader`).
+
+**Upgrading from NoQuarter 1.3.1b7:** the mod folder is still `nq/`, so keep your configs, XP saves and WolfAdmin database. Replace the server files with the EoTS ones and delete `nq_v1.3.1b7.pk3` and `nq_b_v1.3.1b7.pk3`. The EoTS pk3s take priority if an old one is left behind, but clients would still have to download it, and the server warns about it at startup.
 
 The server game module (`qagame`) is **never** put in a pk3. Only the server needs it, and it stays a loose file in the server's `nq/` folder (see below).
 
@@ -118,8 +126,8 @@ The server game module (`qagame`) is **never** put in a pk3. Only the server nee
 
 ```text
 nq/
-├── nq_v1.3.1b7.pk3            # Core assets, menus, shaders, textures
-└── nq_b_v1.3.1b7.pk3          # Unified client binaries (32-bit & 64-bit Win DLLs and Linux .so)
+├── nqeots_v1.0.7b.pk3            # Core assets, menus, shaders, textures
+└── nqeots_b_v1.0.7b.pk3          # Unified client binaries (32-bit & 64-bit Win DLLs and Linux .so)
 ```
 
 **Servers** need the same two pk3s plus the server files for their platform. These are in the release's `DLL's/<Windows|Linux>/<32 Bit|64 Bit>/` folders; copy the one matching your server into `nq/`:
@@ -197,19 +205,22 @@ Lua and LuaSQL/SQLite are compiled into the Linux `qagame` (`NQ_BUILTIN_LUASQL`)
 
 ### Packaging PK3s
 
-Create standard zip files (without any leading folder paths) containing the binaries and assets, then rename the extension to `.pk3`:
+`python scripts/package_release.py` builds both pk3s and fills the release's `DLL's/` folders. The release name and pk3 names are set at the top of that script and must match `EOTS_VERSION` in `src/game/bg_public.h`.
 
-* `nq_b_v1.3.1b7.pk3`: Pack exactly these 8 client files, with these exact names:
+To build them by hand, create standard zip files (without any leading folder paths) containing the binaries and assets, then rename the extension to `.pk3`:
+
+* `nqeots_b_v1.0.7b.pk3`: Pack exactly these 8 client files, with these exact names:
   * Windows: `cgame_mp_x64.dll`, `ui_mp_x64.dll`, `cgame_mp_x86.dll`, `ui_mp_x86.dll`
   * Linux: `cgame.mp.x86_64.so`, `ui.mp.x86_64.so`, `cgame.mp.i386.so`, `ui.mp.i386.so`
-* `nq_v1.3.1b7.pk3`: Pack your assets (scripts, shaders, textures, and UI menudefs). Zip an **exported/clean copy**, never a working folder with `.svn` or `.git` metadata in it, or the pk3 roughly doubles in size.
+* `nqeots_v1.0.7b.pk3`: Pack your assets (scripts, shaders, textures, and UI menudefs). Zip an **exported/clean copy**, never a working folder with `.svn` or `.git` metadata in it, or the pk3 roughly doubles in size.
 
 ---
 
 ## 📜 Credits & Big Thanks
 
 * **Hawkeye** (`nqv1.3.1help@gmail.com`) — Modernization, 64-bit / 32-bit cross-compile pipeline, UI overhaul, bugfixes, and maintenance.
-* **NoQuarter Team**: IRATA, jaquboss, Meyer, ReyalP, Lucifer, and all past contributors who made NQ great.
+* **The No Quarter Mod Team**, who created No Quarter: Meyerinchains, Jaquboss, snl/lucel, Jay Bird, IRATA, redeye, crapshoot, IlDuca, Berzerkr, and every other contributor and beta tester. Their original credits are in the in-game credits menu.
+* **No Quarter's own thanks**: ReyalP and Zinx (ETPro code), Dr. Evil and jaskot (Omni-bot), antman (location files), mcfw (GeoIP) and the ETPub team (base code).
 * **ET:Legacy Team**: For awesome modern UI concepts, weapon HUD references, and 64-bit id Tech 3 insights.
 * **Splash Damage & id Software**: For creating *Wolfenstein: Enemy Territory*.
 * **Omni-Bot Team**: For bot navigation and AI support.
@@ -218,4 +229,6 @@ Create standard zip files (without any leading folder paths) containing the bina
 ---
 
 ## ⚖️ License
-This project is open-source software licensed under the **GNU General Public License v3 (GPLv3)**. See `License.txt` for details.
+NoQuarter EoTS is distributed under the **Modified Reciprocal Public License 1.1** of the No Quarter Mod Team, the same license as No Quarter. See `License.txt` for the full text. In short: if you run a modified version on a public server or distribute it, you must publish your source changes, list them in a `CHANGES` file, and give your version its own name.
+
+Bundled third-party code keeps its own license (Lua, LuaSQL, SQLite, Omni-bot, WolfAdmin). See `CHANGES` for the list.
