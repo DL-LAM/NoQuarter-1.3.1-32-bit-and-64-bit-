@@ -206,7 +206,7 @@ Create standard zip files (without any leading folder paths) containing the bina
 
 ---
 
-## 📜 Credits & Big Thanks
+## 📜 Credits 
 
 * **Hawkeye** (`nqv1.3.1help@gmail.com`) — Modernization, 64-bit / 32-bit cross-compile pipeline, UI overhaul, bugfixes, and maintenance.
 * **NoQuarter Team**: IRATA, jaquboss, Meyer, ReyalP, Lucifer, and all past contributors who made NQ great.
