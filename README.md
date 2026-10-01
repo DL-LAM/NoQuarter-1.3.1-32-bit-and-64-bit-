@@ -2,9 +2,9 @@
 
 **NQ EoTS 1.0.7b** (beta) · 32-bit & 64-bit · Windows & Linux · ET:Legacy and ET 2.60b
 
-Maintained and updated by **Hawkeye** (`nqv1.3.1help@gmail.com`)
+Maintained and updated by **Hawkeye** (`nq.eots@gmail.com`)
 
-> **NoQuarter EoTS is derived from No Quarter by the No Quarter Mod Team** (No Quarter SVN trunk, revision 5758). It is an unofficial, community-maintained continuation and is not affiliated with or endorsed by the original No Quarter Mod Team. It is distributed under the No Quarter Mod Team's Modified Reciprocal Public License 1.1 (see the License section below). All changes are listed in [`CHANGES`](CHANGES).
+> **NoQuarter EoTS is derived from NoQuarter Source Code released by the No Quarter Mod Team** (No Quarter SVN trunk, revision 5758). It is an unofficial, community-maintained project and is not affiliated with or endorsed by the original No Quarter Mod Team. It is distributed under the No Quarter Mod Team's Modified Reciprocal Public License 1.1 (see the License section below). All changes are listed in [`CHANGES`](CHANGES).
 >
 > The name is a nod to Shitstorm, the original home of No Quarter.
 
@@ -216,9 +216,9 @@ To build them by hand, create standard zip files (without any leading folder pat
 
 ---
 
-## 📜 Credits & Big Thanks
+## 📜 Credits
 
-* **Hawkeye** (`nqv1.3.1help@gmail.com`) — Modernization, 64-bit / 32-bit cross-compile pipeline, UI overhaul, bugfixes, and maintenance.
+* **Hawkeye** (`nq.eots@gmail.com`) — Modernization, 64-bit / 32-bit cross-compile pipeline, UI overhaul, bugfixes, and maintenance.
 * **The No Quarter Mod Team**, who created No Quarter: Meyerinchains, Jaquboss, snl/lucel, Jay Bird, IRATA, redeye, crapshoot, IlDuca, Berzerkr, and every other contributor and beta tester. Their original credits are in the in-game credits menu.
 * **No Quarter's own thanks**: ReyalP and Zinx (ETPro code), Dr. Evil and jaskot (Omni-bot), antman (location files), mcfw (GeoIP) and the ETPub team (base code).
 * **ET:Legacy Team**: For awesome modern UI concepts, weapon HUD references, and 64-bit id Tech 3 insights.
@@ -229,6 +229,6 @@ To build them by hand, create standard zip files (without any leading folder pat
 ---
 
 ## ⚖️ License
-NoQuarter EoTS is distributed under the **Modified Reciprocal Public License 1.1** of the No Quarter Mod Team, the same license as No Quarter. See `License.txt` for the full text. In short: if you run a modified version on a public server or distribute it, you must publish your source changes, list them in a `CHANGES` file, and give your version its own name.
+NoQuarter EoTS is distributed under the **Modified Reciprocal Public License 1.1** of the No Quarter Mod Team, the same license as No Quarter. See `License.txt` for the full text. 
 
 Bundled third-party code keeps its own license (Lua, LuaSQL, SQLite, Omni-bot, WolfAdmin). See `CHANGES` for the list.
